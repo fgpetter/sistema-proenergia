@@ -24,5 +24,10 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
+        copy({
+            targets: [
+                { src: 'resources/images/**/*', dest: 'images' }
+            ]
+        }),
     ],
 });

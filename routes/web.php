@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoutingController;
 
 // Rota do painel (home do sistema autenticado)
-Route::redirect('/', '/painel');
+// Route::redirect('/', '/painel');
 
 Route::group(['prefix' => '/painel','middleware' => 'auth'], function () {
     Route::view('/', 'painel.dashboard')->name('painel.dashboard');

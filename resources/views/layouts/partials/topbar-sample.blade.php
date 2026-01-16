@@ -8,7 +8,7 @@
                 <i class="iconify lucide--align-left text-xl"></i>
             </button>
             <!-- Topbar Search -->
-            {{-- <div class="lg:flex hidden items-center relative">
+            <div class="lg:flex hidden items-center relative">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
                     <i class="iconify tabler--search text-base"></i>
                 </div>
@@ -17,11 +17,11 @@
                 <button class="absolute inset-y-0 end-0 flex items-center pe-4" type="button">
                     <span class="ms-auto font-medium">⌘ K</span>
                 </button>
-            </div> --}}
+            </div>
         </div>
         <div class="flex items-center gap-3">
             <!-- Language Dropdown Button -->
-            {{-- <div class="topbar-item hs-dropdown [--placement:bottom-right] relative inline-flex">
+            <div class="topbar-item hs-dropdown [--placement:bottom-right] relative inline-flex">
                 <button aria-expanded="false" aria-haspopup="menu" aria-label="Dropdown"
                         class="hs-dropdown-toggle btn btn-icon size-8 hover:bg-default-150 rounded-full relative"
                         type="button">
@@ -69,7 +69,7 @@
                         Arabic
                     </a>
                 </div>
-            </div> --}}
+            </div>
             <!-- Light/Dark Mode Button -->
             <div class="topbar-item">
                 <button class="btn btn-icon size-8 hover:bg-default-150 transition-[scale,background] rounded-full"
@@ -79,7 +79,7 @@
                 </button>
             </div>
             <!-- Notification Button -->
-            {{-- <div class="topbar-item hs-dropdown [--auto-close:inside] relative inline-flex">
+            <div class="topbar-item hs-dropdown [--auto-close:inside] relative inline-flex">
                 <button aria-expanded="false" aria-haspopup="menu" aria-label="Dropdown"
                         class="hs-dropdown-toggle btn btn-icon size-8 hover:bg-default-150 rounded-full relative"
                         type="button">
@@ -347,45 +347,43 @@
                         </button>
                     </div>
                 </div>
-            </div> --}}
+            </div>
             <!-- Setting Offcanvas Button -->
-            {{-- <div class="topbar-item">
+            <div class="topbar-item">
                 <button aria-controls="theme-customization" aria-expanded="false" aria-haspopup="dialog"
                         class="btn btn-icon size-8 hover:bg-default-150 rounded-full"
                         data-hs-overlay="#theme-customization" type="button">
                     <i class="size-4.5" data-lucide="settings"></i>
                 </button>
-            </div> --}}
-
+            </div>
             <!-- Profile Dropdown Button -->
             <div class="topbar-item hs-dropdown relative inline-flex">
                 <button aria-expanded="false" aria-haspopup="menu" aria-label="Dropdown"
-                        class="cursor-pointer  rounded-full">
-                    <span class="hs-dropdown-toggle rounded-full size-9.5 bg-zinc-900 text-white flex items-center justify-center font-semibold text-base uppercase">
-                        {{ Auth::user()->initials }}
-                    </span>
+                        class="cursor-pointer bg-pink-100 rounded-full">
+                    <img alt="user-image" class="hs-dropdown-toggle rounded-full size-9.5"
+                         src="/images/user/avatar-1.png"/>
                 </button>
                 <div aria-labelledby="hs-dropdown-with-icons" aria-orientation="vertical"
                      class="hs-dropdown-menu min-w-48" role="menu">
                     <div class="p-2">
-                        {{-- <h6 class="mb-2 text-default-500">Welcome to Tailwick</h6> --}}
+                        <h6 class="mb-2 text-default-500">Welcome to Tailwick</h6>
                         <a class="flex gap-3" href="#!">
-                            {{-- <div class="relative inline-block">
+                            <div class="relative inline-block">
                                 <div class="rounded bg-default-200">
                                     <img alt="" class="size-12 rounded" src="/images/user/avatar-1.png"/>
                                 </div>
                                 <span
                                     class="-top-1 -end-1 absolute w-2.5 h-2.5 bg-green-400 border-2 border-white rounded-full"></span>
-                            </div> --}}
+                            </div>
                             <div>
-                                <h6 class="mb-1 text-sm font-semibold text-default-800"> {{ Auth::user()->name }} </h6>
+                                <h6 class="mb-1 text-sm font-semibold text-default-800">Paula Keenan</h6>
                                 <p class="text-default-500">CEO &amp; Founder</p>
                             </div>
                         </a>
                     </div>
                     <div class="border-t border-t-default-200 -mx-2 my-2"></div>
                     <div class="flex flex-col gap-y-1">
-                        {{-- <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
+                        <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                            href="{{ route('second', ['apps', 'mailbox']) }}">
                             <i class="size-4" data-lucide="mail"></i>
                             Inbox
@@ -401,15 +399,13 @@
                            href="{{ route('second', ['pages', 'pricing']) }}">
                             <i class="size-4" data-lucide="gem"></i>
                             Upgrade Pro
-                        </a> 
-                        <div class="border-t border-default-200 -mx-2 my-1"></div> --}}
-                        <form method="POST" action="{{ route('logout') }}" class="w-full">
-                            @csrf
-                            <button type="submit" class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded w-full text-left">
-                                <i class="size-4" data-lucide="log-out"></i>
-                                Sair
-                            </button>
-                        </form>
+                        </a>
+                        <div class="border-t border-default-200 -mx-2 my-1"></div>
+                        <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
+                           href="{{ route('second', ['auth', 'basic-logout']) }}">
+                            <i class="size-4" data-lucide="log-out"></i>
+                            Sign Out
+                        </a>
                     </div>
                 </div>
             </div>
