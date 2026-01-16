@@ -19,29 +19,64 @@
                                     any of your prior passwords
                                 </p>
                             </div>
-                            <form action="{{ route('second', ['dashboards', 'index']) }}">
+                            <form action="/reset-password" method="POST">
+                                @csrf
+                                <input type="hidden" name="token" value="{{ request()->route('token') }}">
+
+                                @if ($errors->any())
+                                    <div class="mb-4 p-3 text-danger rounded-md bg-danger/15">
+                                        <ul class="list-disc list-inside">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
                                 <div class="text-start">
-                                    <label class="inline-block mb-2 text-sm text-default-800 font-medium" for="Email">Password</label>
-                                    <input class="form-input" id="Email" placeholder="Password" type="text"/>
+                                    <label class="inline-block mb-2 text-sm text-default-800 font-medium" for="email">Email</label>
+                                    <input class="form-input @error('email') border-danger @enderror" 
+                                           id="email" 
+                                           name="email" 
+                                           placeholder="Enter Email" 
+                                           type="email"
+                                           value="{{ old('email', request()->email) }}"
+                                           required
+                                           autofocus/>
+                                    @error('email')
+                                        <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                    @enderror
                                 </div>
                                 <div class="text-start mt-4">
-                                    <label class="inline-block mb-2 text-sm text-default-800 font-medium" for="Email">Confirm
-                                        Password</label>
-                                    <input class="form-input" id="Email" placeholder="Confirm Password" type="text"/>
+                                    <label class="inline-block mb-2 text-sm text-default-800 font-medium" for="password">Password</label>
+                                    <input class="form-input @error('password') border-danger @enderror" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Password" 
+                                           type="password"
+                                           required/>
+                                    @error('password')
+                                        <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                    @enderror
                                 </div>
-                                <div class="flex items-center gap-2 mt-4">
-                                    <input class="form-checkbox" id="checkbox-1" type="checkbox"/>
-                                    <label class="text-default-900 text-sm font-medium" for="checkbox-1">Remember
-                                        Me</label>
+                                <div class="text-start mt-4">
+                                    <label class="inline-block mb-2 text-sm text-default-800 font-medium" for="password_confirmation">Confirm
+                                        Password</label>
+                                    <input class="form-input" 
+                                           id="password_confirmation" 
+                                           name="password_confirmation" 
+                                           placeholder="Confirm Password" 
+                                           type="password"
+                                           required/>
                                 </div>
                                 <div class="mt-8">
-                                    <button class="btn bg-primary text-white w-full" type="button">Reset Password
+                                    <button class="btn bg-primary text-white w-full" type="submit">Reset Password
                                     </button>
                                 </div>
                                 <div class="mt-4 text-center">
                                     <p class="text-base text-default-800">Hold on, I've got my password... <a
                                             class="text-primary underline"
-                                            href="{{ route('second', ['auth', 'boxed-login']) }}"> Click here </a></p>
+                                            href="/login"> Click here </a></p>
                                 </div>
                             </form>
                         </div>

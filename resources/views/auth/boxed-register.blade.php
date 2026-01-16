@@ -34,30 +34,74 @@
                             <div class="mt-10 w-110 mx-auto">
                                 <!-- Email Tab -->
                                 <div aria-labelledby="tabs-with-underline-item-1" id="tabsForEmail" role="tabpanel">
-                                    <form action="{{ route('second', ['dashboards', 'index']) }}" class="text-left w-full mt-10">
+                                    <form action="/register" method="POST" class="text-left w-full mt-10">
+                                        @csrf
+
+                                        @if ($errors->any())
+                                            <div class="mb-4 p-3 text-danger rounded-md bg-danger/15">
+                                                <ul class="list-disc list-inside">
+                                                    @foreach ($errors->all() as $error)
+                                                        <li>{{ $error }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
+
                                         <div class="mb-4">
-                                            <label class="block font-medium text-default-900 text-sm mb-2" for="email">Email
-                                                ID</label>
-                                            <input class="form-input" id="email" placeholder="Enter Username or email"
-                                                   type="text"/>
+                                            <label class="block font-medium text-default-900 text-sm mb-2" for="name">Nome</label>
+                                            <input class="form-input @error('name') border-danger @enderror" 
+                                                   id="name" 
+                                                   name="name" 
+                                                   placeholder="Enter your name"
+                                                   type="text"
+                                                   value="{{ old('name') }}"
+                                                   required
+                                                   autofocus/>
+                                            @error('name')
+                                                <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="block font-medium text-default-900 text-sm mb-2" for="email">Email</label>
+                                            <input class="form-input @error('email') border-danger @enderror" 
+                                                   id="email" 
+                                                   name="email" 
+                                                   placeholder="Enter your email"
+                                                   type="email"
+                                                   value="{{ old('email') }}"
+                                                   required/>
+                                            @error('email')
+                                                <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div class="mb-4">
                                             <label class="block font-medium text-default-900 text-sm mb-2"
-                                                   for="Username">Username</label>
-                                            <input class="form-input" id="Username" placeholder="Enter Username"
-                                                   type="text"/>
+                                                   for="password">Password</label>
+                                            <input class="form-input @error('password') border-danger @enderror" 
+                                                   id="password" 
+                                                   name="password" 
+                                                   placeholder="Enter Password"
+                                                   type="password"
+                                                   required/>
+                                            @error('password')
+                                                <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div class="mb-4">
                                             <label class="block font-medium text-default-900 text-sm mb-2"
-                                                   for="Password">Password</label>
-                                            <input class="form-input" id="Password" placeholder="Enter Password"
-                                                   type="text"/>
+                                                   for="password_confirmation">Confirm Password</label>
+                                            <input class="form-input" 
+                                                   id="password_confirmation" 
+                                                   name="password_confirmation" 
+                                                   placeholder="Confirm Password"
+                                                   type="password"
+                                                   required/>
                                         </div>
                                         <p class="italic text-sm font-medium text-default-500">By registering you agree
                                             to the Tailwick <a class="underline" href="#">Terms of Use</a></p>
                                         <div class="mt-10 text-center">
-                                            <button class="btn bg-primary text-white w-full" type="button">Sign
-                                                In
+                                            <button class="btn bg-primary text-white w-full" type="submit">Sign
+                                                Up
                                             </button>
                                         </div>
                                         <div
@@ -82,7 +126,7 @@
                                         <div class="mt-10 text-center">
                                             <p class="text-base text-default-500">Already have an account ?
                                                 <a class="font-semibold underline hover:text-primary transition duration-200"
-                                                   href="{{ route('second', ['auth', 'boxed-login']) }}">Login</a>
+                                                   href="/login">Login</a>
                                             </p>
                                         </div>
                                     </form>
@@ -90,58 +134,10 @@
                                 <!-- Phone Tab -->
                                 <div aria-labelledby="tabs-with-underline-item-2" class="hidden" id="tabsForPhone"
                                      role="tabpanel">
-                                    <form action="{{ route('second', ['dashboards', 'index']) }}" class="text-left w-full mt-10">
-                                        <div class="mb-4">
-                                            <label class="block font-medium text-default-900 text-sm mb-2"
-                                                   for="Phone Number">Phone
-                                                Number</label>
-                                            <input class="form-input" id="Phone Number" placeholder="Enter phone"
-                                                   type="text"/>
-                                        </div>
-                                        <div class="mb-4">
-                                            <label class="block font-medium text-default-900 text-sm mb-2"
-                                                   for="Username">Username</label>
-                                            <input class="form-input" id="Username" placeholder="Enter Username"
-                                                   type="text"/>
-                                        </div>
-                                        <div class="mb-4">
-                                            <label class="block font-medium text-default-900 text-sm mb-2"
-                                                   for="Password">Password</label>
-                                            <input class="form-input" id="Password" placeholder="Enter Password"
-                                                   type="text"/>
-                                        </div>
-                                        <p class="italic text-sm font-medium text-default-500">By registering you agree
-                                            to the Tailwick <a class="underline" href="#">Terms of Use</a></p>
-                                        <div class="mt-10 text-center">
-                                            <button class="btn bg-primary text-white w-full" type="button">Sign
-                                                In
-                                            </button>
-                                        </div>
-                                        <div
-                                            class="my-9 relative text-center before:absolute before:top-2.5 before:left-0 before:border-t before:border-default-200 before:w-full before:h-0.5 before:right-0 before:-z-0">
-                                            <h4 class="relative z-1 py-0.5 px-2 inline-block font-medium bg-card rounded-md">
-                                                Create
-                                                account with</h4>
-                                        </div>
-                                        <div class="flex w-full justify-center items-center gap-2">
-                                            <a class="bg-card btn border border-default-200 flex-grow hover:bg-default-150 shadow-sm hover:text-default-800"
-                                               href="#">
-                                                <i class="iconify-color logos--google-icon"></i>
-                                                Use Google
-                                            </a>
-                                            <a class="bg-card btn border border-default-200 flex-grow hover:bg-default-150 shadow-sm hover:text-default-800"
-                                               href="#">
-                                                <i class="iconify logos--apple"></i>
-                                                Use Apple
-                                            </a>
-                                        </div>
-                                        <div class="mt-10 text-center">
-                                            <p class="text-base text-default-500">Already have an account ?
-                                                <a class="font-semibold underline hover:text-primary transition duration-200"
-                                                   href="{{ route('second', ['auth', 'basic-login']) }}">Login</a>
-                                            </p>
-                                        </div>
-                                    </form>
+                                    <div class="text-center p-4 text-default-500">
+                                        <p>Registro por telefone não está disponível no momento.</p>
+                                        <p class="mt-2">Por favor, use a aba de Email para se registrar.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

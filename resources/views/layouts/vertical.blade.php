@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" @yield('html_attribute')>
+<html lang="pt_br" @yield('html_attribute')>
 
 <head>
     @include('layouts.partials/title-meta')

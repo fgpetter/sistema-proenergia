@@ -19,27 +19,60 @@
                                 </p>
                             </div>
                             <!-- form -->
-                            <form action="{{ route('second', ['dashboards', 'index']) }}" class="text-left w-full mt-10">
+                            <form action="/login" method="POST" class="text-left w-full mt-10">
+                                @csrf
+                                
+                                @if (session('status'))
+                                    <div class="mb-4 p-3 text-success rounded-md bg-success/15">
+                                        {{ session('status') }}
+                                    </div>
+                                @endif
+
+                                @if ($errors->any())
+                                    <div class="mb-4 p-3 text-danger rounded-md bg-danger/15">
+                                        <ul class="list-disc list-inside">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
                                 <div class="mb-4">
-                                    <label class="block font-medium text-default-900 text-sm mb-2" for="Username">Username/
-                                        Email ID</label>
-                                    <input class="form-input" id="Username" placeholder="Enter Username or email"
-                                           type="text"/>
+                                    <label class="block font-medium text-default-900 text-sm mb-2" for="email">Email</label>
+                                    <input class="form-input @error('email') border-danger @enderror" 
+                                           id="email" 
+                                           name="email" 
+                                           placeholder="Enter your email"
+                                           type="email"
+                                           value="{{ old('email') }}"
+                                           required
+                                           autofocus/>
+                                    @error('email')
+                                        <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                    @enderror
                                 </div>
                                 <div class="mb-4">
                                     <a class="text-primary font-medium text-sm mb-2 float-end"
-                                       href="{{ route('second', ['auth', 'boxed-reset-password']) }}">Forgot Password
-                                        ?</a>
-                                    <label class="block font-medium text-default-900 text-sm mb-2" for="Password">Password</label>
-                                    <input class="form-input" id="Password" placeholder="Enter Password" type="text"/>
+                                       href="/forgot-password">Forgot Password ?</a>
+                                    <label class="block font-medium text-default-900 text-sm mb-2" for="password">Password</label>
+                                    <input class="form-input @error('password') border-danger @enderror" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Enter Password" 
+                                           type="password"
+                                           required/>
+                                    @error('password')
+                                        <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                    @enderror
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <input class="form-checkbox" id="checkbox-1" type="checkbox"/>
-                                    <label class="text-default-900 text-sm font-medium" for="checkbox-1">Remember
+                                    <input class="form-checkbox" id="remember" name="remember" type="checkbox"/>
+                                    <label class="text-default-900 text-sm font-medium" for="remember">Remember
                                         Me</label>
                                 </div>
                                 <div class="mt-10 text-center">
-                                    <button class="btn bg-primary text-white w-full" type="button">Sign
+                                    <button class="btn bg-primary text-white w-full" type="submit">Sign
                                         In
                                     </button>
                                 </div>
@@ -63,7 +96,7 @@
                                 <div class="mt-10 text-center">
                                     <p class="text-base text-default-500">Don't have an account ?
                                         <a class="font-semibold underline hover:text-primary transition duration-200"
-                                           href="{{ route('second', ['auth', 'boxed-register']) }}"> SignUp</a>
+                                           href="/register"> SignUp</a>
                                     </p>
                                 </div>
                             </form>
