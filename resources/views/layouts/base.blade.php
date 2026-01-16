@@ -4,10 +4,12 @@
     @include('layouts.partials/title-meta')
 
     @include('layouts.partials/head-css')
+    @livewireStyles
 </head>
 <body>
     @yield('content')
 
     @include('layouts.partials/customizer')
+    @livewireScripts
 </body>
 </html>
