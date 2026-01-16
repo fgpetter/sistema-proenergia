@@ -7,7 +7,7 @@ use App\Http\Controllers\RoutingController;
 Route::redirect('/', '/painel');
 
 Route::group(['prefix' => '/painel','middleware' => 'auth'], function () {
-    Route::view('/', 'viewName')->name('URI');
+    Route::view('/', 'painel.dashboard')->name('painel.dashboard');
 });
 
 // Rotas catch-all (devem vir por último para não interceptar rotas do Fortify)
