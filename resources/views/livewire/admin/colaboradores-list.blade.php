@@ -30,10 +30,10 @@
 
     <div class="card">
         <div class="card-header">
-            <h6 class="card-title">Gestão de Usuários</h6>
+            <h6 class="card-title">Gestão de Colaboradores</h6>
             <button @click="$wire.openCreateModal()" class="btn btn-sm bg-primary text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Novo Usuário
+                Novo Colaborador
             </button>
         </div>
         <div class="card-header">
@@ -51,9 +51,9 @@
                 </div>
 
                 <div class="relative w-2/5">
-                    <select wire:model.live="roleFilter" class="form-input form-input-sm">
-                        <option value="">Todos os perfis</option>
-                        @foreach ($this->roles as $value => $label)
+                    <select wire:model.live="tipoFilter" class="form-input form-input-sm">
+                        <option value="">Todos os tipos</option>
+                        @foreach ($this->tipos as $value => $label)
                             <option value="{{ $value }}">{{ $label }}</option>
                         @endforeach
                     </select>
@@ -69,70 +69,66 @@
                             <thead class="bg-default-150">
                                 <tr class="text-sm font-normal text-default-700 whitespace-nowrap">
                                     <th class="px-3.5 py-3 text-start" scope="col">ID</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Nome</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Tipo</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Contrato</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Usuário</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">E-mail</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Perfil</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Criado em</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($this->users as $user)
-                                    <tr wire:key="user-{{ $user->id }}" class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                        <td class="px-3.5 py-3 text-primary">#{{ $user->id }}</td>
-                                        <td class="flex py-3 px-3.5 items-center gap-3">
-                                            <div class="size-10 rounded-full bg-default-200 flex items-center justify-center font-semibold text-default-600">
-                                                {{ $user->initials }}
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0.5 font-semibold text-default-800">{{ $user->name }}</h6>
-                                            </div>
-                                        </td>
-                                        <td class="py-3 px-3.5">{{ $user->email }}</td>
+                                @forelse ($this->colaboradores as $colaborador)
+                                    <tr wire:key="colaborador-{{ $colaborador->id }}" class="text-default-800 font-normal text-sm whitespace-nowrap">
+                                        <td class="px-3.5 py-3 text-primary">#{{ $colaborador->id }}</td>
                                         <td class="px-3.5 py-3">
-                                            @php
-                                                $colorClass = match($user->role->color()) {
-                                                    'danger' => 'bg-danger/10 text-danger',
-                                                    'warning' => 'bg-warning/10 text-warning',
-                                                    'primary' => 'bg-primary/10 text-primary',
-                                                    'success' => 'bg-success/10 text-success',
-                                                    default => 'bg-default-200 text-default-600',
-                                                };
-                                            @endphp
-                                            <span class="py-0.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium {{ $colorClass }} rounded">
-                                                {{ $user->role->label() }}
+                                            <h6 class="mb-0.5 font-semibold text-default-800">{{ $colaborador->nome }}</h6>
+                                        </td>
+                                        <td class="px-3.5 py-3">
+                                            <span class="py-0.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium bg-primary/10 text-primary rounded">
+                                                {{ $colaborador->tipo->label() }}
                                             </span>
                                         </td>
-                                        <td class="py-3 px-3.5">{{ $user->created_at->format('d/m/Y') }}</td>
+                                        <td class="px-3.5 py-3">
+                                            @if ($colaborador->contrato->label() === "CLT")
+                                                <span class="py-0.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium bg-success/10 text-success rounded">
+                                                    {{ $colaborador->contrato->label() }}
+                                                </span>
+                                            @else
+                                                <span class="py-0.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium bg-warning/10 text-warning rounded">
+                                                    {{ $colaborador->contrato->label() }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="py-3 px-3.5">{{ $colaborador->user->email }}</td>
+                                        <td class="py-3 px-3.5">{{ $colaborador->created_at->format('d/m/Y') }}</td>
                                         <td class="px-3.5 py-3">
                                             <div class="flex items-center gap-2">
                                                 <button
                                                     type="button"
-                                                    @click="$wire.openEditModal({{ $user->id }})"
+                                                    @click="$wire.openEditModal({{ $colaborador->id }})"
                                                     class="btn size-7.5 bg-default-200 hover:bg-primary/10 text-default-500 hover:text-primary"
                                                     title="Editar"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                 </button>
-                                                @if ($user->id !== auth()->id())
-                                                    <button
-                                                        type="button"
-                                                        @click="$wire.confirmDelete({{ $user->id }})"
-                                                        class="btn size-7.5 bg-default-200 hover:bg-danger/10 text-default-500 hover:text-danger"
-                                                        title="Excluir"
-                                                    >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                                    </button>
-                                                @endif
+                                                <button
+                                                    type="button"
+                                                    @click="$wire.confirmDelete({{ $colaborador->id }})"
+                                                    class="btn size-7.5 bg-default-200 hover:bg-danger/10 text-default-500 hover:text-danger"
+                                                    title="Excluir"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-3.5 py-8 text-center text-default-500">
+                                        <td colspan="7" class="px-3.5 py-8 text-center text-default-500">
                                             <div class="flex flex-col items-center gap-2">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-default-300"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                                <p>Nenhum usuário encontrado.</p>
+                                                <p>Nenhum colaborador encontrado.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -142,13 +138,13 @@
                     </div>
                 </div>
             </div>
-            @if ($this->users->hasPages())
+            @if ($this->colaboradores->hasPages())
                 <div class="card-footer">
                     <p class="text-default-500 text-sm">
-                        Exibindo <b>{{ $this->users->firstItem() ?? 0 }}</b> a <b>{{ $this->users->lastItem() ?? 0 }}</b> de <b>{{ $this->users->total() }}</b> resultados
+                        Exibindo <b>{{ $this->colaboradores->firstItem() ?? 0 }}</b> a <b>{{ $this->colaboradores->lastItem() ?? 0 }}</b> de <b>{{ $this->colaboradores->total() }}</b> resultados
                     </p>
                     <nav aria-label="Pagination" class="flex items-center gap-2">
-                        @if ($this->users->onFirstPage())
+                        @if ($this->colaboradores->onFirstPage())
                             <button disabled class="btn btn-sm border bg-transparent border-default-200 text-default-400 cursor-not-allowed" type="button">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="15 18 9 12 15 6"/></svg> Anterior
                             </button>
@@ -158,8 +154,8 @@
                             </button>
                         @endif
 
-                        @foreach ($this->users->getUrlRange(1, $this->users->lastPage()) as $page => $url)
-                            @if ($page == $this->users->currentPage())
+                        @foreach ($this->colaboradores->getUrlRange(1, $this->colaboradores->lastPage()) as $page => $url)
+                            @if ($page == $this->colaboradores->currentPage())
                                 <button class="btn size-7.5 bg-primary text-white" type="button">{{ $page }}</button>
                             @else
                                 <button wire:click="gotoPage({{ $page }})" class="btn size-7.5 bg-transparent border border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary hover:border-primary/10" type="button">
@@ -168,7 +164,7 @@
                             @endif
                         @endforeach
 
-                        @if ($this->users->hasMorePages())
+                        @if ($this->colaboradores->hasMorePages())
                             <button wire:click="nextPage" class="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary hover:border-primary/10" type="button">
                                 Próximo <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-1"><polyline points="9 18 15 12 9 6"/></svg>
                             </button>
@@ -183,7 +179,7 @@
         </div>
     </div>
 
-    <!-- Modal Criar/Editar Usuário -->
+    <!-- Modal Criar/Editar Colaborador -->
     <template x-teleport="body">
         <div
             x-show="showModal"
@@ -221,7 +217,7 @@
                 >
                     <div class="flex justify-between items-center p-4 border-b border-default-200">
                         <h3 id="modal-title" class="font-bold text-default-800 text-base">
-                            {{ $editingUserId ? 'Editar Usuário' : 'Novo Usuário' }}
+                            {{ $editingId ? 'Editar Colaborador' : 'Novo Colaborador' }}
                         </h3>
                         <button type="button" aria-label="Fechar" @click="$wire.closeModal()">
                             <span class="sr-only">Fechar</span>
@@ -233,68 +229,85 @@
                         <div class="p-4 overflow-y-auto">
                             <div class="space-y-4">
                                 <div>
-                                    <label for="name" class="block text-sm font-medium text-default-700 mb-1">Nome</label>
+                                    <label for="nome" class="block text-sm font-medium text-default-700 mb-1">Nome</label>
                                     <input
-                                        wire:model="name"
+                                        wire:model="nome"
                                         type="text"
-                                        id="name"
-                                        class="form-input w-full @error('name') border-danger @enderror"
+                                        id="nome"
+                                        class="form-input w-full @error('nome') border-danger @enderror"
                                         placeholder="Nome completo"
                                     >
-                                    @error('name')
+                                    @error('nome')
                                         <p class="mt-1 text-sm text-danger">{{ $message }}</p>
                                     @enderror
                                 </div>
 
                                 <div>
-                                    <label for="email" class="block text-sm font-medium text-default-700 mb-1">E-mail</label>
-                                    <input
-                                        wire:model="email"
-                                        type="email"
-                                        id="email"
-                                        class="form-input w-full @error('email') border-danger @enderror"
-                                        placeholder="email@exemplo.com"
+                                    <label for="tipo" class="block text-sm font-medium text-default-700 mb-1">Tipo</label>
+                                    <select
+                                        wire:model="tipo"
+                                        id="tipo"
+                                        class="form-input w-full @error('tipo') border-danger @enderror"
                                     >
-                                    @error('email')
+                                        <option value="">Selecione um tipo</option>
+                                        @foreach ($this->tipos as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('tipo')
                                         <p class="mt-1 text-sm text-danger">{{ $message }}</p>
                                     @enderror
                                 </div>
 
-                                @if ($editingUserId)
+                                <div>
+                                    <label for="contrato" class="block text-sm font-medium text-default-700 mb-1">Contrato</label>
+                                    <select
+                                        wire:model="contrato"
+                                        id="contrato"
+                                        class="form-input w-full @error('contrato') border-danger @enderror"
+                                    >
+                                        <option value="">Selecione um contrato</option>
+                                        @foreach ($this->contratos as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('contrato')
+                                        <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                @if ($editingId)
                                     <div>
-                                        <label for="password" class="block text-sm font-medium text-default-700 mb-1">
-                                            Senha
-                                            <span class="text-default-400 font-normal">(deixe em branco para manter)</span>
-                                        </label>
-                                        <input
-                                            wire:model="password"
-                                            type="password"
-                                            id="password"
-                                            class="form-input w-full @error('password') border-danger @enderror"
-                                            placeholder="••••••••"
+                                        <label for="userId" class="block text-sm font-medium text-default-700 mb-1">Usuário</label>
+                                        <select
+                                            wire:model="userId"
+                                            id="userId"
+                                            class="form-input w-full @error('userId') border-danger @enderror"
                                         >
-                                        @error('password')
+                                            <option value="">Selecione um usuário prestador</option>
+                                            @foreach ($this->prestadoresDisponiveis as $id => $label)
+                                                <option value="{{ $id }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('userId')
+                                            <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                @else
+                                    <div>
+                                        <label for="email" class="block text-sm font-medium text-default-700 mb-1">E-mail</label>
+                                        <input
+                                            wire:model="email"
+                                            type="email"
+                                            id="email"
+                                            class="form-input w-full @error('email') border-danger @enderror"
+                                            placeholder="email@exemplo.com"
+                                        >
+                                        @error('email')
                                             <p class="mt-1 text-sm text-danger">{{ $message }}</p>
                                         @enderror
                                     </div>
                                 @endif
-
-                                <div>
-                                    <label for="role" class="block text-sm font-medium text-default-700 mb-1">Perfil</label>
-                                    <select
-                                        wire:model="role"
-                                        id="role"
-                                        class="form-input w-full @error('role') border-danger @enderror"
-                                    >
-                                        <option value="">Selecione um perfil</option>
-                                        @foreach ($this->roles as $value => $label)
-                                            <option value="{{ $value }}">{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('role')
-                                        <p class="mt-1 text-sm text-danger">{{ $message }}</p>
-                                    @enderror
-                                </div>
                             </div>
                         </div>
 
@@ -312,7 +325,7 @@
                                 wire:loading.attr="disabled"
                             >
                                 <span wire:loading.remove wire:target="save">
-                                    {{ $editingUserId ? 'Salvar Alterações' : 'Criar Usuário' }}
+                                    {{ $editingId ? 'Salvar Alterações' : 'Criar Colaborador' }}
                                 </span>
                                 <span wire:loading wire:target="save">
                                     Salvando...
@@ -363,7 +376,7 @@
                 >
                     <div class="flex justify-between items-center p-4 border-b border-default-200">
                         <h3 id="delete-modal-title" class="font-bold text-default-800 text-base">
-                            Excluir Usuário
+                            Excluir Colaborador
                         </h3>
                         <button type="button" aria-label="Fechar" @click="$wire.closeDeleteModal()">
                             <span class="sr-only">Fechar</span>
@@ -378,7 +391,7 @@
                             </div>
                             <div>
                                 <p class="text-sm text-default-500">
-                                    Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.
+                                    Tem certeza que deseja excluir este colaborador? Esta ação não pode ser desfeita.
                                 </p>
                             </div>
                         </div>

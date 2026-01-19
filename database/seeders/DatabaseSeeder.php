@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Colaborador;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -28,7 +29,13 @@ class DatabaseSeeder extends Seeder
         // Gestores
         User::factory()->gestor()->count(3)->create();
 
-        // Prestadores
-        User::factory()->prestador()->count(5)->create();
+        // Prestadores com Colaboradores
+        $prestadores = User::factory()->prestador()->count(5)->create();
+        foreach ($prestadores as $prestador) {
+            Colaborador::factory()->create([
+                'user_id' => $prestador->id,
+                'nome' => $prestador->name,
+            ]);
+        }
     }
 }

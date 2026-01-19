@@ -4,8 +4,10 @@ namespace App\Livewire\Admin;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Notifications\SendPasswordResetNotification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Computed;
@@ -52,7 +54,6 @@ class UsersList extends Component
             $rules['password'] = ['nullable', 'string', Password::defaults()];
         } else {
             $rules['email'][] = Rule::unique('users', 'email');
-            $rules['password'] = ['required', 'string', Password::defaults()];
         }
 
         return $rules;
@@ -66,7 +67,6 @@ class UsersList extends Component
             'email.required' => 'O e-mail é obrigatório.',
             'email.email' => 'O e-mail deve ser um endereço válido.',
             'email.unique' => 'Este e-mail já está em uso.',
-            'password.required' => 'A senha é obrigatória.',
             'role.required' => 'O perfil é obrigatório.',
             'role.enum' => 'O perfil selecionado é inválido.',
         ];
@@ -164,9 +164,11 @@ class UsersList extends Component
             $user->update($data);
             session()->flash('success', 'Usuário atualizado com sucesso.');
         } else {
-            $data['password'] = Hash::make($this->password);
-            User::create($data);
-            session()->flash('success', 'Usuário criado com sucesso.');
+            $temporaryPassword = Str::random(32);
+            $data['password'] = Hash::make($temporaryPassword);
+            $user = User::create($data);
+            $user->notify(new SendPasswordResetNotification());
+            session()->flash('success', 'Usuário criado com sucesso. Um email foi enviado para o usuário definir sua senha.');
         }
 
         $this->closeModal();

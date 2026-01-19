@@ -17,6 +17,14 @@ Route::group(['prefix' => '/painel', 'middleware' => 'auth'], function () {
     ], function () {
         Route::view('/usuarios', 'admin.usuarios')->name('admin.usuarios');
     });
+
+    // Rotas de gestão (super_admin, admin e gestor)
+    Route::group([
+        'prefix' => '/admin',
+        'middleware' => 'role:'.UserRole::SuperAdmin->value.','.UserRole::Admin->value.','.UserRole::Gestor->value,
+    ], function () {
+        Route::view('/colaboradores', 'admin.colaboradores')->name('admin.colaboradores');
+    });
 });
 
 // Rotas catch-all (devem vir por último para não interceptar rotas do Fortify)

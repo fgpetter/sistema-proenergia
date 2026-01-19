@@ -1,0 +1,284 @@
+<?php
+
+namespace App\Livewire\Admin;
+
+use App\Enums\TipoColaborador;
+use App\Enums\TipoContrato;
+use App\Enums\UserRole;
+use App\Models\Colaborador;
+use App\Models\User;
+use App\Notifications\SendPasswordResetNotification;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+class ColaboradoresList extends Component
+{
+    use WithPagination;
+
+    #[Url(as: 'busca')]
+    public string $search = '';
+
+    #[Url(as: 'tipo')]
+    public string $tipoFilter = '';
+
+    public bool $showModal = false;
+
+    public ?int $editingId = null;
+
+    public string $nome = '';
+
+    public string $email = '';
+
+    public string $tipo = '';
+
+    public string $contrato = '';
+
+    public ?int $userId = null;
+
+    public bool $showDeleteModal = false;
+
+    public ?int $deletingId = null;
+
+    protected function rules(): array
+    {
+        $rules = [
+            'nome' => ['required', 'string', 'max:255'],
+            'tipo' => ['required', Rule::enum(TipoColaborador::class)],
+            'contrato' => ['required', Rule::enum(TipoContrato::class)],
+        ];
+
+        if ($this->editingId) {
+            $rules['userId'] = ['required', 'exists:users,id', Rule::unique('colaboradores', 'user_id')->ignore($this->editingId)];
+        } else {
+            $rules['email'] = ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')];
+        }
+
+        return $rules;
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'nome.required' => 'O nome é obrigatório.',
+            'nome.max' => 'O nome não pode ter mais de 255 caracteres.',
+            'tipo.required' => 'O tipo é obrigatório.',
+            'tipo.enum' => 'O tipo selecionado é inválido.',
+            'contrato.required' => 'O contrato é obrigatório.',
+            'contrato.enum' => 'O contrato selecionado é inválido.',
+            'email.required' => 'O e-mail é obrigatório.',
+            'email.email' => 'O e-mail deve ser um endereço válido.',
+            'email.unique' => 'Este e-mail já está em uso.',
+            'userId.required' => 'O usuário é obrigatório.',
+            'userId.exists' => 'O usuário selecionado não existe.',
+            'userId.unique' => 'Este usuário já possui um colaborador vinculado.',
+        ];
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedTipoFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    #[Computed]
+    public function colaboradores()
+    {
+        return Colaborador::query()
+            ->with('user')
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('nome', 'like', "%{$this->search}%")
+                        ->orWhereHas('user', function ($userQuery) {
+                            $userQuery->where('email', 'like', "%{$this->search}%");
+                        });
+                });
+            })
+            ->when($this->tipoFilter, function ($query) {
+                $tipo = TipoColaborador::tryFrom($this->tipoFilter);
+                if ($tipo) {
+                    $query->tipo($tipo);
+                }
+            })
+            ->orderBy('nome')
+            ->paginate(10);
+    }
+
+    #[Computed]
+    public function tipos(): array
+    {
+        return TipoColaborador::options();
+    }
+
+    #[Computed]
+    public function contratos(): array
+    {
+        return TipoContrato::options();
+    }
+
+    #[Computed]
+    public function prestadoresDisponiveis(): array
+    {
+        if ($this->editingId) {
+            $prestadores = User::query()
+                ->role(UserRole::Prestador)
+                ->whereDoesntHave('colaborador')
+                ->orderBy('name')
+                ->get();
+
+            $colaborador = Colaborador::with('user')->find($this->editingId);
+            if ($colaborador && $colaborador->user) {
+                $prestadores->push($colaborador->user);
+            }
+
+            return $prestadores->mapWithKeys(fn (User $user) => [
+                $user->id => $user->name.' ('.$user->email.')',
+            ])->toArray();
+        }
+
+        return [];
+    }
+
+    public function openCreateModal(): void
+    {
+        $this->ensureUserIsAuthorized();
+        $this->resetForm();
+        $this->editingId = null;
+        $this->email = '';
+        $this->tipo = TipoColaborador::Levantadores->value;
+        $this->contrato = TipoContrato::CLT->value;
+        $this->showModal = true;
+    }
+
+    public function openEditModal(int $colaboradorId): void
+    {
+        $this->ensureUserIsAuthorized();
+
+        $colaborador = Colaborador::with('user')->findOrFail($colaboradorId);
+
+        $this->editingId = $colaborador->id;
+        $this->nome = $colaborador->nome;
+        $this->email = $colaborador->user->email;
+        $this->tipo = $colaborador->tipo->value;
+        $this->contrato = $colaborador->contrato->value;
+        $this->userId = $colaborador->user_id;
+        $this->showModal = true;
+    }
+
+    public function save(): void
+    {
+        $this->ensureUserIsAuthorized();
+        $this->validate();
+
+        DB::transaction(function () {
+            if ($this->editingId) {
+                $colaborador = Colaborador::findOrFail($this->editingId);
+                $colaborador->update([
+                    'nome' => $this->nome,
+                    'tipo' => $this->tipo,
+                    'contrato' => $this->contrato,
+                    'user_id' => $this->userId,
+                ]);
+
+                $user = $colaborador->user;
+                if ($user && $user->name !== $this->nome) {
+                    $user->update(['name' => $this->nome]);
+                }
+
+                session()->flash('success', 'Colaborador atualizado com sucesso.');
+            } else {
+                $temporaryPassword = Str::random(32);
+                $user = User::create([
+                    'name' => $this->nome,
+                    'email' => $this->email,
+                    'password' => Hash::make($temporaryPassword),
+                    'role' => UserRole::Prestador,
+                ]);
+
+                $colaborador = Colaborador::create([
+                    'nome' => $this->nome,
+                    'tipo' => $this->tipo,
+                    'contrato' => $this->contrato,
+                    'user_id' => $user->id,
+                ]);
+
+                $user->notify(new SendPasswordResetNotification());
+                session()->flash('success', 'Colaborador criado com sucesso. Um email foi enviado para o usuário definir sua senha.');
+            }
+        });
+
+        $this->closeModal();
+    }
+
+    public function confirmDelete(int $colaboradorId): void
+    {
+        $this->ensureUserIsAuthorized();
+
+        $colaborador = Colaborador::findOrFail($colaboradorId);
+
+        $this->deletingId = $colaboradorId;
+        $this->showDeleteModal = true;
+    }
+
+    public function delete(): void
+    {
+        $this->ensureUserIsAuthorized();
+
+        if (! $this->deletingId) {
+            return;
+        }
+
+        $colaborador = Colaborador::findOrFail($this->deletingId);
+        $colaborador->delete();
+
+        session()->flash('success', 'Colaborador excluído com sucesso.');
+        $this->closeDeleteModal();
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
+
+    public function closeDeleteModal(): void
+    {
+        $this->showDeleteModal = false;
+        $this->deletingId = null;
+    }
+
+    protected function resetForm(): void
+    {
+        $this->nome = '';
+        $this->email = '';
+        $this->tipo = '';
+        $this->contrato = '';
+        $this->userId = null;
+        $this->editingId = null;
+        $this->resetValidation();
+    }
+
+    protected function ensureUserIsAuthorized(): void
+    {
+        /** @var User|null $user */
+        $user = auth()->user();
+        if (! $user || (! $user->isAdminOrSuperAdmin() && ! $user->isGestor())) {
+            abort(403, 'Você não tem permissão para acessar esta funcionalidade.');
+        }
+    }
+
+    public function render(): View
+    {
+        return view('livewire.admin.colaboradores-list');
+    }
+}

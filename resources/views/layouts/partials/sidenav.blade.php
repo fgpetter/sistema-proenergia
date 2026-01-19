@@ -31,14 +31,22 @@
                     </a>
                 </li>
 
-                @if (auth()->user()?->isAdminOrSuperAdmin())
+                @if (auth()->user()?->isAdminOrSuperAdmin() || auth()->user()?->isGestor())
                     <li class="menu-title">
                         <span>Administração</span>
                     </li>
+                    @if (auth()->user()?->isAdminOrSuperAdmin())
+                        <li class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.usuarios') ? 'active' : '' }}" href="{{ route('admin.usuarios') }}">
+                                <span class="menu-icon"><i data-lucide="users"></i></span>
+                                <div class="menu-text">Usuários</div>
+                            </a>
+                        </li>
+                    @endif
                     <li class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('admin.usuarios') ? 'active' : '' }}" href="{{ route('admin.usuarios') }}">
-                            <span class="menu-icon"><i data-lucide="users"></i></span>
-                            <div class="menu-text">Usuários</div>
+                        <a class="menu-link {{ request()->routeIs('admin.colaboradores') ? 'active' : '' }}" href="{{ route('admin.colaboradores') }}">
+                            <span class="menu-icon"><i data-lucide="user-check"></i></span>
+                            <div class="menu-text">Colaboradores</div>
                         </a>
                     </li>
                 @endif

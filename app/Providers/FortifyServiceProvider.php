@@ -39,7 +39,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn () => view('auth.boxed-login'));
         Fortify::registerView(fn () => view('auth.boxed-register'));
         Fortify::requestPasswordResetLinkView(fn () => view('auth.boxed-reset-password'));
-        Fortify::resetPasswordView(fn () => view('auth.boxed-create-password'));
+        Fortify::resetPasswordView(fn (Request $request) => view('auth.boxed-create-password', ['request' => $request]));
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
