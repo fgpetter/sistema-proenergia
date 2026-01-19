@@ -10,6 +10,8 @@ Route::redirect('/', '/painel');
 Route::group(['prefix' => '/painel', 'middleware' => 'auth'], function () {
     Route::view('/', 'painel.dashboard')->name('painel.dashboard');
 
+    Route::view('/perfil', 'profile.edit')->name('profile.edit');
+
     // Rotas de administração (apenas admin e super_admin)
     Route::group([
         'prefix' => '/admin',
