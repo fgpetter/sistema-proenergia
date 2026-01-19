@@ -4,6 +4,7 @@ alwaysApply: true
 
 ## General code instructions
 
+- Use files in the `template-src` folder as reference for UI
 - Don't add docblock comments when defining variables, unless instructed to, like `/** @var \App\Models\User $currentUser */`. Generate comments only for something that needs extra explanation for the reasons why that code was written.
 - For library documentation, if some library is not available in Laravel Boost 'search-docs', always use context7. Automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 - Every frontend change or debugging mode use Crhome DevTools MCP to check for errors.
