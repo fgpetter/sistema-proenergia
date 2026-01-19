@@ -1,13 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Enums\UserRole;
 use App\Http\Controllers\RoutingController;
+use Illuminate\Support\Facades\Route;
 
 // Rota do painel (home do sistema autenticado)
-// Route::redirect('/', '/painel');
+Route::redirect('/', '/painel');
 
-Route::group(['prefix' => '/painel','middleware' => 'auth'], function () {
+Route::group(['prefix' => '/painel', 'middleware' => 'auth'], function () {
     Route::view('/', 'painel.dashboard')->name('painel.dashboard');
+
+    // Rotas de administração (apenas admin e super_admin)
+    Route::group([
+        'prefix' => '/admin',
+        'middleware' => 'role:'.UserRole::SuperAdmin->value.','.UserRole::Admin->value,
+    ], function () {
+        Route::view('/usuarios', 'admin.usuarios')->name('admin.usuarios');
+    });
 });
 
 // Rotas catch-all (devem vir por último para não interceptar rotas do Fortify)
