@@ -2,25 +2,28 @@
 
 namespace App\Livewire\Admin;
 
-use App\Enums\TipoColaborador;
-use App\Enums\TipoContrato;
-use App\Enums\UserRole;
-use App\Models\Colaborador;
 use App\Models\User;
-use App\Notifications\SendPasswordResetNotification;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Enums\UserRole;
+use Livewire\Component;
+use App\Enums\TipoContrato;
+use App\Models\Colaborador;
 use Illuminate\Support\Str;
+use App\Helpers\SwalHelpers;
+use Livewire\Attributes\Url;
+use Livewire\WithPagination;
+use App\Enums\TipoColaborador;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
-use Livewire\Component;
-use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Hash;
+use SweetAlert2\Laravel\Traits\WithSweetAlert;
+use App\Notifications\SendPasswordResetNotification;
 
 class ColaboradoresList extends Component
 {
     use WithPagination;
+    use WithSweetAlert;
 
     #[Url(as: 'busca')]
     public string $search = '';
@@ -195,13 +198,18 @@ class ColaboradoresList extends Component
                     $user->update(['name' => $this->nome]);
                 }
 
-                session()->flash('success', 'Colaborador atualizado com sucesso.');
+                $this->swalToastSuccess([
+                    'title' => 'Salvo com sucesso!',
+                    'showConfirmButton' => false,
+                    'position' => 'top-end',
+                    'timer' => 2000,
+                ]);
+
             } else {
-                $temporaryPassword = Str::random(32);
                 $user = User::create([
                     'name' => $this->nome,
                     'email' => $this->email,
-                    'password' => Hash::make($temporaryPassword),
+                    'password' => Hash::make( Str::random(8) ),
                     'role' => UserRole::Prestador,
                 ]);
 
@@ -213,7 +221,13 @@ class ColaboradoresList extends Component
                 ]);
 
                 $user->notify(new SendPasswordResetNotification());
-                session()->flash('success', 'Colaborador criado com sucesso. Um email foi enviado para o usuário definir sua senha.');
+
+                $this->swalToastSuccess([
+                    'title' => 'Salvo com sucesso!',
+                    'showConfirmButton' => false,
+                    'position' => 'top-end',
+                    'timer' => 2000,
+                ]);
             }
         });
 
@@ -223,8 +237,6 @@ class ColaboradoresList extends Component
     public function confirmDelete(int $colaboradorId): void
     {
         $this->ensureUserIsAuthorized();
-
-        $colaborador = Colaborador::findOrFail($colaboradorId);
 
         $this->deletingId = $colaboradorId;
         $this->showDeleteModal = true;
@@ -238,10 +250,15 @@ class ColaboradoresList extends Component
             return;
         }
 
-        $colaborador = Colaborador::findOrFail($this->deletingId);
-        $colaborador->delete();
+        Colaborador::findOrFail($this->deletingId)->delete();
 
-        session()->flash('success', 'Colaborador excluído com sucesso.');
+        $this->swalToastWarning([
+            'title' => 'Excluído com sucesso!',
+            'showConfirmButton' => false,
+            'position' => 'top-end',
+            'timer' => 2000,
+        ]);
+
         $this->closeDeleteModal();
     }
 
