@@ -5,10 +5,11 @@
     @include('layouts.partials/title-meta')
 
     @include('layouts.partials/head-css')
+    @livewireStyles
 </head>
 
 <body>
-    <div class="wrapper">
+    <div div class="wrapper">
 
         @include('layouts.partials/sidenav')
 
@@ -29,6 +30,9 @@
     </div>
 
     @include('layouts.partials/customizer')
+    @livewireScripts
+    @include('sweetalert2::index')
+
 </body>
 
 </html>

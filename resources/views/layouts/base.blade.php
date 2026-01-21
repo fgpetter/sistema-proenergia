@@ -11,5 +11,6 @@
 
     @include('layouts.partials/customizer')
     @livewireScripts
+    @include('sweetalert2::index')
 </body>
 </html>
