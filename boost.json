@@ -1,10 +1,14 @@
 {
     "agents": [
-        "cursor"
+        "cursor",
+        "gemini"
     ],
     "editors": [
-        "cursor"
+        "cursor",
+        "vscode"
     ],
-    "guidelines": [],
+    "guidelines": [
+        "laravel/fortify"
+    ],
     "sail": true
 }
