@@ -61,19 +61,21 @@ class User extends Authenticatable
         }
     }
 
+    // $user->isSuperAdmin()
     public function isSuperAdmin(): bool
     {
         return $this->role === UserRole::SuperAdmin;
     }
 
+    // $user->isAdmin()
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
     }
 
-    public function isGestor(): bool
+    public function isCoordenador(): bool
     {
-        return $this->role === UserRole::Gestor;
+        return $this->role === UserRole::Coordenador;
     }
 
     public function isPrestador(): bool

@@ -8,6 +8,7 @@ enum TipoColaborador: string
     case Projetistas = 'projetistas';
     case Orcamentistas = 'orcamentistas';
     case Coordenadores = 'coordenadores';
+    case Administrativos = 'administrativos';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum TipoColaborador: string
             self::Projetistas => 'Projetistas',
             self::Orcamentistas => 'Orçamentistas',
             self::Coordenadores => 'Coordenadores',
+            self::Administrativos => 'Administrativos',
         };
     }
 
