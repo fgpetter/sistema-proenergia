@@ -2,23 +2,19 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\User;
-use App\Enums\UserRole;
-use Livewire\Component;
-use App\Enums\TipoContrato;
-use App\Models\Colaborador;
-use Illuminate\Support\Str;
-use App\Helpers\SwalHelpers;
-use Livewire\Attributes\Url;
-use Livewire\WithPagination;
+use App\Actions\CreateOrUpdateColaborador;
 use App\Enums\TipoColaborador;
+use App\Enums\TipoContrato;
+use App\Enums\UserRole;
+use App\Models\Colaborador;
+use App\Models\User;
+use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
 use SweetAlert2\Laravel\Traits\WithSweetAlert;
-use App\Notifications\SendPasswordResetNotification;
 
 class ColaboradoresList extends Component
 {
@@ -178,58 +174,38 @@ class ColaboradoresList extends Component
         $this->showModal = true;
     }
 
-    public function save(): void
+    public function save(CreateOrUpdateColaborador $action): void
     {
         $this->ensureUserIsAuthorized();
         $this->validate();
 
-        DB::transaction(function () {
-            if ($this->editingId) {
-                $colaborador = Colaborador::findOrFail($this->editingId);
-                $colaborador->update([
-                    'nome' => $this->nome,
-                    'tipo' => $this->tipo,
-                    'contrato' => $this->contrato,
-                    'user_id' => $this->userId,
-                ]);
+        $tipo = TipoColaborador::from($this->tipo);
+        $contrato = TipoContrato::from($this->contrato);
 
-                $user = $colaborador->user;
-                if ($user && $user->name !== $this->nome) {
-                    $user->update(['name' => $this->nome]);
-                }
+        if ($this->editingId) {
+            $colaborador = Colaborador::findOrFail($this->editingId);
+            $action->update(
+                $colaborador,
+                $this->nome,
+                $tipo,
+                $contrato,
+                $this->userId
+            );
+        } else {
+            $action->create(
+                $this->nome,
+                $this->email,
+                $tipo,
+                $contrato
+            );
+        }
 
-                $this->swalToastSuccess([
-                    'title' => 'Salvo com sucesso!',
-                    'showConfirmButton' => false,
-                    'position' => 'top-end',
-                    'timer' => 2000,
-                ]);
-
-            } else {
-                $user = User::create([
-                    'name' => $this->nome,
-                    'email' => $this->email,
-                    'password' => Hash::make( Str::random(8) ),
-                    'role' => UserRole::Prestador,
-                ]);
-
-                $colaborador = Colaborador::create([
-                    'nome' => $this->nome,
-                    'tipo' => $this->tipo,
-                    'contrato' => $this->contrato,
-                    'user_id' => $user->id,
-                ]);
-
-                $user->notify(new SendPasswordResetNotification());
-
-                $this->swalToastSuccess([
-                    'title' => 'Salvo com sucesso!',
-                    'showConfirmButton' => false,
-                    'position' => 'top-end',
-                    'timer' => 2000,
-                ]);
-            }
-        });
+        $this->swalToastSuccess([
+            'title' => 'Salvo com sucesso!',
+            'showConfirmButton' => false,
+            'position' => 'top-end',
+            'timer' => 2000,
+        ]);
 
         $this->closeModal();
     }

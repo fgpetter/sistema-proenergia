@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Enums\UserRole;
+
 enum TipoColaborador: string
 {
     case Levantadores = 'levantadores';
@@ -26,5 +28,16 @@ enum TipoColaborador: string
         return collect(self::cases())->mapWithKeys(fn (self $tipo) => [
             $tipo->value => $tipo->label(),
         ])->toArray();
+    }
+
+    public function toUserRole(): UserRole
+    {
+        return match ($this) {
+            self::Levantadores => UserRole::Prestador,
+            self::Projetistas => UserRole::Prestador,
+            self::Orcamentistas => UserRole::Prestador,
+            self::Coordenadores => UserRole::Coordenador,
+            self::Administrativos => UserRole::Admin,
+        };
     }
 }
