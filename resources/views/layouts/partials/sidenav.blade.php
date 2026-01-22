@@ -31,25 +31,25 @@
                     </a>
                 </li>
 
-                @if (auth()->user()?->isAdminOrSuperAdmin() || auth()->user()?->isGestor())
+                @canany(['admin', 'coordenador'])
                     <li class="menu-title">
                         <span>Administração</span>
                     </li>
-                    @if (auth()->user()?->isAdminOrSuperAdmin())
+                    @can('admin')
                         <li class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.usuarios') ? 'active' : '' }}" href="{{ route('admin.usuarios') }}">
                                 <span class="menu-icon"><i data-lucide="users"></i></span>
                                 <div class="menu-text">Usuários</div>
                             </a>
                         </li>
-                    @endif
+                    @endcan
                     <li class="menu-item">
                         <a class="menu-link {{ request()->routeIs('admin.colaboradores') ? 'active' : '' }}" href="{{ route('admin.colaboradores') }}">
                             <span class="menu-icon"><i data-lucide="user-check"></i></span>
                             <div class="menu-text">Colaboradores</div>
                         </a>
                     </li>
-                @endif
+                @endcanany
             </ul>
         </div>
     </div>

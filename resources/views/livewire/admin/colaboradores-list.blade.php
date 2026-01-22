@@ -18,10 +18,12 @@
     <div class="card">
         <div class="card-header">
             <h6 class="card-title">Gestão de Colaboradores</h6>
-            <button @click="$wire.openCreateModal()" class="btn btn-sm bg-primary text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Novo Colaborador
-            </button>
+            @can('admin')
+                <button @click="$wire.openCreateModal()" class="btn btn-sm bg-primary text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Novo Colaborador
+                </button>
+            @endcan
         </div>
         <div class="card-header">
             <div class="md:flex items-center md:space-y-0 space-y-4 gap-3 w-1/2">
@@ -61,7 +63,7 @@
                                     <th class="px-3.5 py-3 text-start" scope="col">Contrato</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Usuário</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Criado em</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Ações</th>
+                                    @can('admin') <th class="px-3.5 py-3 text-start" scope="col">Ações</th> @endcan
                                 </tr>
                             </thead>
                             <tbody>
@@ -89,6 +91,7 @@
                                         </td>
                                         <td class="py-3 px-3.5">{{ $colaborador->user->email }}</td>
                                         <td class="py-3 px-3.5">{{ $colaborador->created_at->format('d/m/Y') }}</td>
+                                        @can('admin') 
                                         <td class="px-3.5 py-3">
                                             <div class="flex items-center gap-2">
                                                 <button
@@ -109,6 +112,7 @@
                                                 </button>
                                             </div>
                                         </td>
+                                        @endcan
                                     </tr>
                                 @empty
                                     <tr>
@@ -265,20 +269,22 @@
 
                                 @if ($editingId)
                                     <div>
-                                        <label for="userId" class="block text-sm font-medium text-default-700 mb-1">Usuário</label>
-                                        <select
-                                            wire:model="userId"
-                                            id="userId"
-                                            class="form-input w-full @error('userId') border-danger @enderror"
+                                        <label for="userName" class="block text-sm font-medium text-default-700 mb-1">Usuário</label>
+                                        <input
+                                            type="text"
+                                            id="userName"
+                                            class="form-input w-full bg-default-100"
+                                            value="{{ $nome }}"
+                                            disabled
                                         >
-                                            <option value="">Selecione um usuário prestador</option>
-                                            @foreach ($this->prestadoresDisponiveis as $id => $label)
-                                                <option value="{{ $id }}">{{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('userId')
-                                            <p class="mt-1 text-sm text-danger">{{ $message }}</p>
-                                        @enderror
+                                        <label for="userEmail" class="block text-sm font-medium text-default-700 mt-3">Email</label>
+                                        <input
+                                            type="text"
+                                            id="userEmail"
+                                            class="form-input w-full bg-default-100"
+                                            value="{{ $email }}"
+                                            disabled
+                                        >
                                     </div>
                                 @else
                                     <div>

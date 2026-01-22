@@ -13,6 +13,7 @@
 /.phpunit.cache
 /.vscode
 /.zed
+/.plans
 /auth.json
 /node_modules
 /public/build
