@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\TipoColaborador;
 use App\Enums\TipoContrato;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +19,6 @@ class Colaborador extends Model
      */
     protected $fillable = [
         'nome',
-        'tipo',
         'contrato',
         'user_id',
     ];
@@ -36,7 +33,6 @@ class Colaborador extends Model
     protected function casts(): array
     {
         return [
-            'tipo' => TipoColaborador::class,
             'contrato' => TipoContrato::class,
         ];
     }
@@ -44,10 +40,5 @@ class Colaborador extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function scopeTipo(Builder $query, TipoColaborador $tipo): Builder
-    {
-        return $query->where('tipo', $tipo);
     }
 }

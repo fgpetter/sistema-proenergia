@@ -3,7 +3,6 @@
 namespace App\Livewire\Admin;
 
 use App\Actions\CreateOrUpdateColaborador;
-use App\Enums\TipoColaborador;
 use App\Enums\TipoContrato;
 use App\Enums\UserRole;
 use App\Models\Colaborador;
@@ -24,8 +23,8 @@ class ColaboradoresList extends Component
     #[Url(as: 'busca')]
     public string $search = '';
 
-    #[Url(as: 'tipo')]
-    public string $tipoFilter = '';
+    #[Url(as: 'role')]
+    public string $roleFilter = '';
 
     public bool $showModal = false;
 
@@ -35,7 +34,7 @@ class ColaboradoresList extends Component
 
     public string $email = '';
 
-    public string $tipo = '';
+    public string $role = '';
 
     public string $contrato = '';
 
@@ -49,7 +48,7 @@ class ColaboradoresList extends Component
     {
         $rules = [
             'nome' => ['required', 'string', 'max:255'],
-            'tipo' => ['required', Rule::enum(TipoColaborador::class)],
+            'role' => ['required', Rule::enum(UserRole::class), Rule::notIn([UserRole::SuperAdmin->value])],
             'contrato' => ['required', Rule::enum(TipoContrato::class)],
         ];
 
@@ -67,8 +66,8 @@ class ColaboradoresList extends Component
         return [
             'nome.required' => 'O nome é obrigatório.',
             'nome.max' => 'O nome não pode ter mais de 255 caracteres.',
-            'tipo.required' => 'O tipo é obrigatório.',
-            'tipo.enum' => 'O tipo selecionado é inválido.',
+            'role.required' => 'O perfil é obrigatório.',
+            'role.enum' => 'O perfil selecionado é inválido.',
             'contrato.required' => 'O contrato é obrigatório.',
             'contrato.enum' => 'O contrato selecionado é inválido.',
             'email.required' => 'O e-mail é obrigatório.',
@@ -85,7 +84,7 @@ class ColaboradoresList extends Component
         $this->resetPage();
     }
 
-    public function updatedTipoFilter(): void
+    public function updatedRoleFilter(): void
     {
         $this->resetPage();
     }
@@ -103,10 +102,10 @@ class ColaboradoresList extends Component
                         });
                 });
             })
-            ->when($this->tipoFilter, function ($query) {
-                $tipo = TipoColaborador::tryFrom($this->tipoFilter);
-                if ($tipo) {
-                    $query->tipo($tipo);
+            ->when($this->roleFilter, function ($query) {
+                $role = UserRole::tryFrom($this->roleFilter);
+                if ($role) {
+                    $query->whereHas('user', fn ($q) => $q->role($role));
                 }
             })
             ->orderBy('nome')
@@ -114,9 +113,9 @@ class ColaboradoresList extends Component
     }
 
     #[Computed]
-    public function tipos(): array
+    public function perfis(): array
     {
-        return TipoColaborador::options();
+        return UserRole::perfisColaborador();
     }
 
     #[Computed]
@@ -125,36 +124,13 @@ class ColaboradoresList extends Component
         return TipoContrato::options();
     }
 
-    #[Computed]
-    public function prestadoresDisponiveis(): array
-    {
-        if ($this->editingId) {
-            $prestadores = User::query()
-                ->role(UserRole::Prestador)
-                ->whereDoesntHave('colaborador')
-                ->orderBy('name')
-                ->get();
-
-            $colaborador = Colaborador::with('user')->find($this->editingId);
-            if ($colaborador && $colaborador->user) {
-                $prestadores->push($colaborador->user);
-            }
-
-            return $prestadores->mapWithKeys(fn (User $user) => [
-                $user->id => $user->name.' ('.$user->email.')',
-            ])->toArray();
-        }
-
-        return [];
-    }
-
     public function openCreateModal(): void
     {
         $this->ensureUserIsAuthorized();
         $this->resetForm();
         $this->editingId = null;
         $this->email = '';
-        $this->tipo = TipoColaborador::Levantadores->value;
+        $this->role = UserRole::Levantadores->value;
         $this->contrato = TipoContrato::CLT->value;
         $this->showModal = true;
     }
@@ -168,7 +144,7 @@ class ColaboradoresList extends Component
         $this->editingId = $colaborador->id;
         $this->nome = $colaborador->nome;
         $this->email = $colaborador->user->email;
-        $this->tipo = $colaborador->tipo->value;
+        $this->role = $colaborador->user->role->value;
         $this->contrato = $colaborador->contrato->value;
         $this->userId = $colaborador->user_id;
         $this->showModal = true;
@@ -179,7 +155,7 @@ class ColaboradoresList extends Component
         $this->ensureUserIsAuthorized();
         $this->validate();
 
-        $tipo = TipoColaborador::from($this->tipo);
+        $role = UserRole::from($this->role);
         $contrato = TipoContrato::from($this->contrato);
 
         if ($this->editingId) {
@@ -187,7 +163,7 @@ class ColaboradoresList extends Component
             $action->update(
                 $colaborador,
                 $this->nome,
-                $tipo,
+                $role,
                 $contrato,
                 $this->userId
             );
@@ -195,7 +171,7 @@ class ColaboradoresList extends Component
             $action->create(
                 $this->nome,
                 $this->email,
-                $tipo,
+                $role,
                 $contrato
             );
         }
@@ -226,7 +202,9 @@ class ColaboradoresList extends Component
             return;
         }
 
-        Colaborador::findOrFail($this->deletingId)->delete();
+        $colaborador = Colaborador::findOrFail($this->deletingId);
+        $colaborador->user->delete();
+        $colaborador->delete();
 
         $this->swalToastWarning([
             'title' => 'Excluído com sucesso!',
@@ -254,7 +232,7 @@ class ColaboradoresList extends Component
     {
         $this->nome = '';
         $this->email = '';
-        $this->tipo = '';
+        $this->role = '';
         $this->contrato = '';
         $this->userId = null;
         $this->editingId = null;
@@ -265,7 +243,7 @@ class ColaboradoresList extends Component
     {
         /** @var User|null $user */
         $user = auth()->user();
-        if (! $user || (! $user->isAdminOrSuperAdmin() && ! $user->isGestor())) {
+        if (! $user || (! $user->isAdminOrSuperAdmin() && ! $user->isCoordenador())) {
             abort(403, 'Você não tem permissão para acessar esta funcionalidade.');
         }
     }

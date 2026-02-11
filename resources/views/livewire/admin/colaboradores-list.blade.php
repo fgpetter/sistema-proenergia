@@ -40,9 +40,9 @@
                 </div>
 
                 <div class="relative w-2/5">
-                    <select wire:model.live="tipoFilter" class="form-input form-input-sm">
-                        <option value="">Todos os tipos</option>
-                        @foreach ($this->tipos as $value => $label)
+                    <select wire:model.live="roleFilter" class="form-input form-input-sm">
+                        <option value="">Todos os perfis</option>
+                        @foreach ($this->perfis as $value => $label)
                             <option value="{{ $value }}">{{ $label }}</option>
                         @endforeach
                     </select>
@@ -59,7 +59,7 @@
                                 <tr class="text-sm font-normal text-default-700 whitespace-nowrap">
                                     <th class="px-3.5 py-3 text-start" scope="col">ID</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Nome</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Tipo</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Perfil</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Contrato</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Usuário</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Criado em</th>
@@ -75,7 +75,7 @@
                                         </td>
                                         <td class="px-3.5 py-3">
                                             <span class="py-0.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium bg-primary/10 text-primary rounded">
-                                                {{ $colaborador->tipo->label() }}
+                                                {{ $colaborador->user->role->label() }}
                                             </span>
                                         </td>
                                         <td class="px-3.5 py-3">
@@ -234,18 +234,18 @@
                                 </div>
 
                                 <div>
-                                    <label for="tipo" class="block text-sm font-medium text-default-700 mb-1">Tipo</label>
+                                    <label for="role" class="block text-sm font-medium text-default-700 mb-1">Perfil</label>
                                     <select
-                                        wire:model="tipo"
-                                        id="tipo"
-                                        class="form-input w-full @error('tipo') border-danger @enderror"
+                                        wire:model="role"
+                                        id="role"
+                                        class="form-input w-full @error('role') border-danger @enderror"
                                     >
-                                        <option value="">Selecione um tipo</option>
-                                        @foreach ($this->tipos as $value => $label)
+                                        <option value="">Selecione um perfil</option>
+                                        @foreach ($this->perfis as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
                                         @endforeach
                                     </select>
-                                    @error('tipo')
+                                    @error('role')
                                         <p class="mt-1 text-sm text-danger">{{ $message }}</p>
                                     @enderror
                                 </div>

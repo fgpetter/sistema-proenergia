@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Profile;
 
-use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;

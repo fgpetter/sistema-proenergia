@@ -67,20 +67,23 @@ class User extends Authenticatable
         return $this->role === UserRole::SuperAdmin;
     }
 
-    // $user->isAdmin()
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::Admin;
+        return $this->role === UserRole::Administrativos;
     }
 
     public function isCoordenador(): bool
     {
-        return $this->role === UserRole::Coordenador;
+        return $this->role === UserRole::Coordenadores;
     }
 
     public function isPrestador(): bool
     {
-        return $this->role === UserRole::Prestador;
+        return in_array($this->role, [
+            UserRole::Levantadores,
+            UserRole::Projetistas,
+            UserRole::Orcamentistas,
+        ], true);
     }
 
     public function isAdminOrSuperAdmin(): bool
@@ -95,7 +98,7 @@ class User extends Authenticatable
 
     public function scopeAdmins(Builder $query): Builder
     {
-        return $query->whereIn('role', [UserRole::SuperAdmin, UserRole::Admin]);
+        return $query->whereIn('role', [UserRole::SuperAdmin, UserRole::Administrativos]);
     }
 
     public function colaborador(): HasOne

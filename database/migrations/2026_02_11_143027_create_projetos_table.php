@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TipoContrato;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('colaboradores', function (Blueprint $table) {
+        Schema::create('projetos', function (Blueprint $table) {
             $table->id();
             $table->string('nome', 255);
-            $table->string('tipo')->default('levantadores');
-            $table->string('contrato')->default(TipoContrato::CLT->value);
-            $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
+            $table->foreignId('colaborador_responsavel_id')
+                ->constrained('colaboradores')
+                ->onDelete('restrict');
             $table->timestamps();
+            $table->index('colaborador_responsavel_id');
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('colaboradores');
+        Schema::dropIfExists('projetos');
     }
 };

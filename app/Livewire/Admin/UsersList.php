@@ -113,7 +113,7 @@ class UsersList extends Component
         $this->ensureUserIsAuthorized();
         $this->resetForm();
         $this->editingUserId = null;
-        $this->role = UserRole::Prestador->value;
+        $this->role = UserRole::Levantadores->value;
         $this->showModal = true;
     }
 
@@ -167,7 +167,7 @@ class UsersList extends Component
             $temporaryPassword = Str::random(32);
             $data['password'] = Hash::make($temporaryPassword);
             $user = User::create($data);
-            $user->notify(new SendPasswordResetNotification());
+            $user->notify(new SendPasswordResetNotification);
             session()->flash('success', 'Usuário criado com sucesso. Um email foi enviado para o usuário definir sua senha.');
         }
 

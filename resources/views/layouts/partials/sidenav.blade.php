@@ -31,7 +31,6 @@
                     </a>
                 </li>
 
-                @canany(['admin', 'coordenador'])
                     <li class="menu-title">
                         <span>Administração</span>
                     </li>
@@ -43,13 +42,20 @@
                             </a>
                         </li>
                     @endcan
+                    @can('admin-or-coordenador')
+                        <li class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.colaboradores') ? 'active' : '' }}" href="{{ route('admin.colaboradores') }}">
+                                <span class="menu-icon"><i data-lucide="user-check"></i></span>
+                                <div class="menu-text">Colaboradores</div>
+                            </a>
+                        </li>
+                    @endcan
                     <li class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('admin.colaboradores') ? 'active' : '' }}" href="{{ route('admin.colaboradores') }}">
-                            <span class="menu-icon"><i data-lucide="user-check"></i></span>
-                            <div class="menu-text">Colaboradores</div>
+                        <a class="menu-link {{ request()->routeIs('admin.projetos') ? 'active' : '' }}" href="{{ route('admin.projetos') }}">
+                            <span class="menu-icon"><i data-lucide="briefcase"></i></span>
+                            <div class="menu-text">Projetos</div>
                         </a>
                     </li>
-                @endcanany
             </ul>
         </div>
     </div>

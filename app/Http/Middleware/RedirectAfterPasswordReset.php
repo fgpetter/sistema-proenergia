@@ -18,8 +18,8 @@ class RedirectAfterPasswordReset
     {
         $response = $next($request);
 
-        if ($request->isMethod('POST') && 
-            $request->path() === 'reset-password' && 
+        if ($request->isMethod('POST') &&
+            $request->path() === 'reset-password' &&
             Auth::check() &&
             $response->isRedirect() &&
             $response->getTargetUrl() === url('/login')) {

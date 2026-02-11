@@ -2,8 +2,8 @@
 
 namespace App\Actions;
 
-use App\Enums\TipoColaborador;
 use App\Enums\TipoContrato;
+use App\Enums\UserRole;
 use App\Models\Colaborador;
 use App\Models\User;
 use App\Notifications\SendPasswordResetNotification;
@@ -16,27 +16,24 @@ class CreateOrUpdateColaborador
     public function create(
         string $nome,
         string $email,
-        TipoColaborador $tipo,
+        UserRole $role,
         TipoContrato $contrato
     ): Colaborador {
-        return DB::transaction(function () use ($nome, $email, $tipo, $contrato) {
-            $userRole = $tipo->toUserRole();
-
+        return DB::transaction(function () use ($nome, $email, $role, $contrato) {
             $user = User::create([
                 'name' => $nome,
                 'email' => $email,
                 'password' => Hash::make(Str::random(8)),
-                'role' => $userRole,
+                'role' => $role,
             ]);
 
             $colaborador = Colaborador::create([
                 'nome' => $nome,
-                'tipo' => $tipo,
                 'contrato' => $contrato,
                 'user_id' => $user->id,
             ]);
 
-            $user->notify(new SendPasswordResetNotification());
+            $user->notify(new SendPasswordResetNotification);
 
             return $colaborador;
         });
@@ -45,25 +42,23 @@ class CreateOrUpdateColaborador
     public function update(
         Colaborador $colaborador,
         string $nome,
-        TipoColaborador $tipo,
+        UserRole $role,
         TipoContrato $contrato,
         int $userId
     ): Colaborador {
-        return DB::transaction(function () use ($colaborador, $nome, $tipo, $contrato, $userId) {
+        return DB::transaction(function () use ($colaborador, $nome, $role, $contrato, $userId) {
             $colaborador->update([
                 'nome' => $nome,
-                'tipo' => $tipo,
                 'contrato' => $contrato,
                 'user_id' => $userId,
             ]);
 
             $user = $colaborador->user;
             if ($user) {
-                $userRole = $tipo->toUserRole();
                 $updateData = ['name' => $nome];
 
-                if ($user->role !== $userRole) {
-                    $updateData['role'] = $userRole;
+                if ($user->role !== $role) {
+                    $updateData['role'] = $role;
                 }
 
                 $user->update($updateData);

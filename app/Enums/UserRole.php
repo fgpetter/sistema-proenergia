@@ -5,17 +5,21 @@ namespace App\Enums;
 enum UserRole: string
 {
     case SuperAdmin = 'super_admin';
-    case Admin = 'admin';
-    case Coordenador = 'coordenador';
-    case Prestador = 'prestador';
+    case Levantadores = 'levantadores';
+    case Projetistas = 'projetistas';
+    case Orcamentistas = 'orcamentistas';
+    case Coordenadores = 'coordenadores';
+    case Administrativos = 'administrativos';
 
     public function label(): string
     {
         return match ($this) {
             self::SuperAdmin => 'Super Admin',
-            self::Admin => 'Admin',
-            self::Coordenador => 'Coordenador',
-            self::Prestador => 'Prestador',
+            self::Levantadores => 'Levantadores',
+            self::Projetistas => 'Projetistas',
+            self::Orcamentistas => 'Orçamentistas',
+            self::Coordenadores => 'Coordenadores',
+            self::Administrativos => 'Administrativos',
         };
     }
 
@@ -23,9 +27,9 @@ enum UserRole: string
     {
         return match ($this) {
             self::SuperAdmin => 'danger',
-            self::Admin => 'warning',
-            self::Coordenador => 'primary',
-            self::Prestador => 'success',
+            self::Administrativos => 'warning',
+            self::Coordenadores => 'primary',
+            self::Levantadores, self::Projetistas, self::Orcamentistas => 'success',
         };
     }
 
@@ -34,5 +38,13 @@ enum UserRole: string
         return collect(self::cases())->mapWithKeys(fn (self $role) => [
             $role->value => $role->label(),
         ])->toArray();
+    }
+
+    public static function perfisColaborador(): array
+    {
+        return collect(self::cases())
+            ->filter(fn (self $role) => $role !== self::SuperAdmin)
+            ->mapWithKeys(fn (self $role) => [$role->value => $role->label()])
+            ->toArray();
     }
 }
