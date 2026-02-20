@@ -4,7 +4,8 @@ alwaysApply: true
 
 ## General code instructions
 
-- Use files in the `template-src` folder as reference for UI
+- Use files in the `resource/views` folder as reference for UI
+- Always search in `resource/views/components/ui` for reusable components, such as buttons, alerts, icons, etc. before creating. If not exists, create a new reusable UI component.
 - Don't add docblock comments when defining variables, unless instructed to, like `/** @var \App\Models\User $currentUser */`. Generate comments only for something that needs extra explanation for the reasons why that code was written.
 - For library documentation, if some library is not available in Laravel Boost 'search-docs', always use context7. Automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 - Every frontend change or debugging mode use Crhome DevTools MCP to check for errors.
@@ -46,6 +47,8 @@ alwaysApply: true
 ## Testing instructions
 
 ### Before Writing Tests
+
+  0. **Only write tests if specified in plan or asked for**
 
   1. **Check database schema** - Use `database-schema` tool to understand:
      - Which columns have defaults
