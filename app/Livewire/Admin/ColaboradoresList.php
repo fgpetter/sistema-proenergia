@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Admin;
 
-use App\Actions\CreateOrUpdateColaborador;
 use App\Enums\TipoContrato;
 use App\Enums\UserRole;
 use App\Models\Colaborador;
@@ -25,10 +24,6 @@ class ColaboradoresList extends Component
 
     #[Url(as: 'role')]
     public string $roleFilter = '';
-
-    public bool $showDeleteModal = false;
-
-    public ?int $deletingId = null;
 
     public function updatedSearch(): void
     {
@@ -93,12 +88,23 @@ class ColaboradoresList extends Component
         $this->dispatch('open-colaborador-modal', colaboradorId: $colaboradorId)->to(ColaboradorForm::class);
     }
 
+    public ?int $deletingId = null;
+
     public function confirmDelete(int $colaboradorId): void
     {
         $this->authorize('create', Projeto::class);
-
         $this->deletingId = $colaboradorId;
-        $this->showDeleteModal = true;
+
+        $componentId = $this->getId();
+        $this->swalFire([
+            'title' => 'Excluir colaborador?',
+            'text' => 'Tem certeza que deseja excluir este colaborador? Esta ação não pode ser desfeita.',
+            'icon' => 'warning',
+            'showCancelButton' => true,
+            'confirmButtonText' => 'Sim, excluir',
+            'cancelButtonText' => 'Cancelar',
+            'preConfirm' => "() => Livewire.find('{$componentId}').\$call('delete')",
+        ]);
     }
 
     public function delete(): void
@@ -112,6 +118,7 @@ class ColaboradoresList extends Component
         $colaborador = Colaborador::findOrFail($this->deletingId);
         $colaborador->user->delete();
         $colaborador->delete();
+        $this->deletingId = null;
 
         $this->swalToastWarning([
             'title' => 'Excluído com sucesso!',
@@ -119,14 +126,6 @@ class ColaboradoresList extends Component
             'position' => 'top-end',
             'timer' => 2000,
         ]);
-
-        $this->closeDeleteModal();
-    }
-
-    public function closeDeleteModal(): void
-    {
-        $this->showDeleteModal = false;
-        $this->deletingId = null;
     }
 
     public function render(): View

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole;
-use App\Models\Colaborador;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -22,8 +21,5 @@ class DatabaseSeeder extends Seeder
             'role' => UserRole::SuperAdmin,
         ]);
 
-        Colaborador::factory()->count(10)->create();
-        Colaborador::factory()->coordenador()->count(2)->create();
-        Colaborador::factory()->administrativo()->count(2)->create();
     }
 }

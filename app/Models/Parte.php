@@ -19,6 +19,8 @@ class Parte extends Model
         'extensao_projeto',
         'postes_desenhados',
         'postes_projetados',
+        'data_hora_inicio',
+        'data_hora_fim',
     ];
 
     protected function casts(): array
@@ -28,6 +30,8 @@ class Parte extends Model
             'extensao_projeto' => 'integer',
             'postes_desenhados' => 'integer',
             'postes_projetados' => 'integer',
+            'data_hora_inicio' => 'datetime',
+            'data_hora_fim' => 'datetime',
         ];
     }
 

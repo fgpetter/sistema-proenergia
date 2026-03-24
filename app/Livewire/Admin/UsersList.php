@@ -14,10 +14,12 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use SweetAlert2\Laravel\Traits\WithSweetAlert;
 
 class UsersList extends Component
 {
     use WithPagination;
+    use WithSweetAlert;
 
     #[Url(as: 'busca')]
     public string $search = '';
@@ -36,10 +38,6 @@ class UsersList extends Component
     public string $password = '';
 
     public string $role = '';
-
-    public bool $showDeleteModal = false;
-
-    public ?int $deletingUserId = null;
 
     protected function rules(): array
     {
@@ -174,6 +172,8 @@ class UsersList extends Component
         $this->closeModal();
     }
 
+    public ?int $deletingUserId = null;
+
     public function confirmDelete(int $userId): void
     {
         $this->ensureUserIsAuthorized();
@@ -187,7 +187,17 @@ class UsersList extends Component
         }
 
         $this->deletingUserId = $userId;
-        $this->showDeleteModal = true;
+
+        $componentId = $this->getId();
+        $this->swalFire([
+            'title' => 'Excluir usuário?',
+            'text' => 'Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.',
+            'icon' => 'warning',
+            'showCancelButton' => true,
+            'confirmButtonText' => 'Sim, excluir',
+            'cancelButtonText' => 'Cancelar',
+            'preConfirm' => "() => Livewire.find('{$componentId}').\$call('delete')",
+        ]);
     }
 
     public function delete(): void
@@ -202,35 +212,20 @@ class UsersList extends Component
 
         if (! $this->canDeleteUser($user)) {
             session()->flash('error', 'Você não tem permissão para excluir este usuário.');
-            $this->closeDeleteModal();
-
-            return;
-        }
-
-        /** @var User $currentUser */
-        $currentUser = auth()->user();
-        if ($user->id === $currentUser->id) {
-            session()->flash('error', 'Você não pode excluir sua própria conta.');
-            $this->closeDeleteModal();
+            $this->deletingUserId = null;
 
             return;
         }
 
         $user->delete();
+        $this->deletingUserId = null;
         session()->flash('success', 'Usuário excluído com sucesso.');
-        $this->closeDeleteModal();
     }
 
     public function closeModal(): void
     {
         $this->showModal = false;
         $this->resetForm();
-    }
-
-    public function closeDeleteModal(): void
-    {
-        $this->showDeleteModal = false;
-        $this->deletingUserId = null;
     }
 
     protected function resetForm(): void
