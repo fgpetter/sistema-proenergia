@@ -1,6 +1,3 @@
----
-alwaysApply: true
----
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -199,7 +196,6 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Use the `vendor/bin/sail artisan make:livewire [Posts\CreatePost]` Artisan command to create new components.
 - State should live on the server, with the UI reflecting it.
 - All Livewire requests hit the Laravel backend; they're like regular HTTP requests. Always validate form data and run authorization checks in Livewire actions.
-- Prefer **Alpine.js** for frontend-only interactions that do not need to load or persist data from the server (e.g. toggles, accordions, open/close modals, purely local menus). That keeps behavior in the browser and avoids unnecessary Livewire roundtrips. Use Livewire when the UI must reflect or change server-side state.
 
 ## Livewire Best Practices
 - Livewire components require a single root element.
@@ -248,18 +244,18 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 ## PHPUnit
 
-- **Never run unit or feature tests** (`vendor/bin/sail artisan test`, invoking PHPUnit directly, or equivalent) **unless the user explicitly requests it in the prompt** (e.g. "run the tests", "rodar os testes", "execute the suite", "verify with tests"). You may *suggest* that the user run tests; you must not execute them without that explicit instruction.
 - This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `vendor/bin/sail artisan make:test --phpunit {name}` to create a new test.
 - If you see a test using "Pest", convert it to PHPUnit.
-- When the user **does** explicitly ask you to run tests: prefer the **smallest** useful scope first (single file or `--filter`) unless they asked for the full suite. If a narrow run passes and they did not ask for the full suite, you may offer running the entire suite — still only run the full suite if they confirm or asked for it.
+- Every time a test has been updated, run that singular test.
+- When the tests relating to your feature are passing, ask the user if they would like to also run the entire test suite to make sure everything is still passing.
 - Tests should test all of the happy paths, failure paths, and weird paths.
 - You must not remove any tests or test files from the tests directory without approval. These are not temporary or helper files; these are core to the application.
 
-### Running Tests (only after explicit user request)
-
+### Running Tests
+- Run the minimal number of tests, using an appropriate filter, before finalizing.
 - To run all tests: `vendor/bin/sail artisan test --compact`.
 - To run all tests in a file: `vendor/bin/sail artisan test --compact tests/Feature/ExampleTest.php`.
-- To filter on a particular test name: `vendor/bin/sail artisan test --compact --filter=testName`.
+- To filter on a particular test name: `vendor/bin/sail artisan test --compact --filter=testName` (recommended after making a change to a related file).
 
 === tailwindcss/core rules ===
 
