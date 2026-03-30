@@ -211,6 +211,33 @@
                                                         </div>
                                                     </div>
 
+                                                    <div class="grid grid-cols-2 gap-2">
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-default-700 mb-1">Postes Desenhados</label>
+                                                            <input
+                                                                wire:model.blur="partes.{{ $index }}.postes_desenhados"
+                                                                type="number"
+                                                                min="0"
+                                                                class="form-input w-full text-sm @error('partes.'.$index.'.postes_desenhados') border-danger @enderror"
+                                                            >
+                                                            @error('partes.'.$index.'.postes_desenhados')
+                                                                <p class="mt-1 text-xs text-danger">{{ $message }}</p>
+                                                            @enderror
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-default-700 mb-1">Postes Projetados</label>
+                                                            <input
+                                                                wire:model.blur="partes.{{ $index }}.postes_projetados"
+                                                                type="number"
+                                                                min="0"
+                                                                class="form-input w-full text-sm @error('partes.'.$index.'.postes_projetados') border-danger @enderror"
+                                                            >
+                                                            @error('partes.'.$index.'.postes_projetados')
+                                                                <p class="mt-1 text-xs text-danger">{{ $message }}</p>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+
                                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Data e hora início</label>
@@ -251,32 +278,6 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="grid grid-cols-2 gap-2">
-                                                        <div>
-                                                            <label class="block text-sm font-medium text-default-700 mb-1">Postes Desenhados</label>
-                                                            <input
-                                                                wire:model.blur="partes.{{ $index }}.postes_desenhados"
-                                                                type="number"
-                                                                min="0"
-                                                                class="form-input w-full text-sm @error('partes.'.$index.'.postes_desenhados') border-danger @enderror"
-                                                            >
-                                                            @error('partes.'.$index.'.postes_desenhados')
-                                                                <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                                                            @enderror
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-sm font-medium text-default-700 mb-1">Postes Projetados</label>
-                                                            <input
-                                                                wire:model.blur="partes.{{ $index }}.postes_projetados"
-                                                                type="number"
-                                                                min="0"
-                                                                class="form-input w-full text-sm @error('partes.'.$index.'.postes_projetados') border-danger @enderror"
-                                                            >
-                                                            @error('partes.'.$index.'.postes_projetados')
-                                                                <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
 
                                                     <!-- Totais (Read-only) -->
                                                     <div class="bg-primary/5 border border-primary/20 rounded p-2 mt-2">
