@@ -15,6 +15,9 @@ Route::group(['prefix' => '/painel', 'middleware' => 'auth'], function () {
         Route::view('/usuarios', 'admin.usuarios')->name('admin.usuarios')->can('admin');
         Route::view('/colaboradores', 'admin.colaboradores')->name('admin.colaboradores')->can('admin-or-coordenador');
         Route::view('/projetos', 'admin.projetos')->name('admin.projetos');
+        Route::view('/relatorio-colaboradores', 'admin.relatorio-colaboradores')
+            ->name('admin.relatorio-colaboradores')
+            ->can('admin-or-coordenador');
     });
 
 });
