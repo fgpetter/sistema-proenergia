@@ -1,13 +1,23 @@
 <?php
 
+use App\Http\Controllers\Painel\DashboardController;
 use App\Http\Controllers\RoutingController;
+use App\Support\PainelHome;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Rota do painel (home do sistema autenticado)
-Route::redirect('/', '/painel');
+Route::get('/', function () {
+    if (! Auth::check()) {
+        return redirect('/login');
+    }
+
+    return redirect(PainelHome::routeFor(Auth::user()));
+});
 
 Route::group(['prefix' => '/painel', 'middleware' => 'auth'], function () {
-    Route::view('/', 'painel.dashboard')->name('painel.dashboard');
+    Route::get('/', [DashboardController::class, 'index'])
+        ->name('painel.dashboard')
+        ->can('admin-or-coordenador');
 
     Route::view('/perfil', 'profile.edit')->name('profile.edit');
 

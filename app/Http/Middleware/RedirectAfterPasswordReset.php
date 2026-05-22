@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\PainelHome;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,7 @@ class RedirectAfterPasswordReset
             Auth::check() &&
             $response->isRedirect() &&
             $response->getTargetUrl() === url('/login')) {
-            return redirect()->route('painel.dashboard');
+            return redirect(PainelHome::routeFor(Auth::user()));
         }
 
         return $response;

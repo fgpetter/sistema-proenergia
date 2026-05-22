@@ -99,6 +99,7 @@
                     <div
                         class="lg:col-span-7 bg-card/60 mx-2 my-2 shadow-[0_14px_15px_-3px_#f1f5f9,0_4px_6px_-4px_#f1f5f9] dark:shadow-none rounded-lg">
                         <div class="pt-10 px-10 h-full">
+                            <h4 class="text-center text-2xl font-bold uppercase">SGP - Controle de Projeto e Produtividade</h4>
                             <div class="mt-auto">
                                 <img alt="Proenergia" src="{{ asset('images/logo_proenergia_grande.png') }}"/>
                             </div>

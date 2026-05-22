@@ -112,8 +112,10 @@
                                     <th class="px-3.5 py-3 text-start" scope="col">Projetos</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Extensão de desenho</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Extensão de projeto</th>
+                                    <th class="px-3.5 py-3 text-start bg-blue-50" scope="col">Extensão total</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Postes desenhados</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Postes projetados</th>
+                                    <th class="px-3.5 py-3 text-start bg-blue-50" scope="col">Postes total</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Horas</th>
                                 </tr>
                             </thead>
@@ -129,8 +131,10 @@
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_projetos }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_desenho }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_projeto }}</td>
+                                        <td class="px-3.5 py-3 bg-blue-50">{{ (int) $colaborador->total_extensao_desenho + (int) $colaborador->total_extensao_projeto }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_desenhados }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_projetados }}</td>
+                                        <td class="px-3.5 py-3 bg-blue-50">{{ (int) $colaborador->total_postes_desenhados + (int) $colaborador->total_postes_projetados }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $interval->totalHours }}h {{ $interval->minutes }}min</td>
                                     </tr>
                                 @empty

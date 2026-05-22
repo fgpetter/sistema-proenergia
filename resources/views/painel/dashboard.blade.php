@@ -7,7 +7,6 @@ data-sidenav-color="dark"
 @endsection
 
 @section('content')
-    {{-- @include('layouts.partials/page-title', ['subtitle' => 'Menu', 'title' => 'Dashboard'] ) --}}
     @include('layouts.partials/page-title', ['title' => 'Dashboard'] )
 
     <div class="grid lg:grid-cols-5 grid-cols-1 gap-5 mb-5">
@@ -15,42 +14,45 @@ data-sidenav-color="dark"
             <div class="card bg-blue-100">
                 <div class="card-body">
                     <p class="text-base text-default-500 font-medium">Numero total de projetos</p>
-                    <h5 class="text-3xl font-medium mt-4">128</h5>
+                    <h5 class="text-3xl font-medium mt-4">{{ $totais->totalProjetos }}</h5>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-body bg-orange-100">
                     <p class="text-base text-default-500 font-medium">Extensao de desenho</p>
-                    <h5 class="text-3xl font-medium mt-4">24.560 m</h5>
+                    <h5 class="text-3xl font-medium mt-4">{{ (int) $totais->totalExtensaoDesenho }}</h5>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-body bg-orange-100">
                     <p class="text-base text-default-500 font-medium">Extensao de projeto</p>
-                    <h5 class="text-3xl font-medium mt-4">19.740 m</h5>
+                    <h5 class="text-3xl font-medium mt-4">{{ (int) $totais->totalExtensaoProjeto }}</h5>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-body bg-rose-100">
                     <p class="text-base text-default-500 font-medium">Postes desenhados</p>
-                    <h5 class="text-3xl font-medium mt-4">3.420</h5>
+                    <h5 class="text-3xl font-medium mt-4">{{ (int) $totais->totalPostesDesenhados }}</h5>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-body bg-rose-100">
                     <p class="text-base text-default-500 font-medium">Postes projetados</p>
-                    <h5 class="text-3xl font-medium mt-4">2.980</h5>
+                    <h5 class="text-3xl font-medium mt-4">{{ (int) $totais->totalPostesProjetados }}</h5>
                 </div>
             </div>
 
             <div class="card bg-green-100">
                 <div class="card-body">
                     <p class="text-base text-default-500 font-medium ">Total de Horas reportadas</p>
-                    <h5 class="text-3xl font-medium mt-4">1.256 h</h5>
+                    @php
+                        $intervalTotais = \Carbon\CarbonInterval::seconds((int) $totais->totalSegundos)->cascade();
+                    @endphp
+                    <h5 class="text-3xl font-medium mt-4">{{ (int) $intervalTotais->totalHours }}h {{ $intervalTotais->minutes }}min</h5>
                 </div>
             </div>
         </div>
@@ -75,51 +77,26 @@ data-sidenav-color="dark"
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-default-200">
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Ana Luiza Gomes</td>
-                                    <td class="px-3.5 py-3">12</td>
-                                    <td class="px-3.5 py-3">4.280 m</td>
-                                    <td class="px-3.5 py-3">3.910 m</td>
-                                    <td class="px-3.5 py-3">560</td>
-                                    <td class="px-3.5 py-3">521</td>
-                                    <td class="px-3.5 py-3">218 h</td>
-                                </tr>
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Carlos Eduardo Lima</td>
-                                    <td class="px-3.5 py-3">9</td>
-                                    <td class="px-3.5 py-3">3.960 m</td>
-                                    <td class="px-3.5 py-3">3.540 m</td>
-                                    <td class="px-3.5 py-3">498</td>
-                                    <td class="px-3.5 py-3">467</td>
-                                    <td class="px-3.5 py-3">193 h</td>
-                                </tr>
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Fernanda Ribeiro</td>
-                                    <td class="px-3.5 py-3">11</td>
-                                    <td class="px-3.5 py-3">4.710 m</td>
-                                    <td class="px-3.5 py-3">4.280 m</td>
-                                    <td class="px-3.5 py-3">622</td>
-                                    <td class="px-3.5 py-3">593</td>
-                                    <td class="px-3.5 py-3">246 h</td>
-                                </tr>
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Marcos Vinicius Santos</td>
-                                    <td class="px-3.5 py-3">8</td>
-                                    <td class="px-3.5 py-3">3.340 m</td>
-                                    <td class="px-3.5 py-3">3.020 m</td>
-                                    <td class="px-3.5 py-3">442</td>
-                                    <td class="px-3.5 py-3">410</td>
-                                    <td class="px-3.5 py-3">171 h</td>
-                                </tr>
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Priscila Almeida</td>
-                                    <td class="px-3.5 py-3">10</td>
-                                    <td class="px-3.5 py-3">4.120 m</td>
-                                    <td class="px-3.5 py-3">3.770 m</td>
-                                    <td class="px-3.5 py-3">535</td>
-                                    <td class="px-3.5 py-3">499</td>
-                                    <td class="px-3.5 py-3">209 h</td>
-                                </tr>
+                                @forelse ($produtividadeColaboradores as $colaborador)
+                                    @php
+                                        $interval = \Carbon\CarbonInterval::seconds((int) $colaborador->total_segundos)->cascade();
+                                    @endphp
+                                    <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
+                                        <td class="px-3.5 py-3">{{ $colaborador->nome }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_projetos }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_desenho }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_projeto }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_desenhados }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_projetados }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $interval->totalHours }}h {{ $interval->minutes }}min</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="px-3.5 py-8 text-center text-default-500">
+                                            Nenhum colaborador com partes registradas foi encontrado.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -148,46 +125,32 @@ data-sidenav-color="dark"
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-default-200">
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Projeto Linha Norte</td>
-                                    <td class="px-3.5 py-3">4.250 m</td>
-                                    <td class="px-3.5 py-3">3.980 m</td>
-                                    <td class="px-3.5 py-3">540</td>
-                                    <td class="px-3.5 py-3">490</td>
-                                    <td class="px-3.5 py-3">214 h</td>
-                                </tr>
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Projeto Serra Azul</td>
-                                    <td class="px-3.5 py-3">5.120 m</td>
-                                    <td class="px-3.5 py-3">4.760 m</td>
-                                    <td class="px-3.5 py-3">710</td>
-                                    <td class="px-3.5 py-3">664</td>
-                                    <td class="px-3.5 py-3">286 h</td>
-                                </tr>
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Projeto Vale Verde</td>
-                                    <td class="px-3.5 py-3">3.640 m</td>
-                                    <td class="px-3.5 py-3">3.215 m</td>
-                                    <td class="px-3.5 py-3">458</td>
-                                    <td class="px-3.5 py-3">420</td>
-                                    <td class="px-3.5 py-3">172 h</td>
-                                </tr>
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Projeto Rota Oeste</td>
-                                    <td class="px-3.5 py-3">6.030 m</td>
-                                    <td class="px-3.5 py-3">5.780 m</td>
-                                    <td class="px-3.5 py-3">820</td>
-                                    <td class="px-3.5 py-3">788</td>
-                                    <td class="px-3.5 py-3">331 h</td>
-                                </tr>
-                                <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
-                                    <td class="px-3.5 py-3">Projeto Parque Sul</td>
-                                    <td class="px-3.5 py-3">2.910 m</td>
-                                    <td class="px-3.5 py-3">2.640 m</td>
-                                    <td class="px-3.5 py-3">392</td>
-                                    <td class="px-3.5 py-3">361</td>
-                                    <td class="px-3.5 py-3">143 h</td>
-                                </tr>
+                                @forelse ($estatisticasProjetos as $projeto)
+                                    @php
+                                        $intervalProjeto = \Carbon\CarbonInterval::seconds((int) $projeto->total_segundos)->cascade();
+                                    @endphp
+                                    <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
+                                        <td class="px-3.5 py-3">
+                                            <div class="hs-tooltip [--placement:right]">
+                                                    <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-30 py-1 px-2 bg-default-900 text-xs font-medium text-default-100 rounded-md shadow-2xs" role="tooltip">
+                                                        {{ $projeto->nome }}
+                                                    </span>
+                                                {{ \Illuminate\Support\Str::limit($projeto->nome, 50) }}
+                                            </div>
+                                        </td>
+                                        <td class="px-3.5 py-3">{{ (int) $projeto->total_extensao_desenho }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $projeto->total_extensao_projeto }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $projeto->total_postes_desenhados }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $projeto->total_postes_projetados }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $intervalProjeto->totalHours }}h {{ $intervalProjeto->minutes }}min</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-3.5 py-8 text-center text-default-500">
+                                            Nenhum projeto cadastrado foi encontrado.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
