@@ -188,7 +188,7 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Extensão Desenho (m)</label>
                                                             <input
-                                                                wire:model.blur="partes.{{ $index }}.extensao_desenho"
+                                                                wire:model.live="partes.{{ $index }}.extensao_desenho"
                                                                 type="number"
                                                                 min="0"
                                                                 class="form-input w-full text-sm @error('partes.'.$index.'.extensao_desenho') border-danger @enderror"
@@ -200,7 +200,7 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Extensão Projeto (m)</label>
                                                             <input
-                                                                wire:model.blur="partes.{{ $index }}.extensao_projeto"
+                                                                wire:model.live="partes.{{ $index }}.extensao_projeto"
                                                                 type="number"
                                                                 min="0"
                                                                 class="form-input w-full text-sm @error('partes.'.$index.'.extensao_projeto') border-danger @enderror"
@@ -215,7 +215,7 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Postes Desenhados</label>
                                                             <input
-                                                                wire:model.blur="partes.{{ $index }}.postes_desenhados"
+                                                                wire:model.live="partes.{{ $index }}.postes_desenhados"
                                                                 type="number"
                                                                 min="0"
                                                                 class="form-input w-full text-sm @error('partes.'.$index.'.postes_desenhados') border-danger @enderror"
@@ -227,7 +227,7 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Postes Projetados</label>
                                                             <input
-                                                                wire:model.blur="partes.{{ $index }}.postes_projetados"
+                                                                wire:model.live="partes.{{ $index }}.postes_projetados"
                                                                 type="number"
                                                                 min="0"
                                                                 class="form-input w-full text-sm @error('partes.'.$index.'.postes_projetados') border-danger @enderror"
@@ -236,6 +236,21 @@
                                                                 <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                             @enderror
                                                         </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-default-700 mb-1">Tipo de Projeto</label>
+                                                        <select
+                                                            wire:model.live="partes.{{ $index }}.tipo_projeto"
+                                                            class="form-input w-full text-sm @error('partes.'.$index.'.tipo_projeto') border-danger @enderror"
+                                                        >
+                                                            @foreach ($this->tiposProjetoDisponiveis as $tipoValue => $tipoLabel)
+                                                                <option value="{{ $tipoValue }}">{{ $tipoLabel }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        @error('partes.'.$index.'.tipo_projeto')
+                                                            <p class="mt-1 text-xs text-danger">{{ $message }}</p>
+                                                        @enderror
                                                     </div>
 
                                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">

@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Actions\CreateOrUpdateParte;
 use App\Actions\CreateOrUpdateProjeto;
+use App\Enums\TipoProjetoParte;
 use App\Enums\UserRole;
 use App\Models\Colaborador;
 use App\Models\Parte;
@@ -13,6 +14,7 @@ use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -61,6 +63,7 @@ class ProjetoEditDrawer extends Component
             'partes.*.extensao_projeto' => ['required', 'integer', 'min:0'],
             'partes.*.postes_desenhados' => ['required', 'integer', 'min:0'],
             'partes.*.postes_projetados' => ['required', 'integer', 'min:0'],
+            'partes.*.tipo_projeto' => ['required', Rule::enum(TipoProjetoParte::class)],
             'partes.*.data_hora_inicio' => ['nullable', 'string', 'max:32'],
             'partes.*.data_hora_fim' => ['nullable', 'string', 'max:32'],
         ];
@@ -76,6 +79,7 @@ class ProjetoEditDrawer extends Component
             'partes.*.extensao_projeto.required' => 'A extensão de projeto é obrigatória.',
             'partes.*.postes_desenhados.required' => 'O número de postes desenhados é obrigatório.',
             'partes.*.postes_projetados.required' => 'O número de postes projetados é obrigatório.',
+            'partes.*.tipo_projeto.required' => 'O tipo de projeto é obrigatório.',
         ];
     }
 
@@ -121,6 +125,7 @@ class ProjetoEditDrawer extends Component
             'extensao_projeto' => $parteData['extensao_projeto'],
             'postes_desenhados' => $parteData['postes_desenhados'],
             'postes_projetados' => $parteData['postes_projetados'],
+            'tipo_projeto' => $parteData['tipo_projeto'] ?? TipoProjetoParte::Cad->value,
             'data_hora_inicio' => $parteData['data_hora_inicio'] ?? '',
             'data_hora_fim' => $parteData['data_hora_fim'] ?? '',
         ];
@@ -152,6 +157,7 @@ class ProjetoEditDrawer extends Component
             'extensao_projeto' => $parte->extensao_projeto,
             'postes_desenhados' => $parte->postes_desenhados,
             'postes_projetados' => $parte->postes_projetados,
+            'tipo_projeto' => $parte->tipo_projeto?->value ?? TipoProjetoParte::Cad->value,
             'data_hora_inicio' => $parte->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
             'data_hora_fim' => $parte->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
             '_delete' => false,
@@ -160,6 +166,31 @@ class ProjetoEditDrawer extends Component
         $this->syncPartesDatetimesToParallel();
 
         $this->showDrawer = true;
+    }
+
+    protected function refreshPartesFromProjeto(): void
+    {
+        if (! $this->editingProjetoId) {
+            return;
+        }
+
+        $projeto = Projeto::with('partes')->findOrFail($this->editingProjetoId);
+
+        $this->partes = $projeto->partes->map(fn (Parte $parte) => [
+            'id' => $parte->id,
+            'nome' => $parte->nome,
+            'colaborador_id' => $parte->colaborador_id,
+            'extensao_desenho' => $parte->extensao_desenho,
+            'extensao_projeto' => $parte->extensao_projeto,
+            'postes_desenhados' => $parte->postes_desenhados,
+            'postes_projetados' => $parte->postes_projetados,
+            'tipo_projeto' => $parte->tipo_projeto?->value ?? TipoProjetoParte::Cad->value,
+            'data_hora_inicio' => $parte->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
+            'data_hora_fim' => $parte->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
+            '_delete' => false,
+        ])->toArray();
+
+        $this->syncPartesDatetimesToParallel();
     }
 
     #[Computed]
@@ -198,6 +229,15 @@ class ProjetoEditDrawer extends Component
             ->toArray();
     }
 
+    /**
+     * @return array<string, string>
+     */
+    #[Computed]
+    public function tiposProjetoDisponiveis(): array
+    {
+        return TipoProjetoParte::options();
+    }
+
     public function addParte(CreateOrUpdateProjeto $projetoAction): void
     {
         $this->authorize('create', Parte::class);
@@ -234,6 +274,7 @@ class ProjetoEditDrawer extends Component
             'extensao_projeto' => 0,
             'postes_desenhados' => 0,
             'postes_projetados' => 0,
+            'tipo_projeto' => TipoProjetoParte::Cad->value,
             'data_hora_inicio' => '',
             'data_hora_fim' => '',
             '_delete' => false,
@@ -274,6 +315,7 @@ class ProjetoEditDrawer extends Component
             "partes.{$index}.extensao_projeto" => ['required', 'integer', 'min:0'],
             "partes.{$index}.postes_desenhados" => ['required', 'integer', 'min:0'],
             "partes.{$index}.postes_projetados" => ['required', 'integer', 'min:0'],
+            "partes.{$index}.tipo_projeto" => ['required', Rule::enum(TipoProjetoParte::class)],
             "partes.{$index}.data_hora_inicio" => ['nullable', 'string', 'max:32'],
             "partes.{$index}.data_hora_fim" => ['nullable', 'string', 'max:32'],
         ]);
@@ -319,6 +361,8 @@ class ProjetoEditDrawer extends Component
                 $this->partesDataHoraFim[$index] = '';
             }
         });
+
+        $this->refreshPartesFromProjeto();
 
         $this->swalToastSuccess([
             'title' => 'Parte salva!',
@@ -372,6 +416,7 @@ class ProjetoEditDrawer extends Component
         }
 
         $this->removingParteIndex = null;
+        $this->refreshPartesFromProjeto();
 
         $this->swalToastWarning([
             'title' => 'Parte removida!',

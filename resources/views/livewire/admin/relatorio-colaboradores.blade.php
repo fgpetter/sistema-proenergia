@@ -88,14 +88,14 @@
                     </select>
                 </div>
 
-                <div class="col-span-1">
-                    <label class="mb-1 block text-sm font-medium text-default-700">Data início</label>
-                    <input type="date" wire:model.live="dataInicio" class="form-input form-input-sm w-full" />
-                </div>
-
-                <div class="col-span-1">
-                    <label class="mb-1 block text-sm font-medium text-default-700">Data fim</label>
-                    <input type="date" wire:model.live="dataFim" class="form-input form-input-sm w-full" />
+                <div class="col-span-2">
+                    <label class="mb-1 block text-sm font-medium text-default-700">Mês/Ano</label>
+                    <select wire:model.live="mesAno" class="form-input form-input-sm w-full">
+                        <option value="">Todas as competências</option>
+                        @foreach ($this->competenciasDisponiveis as $valor => $rotulo)
+                            <option value="{{ $valor }}">{{ $rotulo }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
             </div>
@@ -116,6 +116,7 @@
                                     <th class="px-3.5 py-3 text-start" scope="col">Postes desenhados</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Postes projetados</th>
                                     <th class="px-3.5 py-3 text-start bg-blue-50" scope="col">Postes total</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Bônus</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Horas</th>
                                 </tr>
                             </thead>
@@ -135,11 +136,12 @@
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_desenhados }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_projetados }}</td>
                                         <td class="px-3.5 py-3 bg-blue-50">{{ (int) $colaborador->total_postes_desenhados + (int) $colaborador->total_postes_projetados }}</td>
+                                        <td class="px-3.5 py-3">R$ {{ number_format((float) $colaborador->total_bonus, 2, ',', '.') }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $interval->totalHours }}h {{ $interval->minutes }}min</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-3.5 py-8 text-center text-default-500">
+                                        <td colspan="10" class="px-3.5 py-8 text-center text-default-500">
                                             Nenhum colaborador com partes atribuídas foi encontrado.
                                         </td>
                                     </tr>

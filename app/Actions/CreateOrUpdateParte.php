@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\TipoProjetoParte;
 use App\Enums\UserRole;
 use App\Models\Colaborador;
 use App\Models\Parte;
@@ -29,6 +30,7 @@ class CreateOrUpdateParte
                 'extensao_projeto' => $dados['extensao_projeto'] ?? 0,
                 'postes_desenhados' => $dados['postes_desenhados'] ?? 0,
                 'postes_projetados' => $dados['postes_projetados'] ?? 0,
+                'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoParte::Cad->value,
             ]);
         });
     }
@@ -49,6 +51,7 @@ class CreateOrUpdateParte
                 'extensao_projeto' => $dados['extensao_projeto'] ?? 0,
                 'postes_desenhados' => $dados['postes_desenhados'] ?? 0,
                 'postes_projetados' => $dados['postes_projetados'] ?? 0,
+                'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoParte::Cad->value,
             ];
 
             if ($datetimes !== null) {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TipoProjetoParte;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,7 @@ class Parte extends Model
         'extensao_projeto',
         'postes_desenhados',
         'postes_projetados',
+        'tipo_projeto',
         'data_hora_inicio',
         'data_hora_fim',
     ];
@@ -30,6 +32,7 @@ class Parte extends Model
             'extensao_projeto' => 'integer',
             'postes_desenhados' => 'integer',
             'postes_projetados' => 'integer',
+            'tipo_projeto' => TipoProjetoParte::class,
             'data_hora_inicio' => 'datetime',
             'data_hora_fim' => 'datetime',
         ];

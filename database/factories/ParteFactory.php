@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\TipoProjetoParte;
 use App\Enums\UserRole;
 use App\Models\Colaborador;
 use App\Models\Parte;
@@ -37,6 +38,7 @@ class ParteFactory extends Factory
             'extensao_projeto' => random_int(100, 500),
             'postes_desenhados' => random_int(10, 50),
             'postes_projetados' => random_int(10, 50),
+            'tipo_projeto' => $this->faker->randomElement(TipoProjetoParte::cases()),
         ];
     }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\TipoProjetoParte;
 use App\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateParteRequest extends FormRequest
 {
@@ -39,6 +41,7 @@ class UpdateParteRequest extends FormRequest
             'extensao_projeto' => ['required', 'integer', 'min:0'],
             'postes_desenhados' => ['required', 'integer', 'min:0'],
             'postes_projetados' => ['required', 'integer', 'min:0'],
+            'tipo_projeto' => ['required', Rule::enum(TipoProjetoParte::class)],
         ];
     }
 
@@ -59,6 +62,7 @@ class UpdateParteRequest extends FormRequest
             'postes_projetados.required' => 'O número de postes projetados é obrigatório.',
             'postes_projetados.integer' => 'O número de postes projetados deve ser um número inteiro.',
             'postes_projetados.min' => 'O número de postes projetados não pode ser negativo.',
+            'tipo_projeto.required' => 'O tipo de projeto é obrigatório.',
         ];
     }
 }
