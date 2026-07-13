@@ -58,8 +58,8 @@ class BonusColaboradorCalculatorTest extends TestCase
             postesProjetadosProj: 200,
         );
 
-        // max(0, 0 + (200 * 1.375 - 220)) * 1.82 = 55 * 1.82 = 100.1
-        $this->assertEqualsWithDelta(100.1, $bonus, 0.0001);
+        // max(0, 0 + (200 * 1.3 - 220)) * 1.82 = 40 * 1.82 = 72.8
+        $this->assertEqualsWithDelta(72.8, $bonus, 0.0001);
     }
 
     public function test_calcula_de_partes_agregando_cad_e_proj(): void
@@ -78,8 +78,8 @@ class BonusColaboradorCalculatorTest extends TestCase
         ]);
 
         // postesDesenhados=300, cad=100, proj=80
-        // max(0, (300-280)+(100 + 80*1.375 - 220)) * 1.82 = 10 * 1.82 = 18.2
-        $this->assertEqualsWithDelta(18.2, $bonus, 0.0001);
+        // max(0, (300-280)+(100 + 80*1.3 - 220)) * 1.82 = 4 * 1.82 = 7.28
+        $this->assertEqualsWithDelta(7.28, $bonus, 0.0001);
     }
 
     public function test_soma_bonus_por_colaborador_sem_separar_projetos(): void

@@ -67,9 +67,14 @@ class RelatorioColaboradores extends Component
     {
         $bonusPorColaborador = $this->bonusPorColaborador();
 
+        $colaboradorIdEscopo = $this->colaboradorIdEscopo();
+
         return Colaborador::query()
             ->join('partes', 'partes.colaborador_id', '=', 'colaboradores.id')
             ->join('projetos', 'projetos.id', '=', 'partes.projeto_id')
+            ->when($colaboradorIdEscopo !== null, function (Builder $query) use ($colaboradorIdEscopo): void {
+                $query->where('colaboradores.id', $colaboradorIdEscopo);
+            })
             ->when($this->projetoId, function (Builder $query): void {
                 $query->where('partes.projeto_id', $this->projetoId);
             })
@@ -104,9 +109,14 @@ class RelatorioColaboradores extends Component
      */
     protected function bonusPorColaborador(): Collection
     {
+        $colaboradorIdEscopo = $this->colaboradorIdEscopo();
+
         $partes = Parte::query()
             ->join('projetos', 'projetos.id', '=', 'partes.projeto_id')
             ->whereNotNull('partes.colaborador_id')
+            ->when($colaboradorIdEscopo !== null, function (Builder $query) use ($colaboradorIdEscopo): void {
+                $query->where('partes.colaborador_id', $colaboradorIdEscopo);
+            })
             ->when($this->projetoId, function (Builder $query): void {
                 $query->where('partes.projeto_id', $this->projetoId);
             })
@@ -126,6 +136,17 @@ class RelatorioColaboradores extends Component
 
         return app(BonusColaboradorCalculator::class)
             ->somarPorColaborador($partes);
+    }
+
+    protected function colaboradorIdEscopo(): ?int
+    {
+        $user = auth()->user();
+
+        if ($user === null || $user->isAdminOrSuperAdmin() || $user->isCoordenador()) {
+            return null;
+        }
+
+        return $user->colaborador?->id;
     }
 
     protected function aplicarFiltroCompetencia(Builder $query): void

@@ -111,7 +111,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
             ->assertSee('R$ 182,00')
-            ->assertDontSee('R$ 100,10');
+            ->assertDontSee('R$ 72,80');
     }
 
     public function test_relatorio_respeita_filtro_de_projeto_no_bonus(): void
@@ -159,7 +159,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->set('mesAno', '2026-06')
             ->set('projetoId', $projetoA->id)
             ->assertSee('R$ 182,00')
-            ->assertDontSee('R$ 100,10');
+            ->assertDontSee('R$ 72,80');
     }
 
     private function createUser(UserRole $role): User

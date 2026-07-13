@@ -44,5 +44,13 @@ class AppServiceProvider extends ServiceProvider
             return $user->isPrestador();
         });
 
+        Gate::define('view-relatorio-colaboradores', function (User $user) {
+            if ($user->isAdmin() || $user->isCoordenador()) {
+                return true;
+            }
+
+            return $user->isPrestador() && $user->colaborador !== null;
+        });
+
     }
 }

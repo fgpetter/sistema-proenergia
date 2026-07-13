@@ -11,7 +11,7 @@ class BonusColaboradorCalculator
 
     private const LIMITE_POSTES_PROJETADOS = 220;
 
-    private const MULTIPLICADOR_PROJ = 1.375;
+    private const MULTIPLICADOR_PROJ = 1.3;
 
     private const MULTIPLICADOR_BONUS = 1.82;
 

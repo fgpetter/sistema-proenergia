@@ -58,7 +58,7 @@
                             <div class="menu-text">Projetos</div>
                         </a>
                     </li>
-                    @can('admin-or-coordenador')
+                    @can('view-relatorio-colaboradores')
                         <li class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.relatorio-colaboradores') ? 'active' : '' }}" href="{{ route('admin.relatorio-colaboradores') }}">
                                 <span class="menu-icon"><i data-lucide="chart-column"></i></span>
