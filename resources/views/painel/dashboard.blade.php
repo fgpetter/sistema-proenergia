@@ -9,8 +9,8 @@ data-sidenav-color="dark"
 @section('content')
     @include('layouts.partials/page-title', ['title' => 'Dashboard'] )
 
-    <div class="grid lg:grid-cols-5 grid-cols-1 gap-5 mb-5">
-        <div class="lg:col-span-2 grid md:grid-cols-3 grid-cols-1 gap-5">
+    <div class="grid lg:grid-cols-3 grid-cols-1 gap-5 mb-5">
+        <div class="lg:col-span-1 grid grid-cols-2 gap-5">
             <div class="card bg-blue-100">
                 <div class="card-body">
                     <p class="text-base text-default-500 font-medium">Numero total de projetos</p>
@@ -20,22 +20,8 @@ data-sidenav-color="dark"
 
             <div class="card">
                 <div class="card-body bg-orange-100">
-                    <p class="text-base text-default-500 font-medium">Extensao de desenho</p>
-                    <h5 class="text-3xl font-medium mt-4">{{ (int) $totais->totalExtensaoDesenho }}</h5>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body bg-orange-100">
                     <p class="text-base text-default-500 font-medium">Extensao de projeto</p>
                     <h5 class="text-3xl font-medium mt-4">{{ (int) $totais->totalExtensaoProjeto }}</h5>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body bg-rose-100">
-                    <p class="text-base text-default-500 font-medium">Postes desenhados</p>
-                    <h5 class="text-3xl font-medium mt-4">{{ (int) $totais->totalPostesDesenhados }}</h5>
                 </div>
             </div>
 
@@ -57,7 +43,7 @@ data-sidenav-color="dark"
             </div>
         </div>
 
-        <div class="lg:col-span-3 card">
+        <div class="lg:col-span-2 card">
             <div class="card-header">
                 <h6 class="card-title">Performance de Colaborador</h6>
             </div>
@@ -69,10 +55,9 @@ data-sidenav-color="dark"
                                 <tr class="text-sm font-normal text-default-700 whitespace-nowrap">
                                     <th class="px-3.5 py-3 text-start" scope="col">Nome</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Projetos</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Desenho</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Projeto</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">P. Desenhados</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">P. Projetados</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Meta</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Hs reportadas</th>
                                 </tr>
                             </thead>
@@ -84,15 +69,14 @@ data-sidenav-color="dark"
                                     <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
                                         <td class="px-3.5 py-3">{{ $colaborador->nome }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_projetos }}</td>
-                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_desenho }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_projeto }}</td>
-                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_desenhados }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_projetados }}</td>
+                                        <td class="px-3.5 py-3">{{ $colaborador->meta }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $interval->totalHours }}h {{ $interval->minutes }}min</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-3.5 py-8 text-center text-default-500">
+                                        <td colspan="6" class="px-3.5 py-8 text-center text-default-500">
                                             Nenhum colaborador com partes registradas foi encontrado.
                                         </td>
                                     </tr>
@@ -117,9 +101,7 @@ data-sidenav-color="dark"
                             <thead class="bg-default-150">
                                 <tr class="text-sm font-normal text-default-700 whitespace-nowrap">
                                     <th class="px-3.5 py-3 text-start" scope="col">Nome</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Extensao de desenho</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Extensao de projeto</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Postes desenhados</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Postes projetados</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Total de Horas reportadas</th>
                                 </tr>
@@ -138,15 +120,13 @@ data-sidenav-color="dark"
                                                 {{ \Illuminate\Support\Str::limit($projeto->nome, 50) }}
                                             </div>
                                         </td>
-                                        <td class="px-3.5 py-3">{{ (int) $projeto->total_extensao_desenho }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $projeto->total_extensao_projeto }}</td>
-                                        <td class="px-3.5 py-3">{{ (int) $projeto->total_postes_desenhados }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $projeto->total_postes_projetados }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $intervalProjeto->totalHours }}h {{ $intervalProjeto->minutes }}min</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-3.5 py-8 text-center text-default-500">
+                                        <td colspan="4" class="px-3.5 py-8 text-center text-default-500">
                                             Nenhum projeto cadastrado foi encontrado.
                                         </td>
                                     </tr>

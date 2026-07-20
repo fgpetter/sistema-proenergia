@@ -49,6 +49,17 @@ class BonusColaboradorCalculator
         return ($excedenteCad + $excedenteProj) * self::MULTIPLICADOR_BONUS;
     }
 
+    public function formatarMeta(int|float $postesProjetadosCad, int|float $postesProjetadosProj): string
+    {
+        return sprintf(
+            '%d/%d - %d/%d',
+            (int) $postesProjetadosCad,
+            self::LIMITE_POSTES_CAD,
+            (int) $postesProjetadosProj,
+            self::LIMITE_POSTES_PROJ,
+        );
+    }
+
     /**
      * Soma o bônus por colaborador a partir de todas as partes da competência filtrada.
      *

@@ -114,6 +114,46 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->assertDontSee('R$ 72,80');
     }
 
+    public function test_relatorio_exibe_meta_por_tipo_de_projeto(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $coordenador = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->create();
+
+        $projeto = Projeto::factory()->create([
+            'nome' => 'Projeto Meta',
+            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
+
+        Parte::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoParte::Cad,
+            'postes_desenhados' => 100,
+            'postes_projetados' => 500,
+            'data_hora_inicio' => '2026-06-11 08:00:00',
+            'data_hora_fim' => '2026-06-11 09:00:00',
+        ]);
+
+        Parte::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoParte::Proj,
+            'postes_desenhados' => 50,
+            'postes_projetados' => 300,
+            'data_hora_inicio' => '2026-06-12 08:00:00',
+            'data_hora_fim' => '2026-06-12 09:00:00',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(RelatorioColaboradores::class)
+            ->set('mesAno', '2026-06')
+            ->assertSee('Meta')
+            ->assertSee('500/400 - 300/230');
+    }
+
     public function test_relatorio_respeita_filtro_de_projeto_no_bonus(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);

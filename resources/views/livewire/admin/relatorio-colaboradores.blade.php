@@ -110,12 +110,11 @@
                                 <tr class="text-sm font-normal text-default-700 whitespace-nowrap">
                                     <th class="px-3.5 py-3 text-start" scope="col">Colaborador</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Projetos</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Extensão de desenho</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Extensão de projeto</th>
                                     <th class="px-3.5 py-3 text-start bg-blue-50" scope="col">Extensão total</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Postes desenhados</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Postes projetados</th>
                                     <th class="px-3.5 py-3 text-start bg-blue-50" scope="col">Postes total</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Meta</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Bônus</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Horas</th>
                                 </tr>
@@ -130,18 +129,17 @@
                                             <h6 class="mb-0.5 font-semibold text-default-800">{{ $colaborador->nome }}</h6>
                                         </td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_projetos }}</td>
-                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_desenho }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_projeto }}</td>
                                         <td class="px-3.5 py-3 bg-blue-50">{{ (int) $colaborador->total_extensao_desenho + (int) $colaborador->total_extensao_projeto }}</td>
-                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_desenhados }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_projetados }}</td>
                                         <td class="px-3.5 py-3 bg-blue-50">{{ (int) $colaborador->total_postes_desenhados + (int) $colaborador->total_postes_projetados }}</td>
+                                        <td class="px-3.5 py-3">{{ $colaborador->meta }}</td>
                                         <td class="px-3.5 py-3">R$ {{ number_format((float) $colaborador->total_bonus, 2, ',', '.') }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $interval->totalHours }}h {{ $interval->minutes }}min</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="px-3.5 py-8 text-center text-default-500">
+                                        <td colspan="9" class="px-3.5 py-8 text-center text-default-500">
                                             Nenhum colaborador com partes atribuídas foi encontrado.
                                         </td>
                                     </tr>
@@ -153,4 +151,7 @@
             </div>
         </div>
     </div>
+    <p class="px-3.5 pb-3 text-sm text-primary">
+        * a meta para projetos no PROJ é de 230 postes, para projetos no CAD é de 400 postes.
+    </p>
 </div>

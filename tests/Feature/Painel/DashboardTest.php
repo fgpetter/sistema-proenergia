@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Painel;
 
+use App\Enums\TipoProjetoParte;
 use App\Enums\UserRole;
 use App\Models\Colaborador;
 use App\Models\Parte;
@@ -64,9 +65,7 @@ class DashboardTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('3', false);
-        $response->assertSee('300', false);
         $response->assertSee('130', false);
-        $response->assertSee('30', false);
         $response->assertSee('20', false);
         $response->assertSee($colaborador->nome);
         $response->assertSee('Projeto Recente', false);
@@ -78,6 +77,41 @@ class DashboardTest extends TestCase
         $this->assertNotFalse($posRecente);
         $this->assertNotFalse($posAntigo);
         $this->assertLessThan($posAntigo, $posRecente);
+    }
+
+    public function test_dashboard_exibe_meta_por_tipo_de_projeto_na_performance_de_colaborador(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $coordenador = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->create();
+
+        $projeto = Projeto::factory()->create([
+            'colaborador_responsavel_id' => $coordenador->id,
+        ]);
+
+        Parte::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoParte::Cad,
+            'postes_projetados' => 500,
+            'data_hora_inicio' => now()->subHour(),
+            'data_hora_fim' => now(),
+        ]);
+
+        Parte::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoParte::Proj,
+            'postes_projetados' => 300,
+            'data_hora_inicio' => now()->subHour(),
+            'data_hora_fim' => now(),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('painel.dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Meta');
+        $response->assertSee('500/400 - 300/230');
     }
 
     public function test_coordenador_acessa_dashboard(): void
