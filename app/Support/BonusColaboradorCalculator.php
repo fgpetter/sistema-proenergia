@@ -7,11 +7,9 @@ use Illuminate\Support\Collection;
 
 class BonusColaboradorCalculator
 {
-    private const LIMITE_POSTES_DESENHADOS = 280;
+    private const LIMITE_POSTES_CAD = 400;
 
-    private const LIMITE_POSTES_PROJETADOS = 220;
-
-    private const MULTIPLICADOR_PROJ = 1.3;
+    private const LIMITE_POSTES_PROJ = 230;
 
     private const MULTIPLICADOR_BONUS = 1.82;
 
@@ -20,13 +18,11 @@ class BonusColaboradorCalculator
      */
     public function calcularDePartes(iterable $partes): float
     {
-        $postesDesenhados = 0;
         $postesProjetadosCad = 0.0;
         $postesProjetadosProj = 0.0;
 
         foreach ($partes as $parte) {
             $tipoProjeto = $this->resolveTipoProjeto($parte);
-            $postesDesenhados += (int) data_get($parte, 'postes_desenhados', 0);
             $postesProjetados = (float) data_get($parte, 'postes_projetados', 0);
 
             if ($tipoProjeto === TipoProjetoParte::Proj) {
@@ -37,21 +33,20 @@ class BonusColaboradorCalculator
         }
 
         return $this->calcular(
-            $postesDesenhados,
-            $postesProjetadosCad,
-            $postesProjetadosProj
+            postesProjetadosCad: $postesProjetadosCad,
+            postesProjetadosProj: $postesProjetadosProj,
         );
     }
 
     public function calcular(
-        int|float $postesDesenhados,
-        int|float $postesProjetadosCad,
-        int|float $postesProjetadosProj
+        int|float $postesDesenhados = 0,
+        int|float $postesProjetadosCad = 0,
+        int|float $postesProjetadosProj = 0,
     ): float {
-        $base = ($postesDesenhados - self::LIMITE_POSTES_DESENHADOS)
-            + ($postesProjetadosCad + ($postesProjetadosProj * self::MULTIPLICADOR_PROJ) - self::LIMITE_POSTES_PROJETADOS);
+        $excedenteCad = max(0, $postesProjetadosCad - self::LIMITE_POSTES_CAD);
+        $excedenteProj = max(0, $postesProjetadosProj - self::LIMITE_POSTES_PROJ);
 
-        return max(0, $base) * self::MULTIPLICADOR_BONUS;
+        return ($excedenteCad + $excedenteProj) * self::MULTIPLICADOR_BONUS;
     }
 
     /**

@@ -43,7 +43,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoParte::Cad,
             'postes_desenhados' => 140,
-            'postes_projetados' => 160,
+            'postes_projetados' => 250,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 10:00:00',
         ]);
@@ -53,12 +53,12 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoParte::Cad,
             'postes_desenhados' => 140,
-            'postes_projetados' => 160,
+            'postes_projetados' => 250,
             'data_hora_inicio' => '2026-06-21 08:00:00',
             'data_hora_fim' => '2026-06-21 09:00:00',
         ]);
 
-        // Mesmo mês: (280-280)+(320-220)=100 → 182
+        // Mesmo mês: (500-400)=100 → 182
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
@@ -92,7 +92,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoParte::Cad,
             'postes_desenhados' => 280,
-            'postes_projetados' => 320,
+            'postes_projetados' => 500,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 09:00:00',
         ]);
@@ -139,7 +139,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoParte::Cad,
             'postes_desenhados' => 280,
-            'postes_projetados' => 320,
+            'postes_projetados' => 500,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 09:00:00',
         ]);

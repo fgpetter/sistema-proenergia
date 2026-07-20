@@ -29,6 +29,26 @@ class BonusColaboradorCalculatorTest extends TestCase
         $this->assertSame(0.0, $bonus);
     }
 
+    public function test_retorna_zero_no_limite_exato_cad(): void
+    {
+        $bonus = $this->calculator->calcular(
+            postesProjetadosCad: 400,
+            postesProjetadosProj: 0,
+        );
+
+        $this->assertSame(0.0, $bonus);
+    }
+
+    public function test_retorna_zero_no_limite_exato_proj(): void
+    {
+        $bonus = $this->calculator->calcular(
+            postesProjetadosCad: 0,
+            postesProjetadosProj: 230,
+        );
+
+        $this->assertSame(0.0, $bonus);
+    }
+
     public function test_aplica_formula_com_postes_cad(): void
     {
         $bonus = $this->calculator->calcular(
@@ -37,20 +57,19 @@ class BonusColaboradorCalculatorTest extends TestCase
             postesProjetadosProj: 0,
         );
 
-        // max(0, (300-280)+(100-220)) * 1.82 = max(0, -100) * 1.82 = 0
         $this->assertSame(0.0, $bonus);
 
         $bonusPositivo = $this->calculator->calcular(
             postesDesenhados: 280,
-            postesProjetadosCad: 320,
+            postesProjetadosCad: 500,
             postesProjetadosProj: 0,
         );
 
-        // max(0, (280-280)+(320-220)) * 1.82 = 100 * 1.82 = 182
+        // max(0, 500-400) * 1.82 = 100 * 1.82 = 182
         $this->assertEqualsWithDelta(182.0, $bonusPositivo, 0.0001);
     }
 
-    public function test_aplica_multiplicador_proj_e_bonus(): void
+    public function test_aplica_formula_com_postes_proj(): void
     {
         $bonus = $this->calculator->calcular(
             postesDesenhados: 280,
@@ -58,8 +77,26 @@ class BonusColaboradorCalculatorTest extends TestCase
             postesProjetadosProj: 200,
         );
 
-        // max(0, 0 + (200 * 1.3 - 220)) * 1.82 = 40 * 1.82 = 72.8
-        $this->assertEqualsWithDelta(72.8, $bonus, 0.0001);
+        $this->assertSame(0.0, $bonus);
+
+        $bonusPositivo = $this->calculator->calcular(
+            postesProjetadosCad: 0,
+            postesProjetadosProj: 250,
+        );
+
+        // max(0, 250-230) * 1.82 = 20 * 1.82 = 36.4
+        $this->assertEqualsWithDelta(36.4, $bonusPositivo, 0.0001);
+    }
+
+    public function test_ignora_postes_desenhados_no_calculo(): void
+    {
+        $bonus = $this->calculator->calcular(
+            postesDesenhados: 500,
+            postesProjetadosCad: 100,
+            postesProjetadosProj: 0,
+        );
+
+        $this->assertSame(0.0, $bonus);
     }
 
     public function test_calcula_de_partes_agregando_cad_e_proj(): void
@@ -77,9 +114,21 @@ class BonusColaboradorCalculatorTest extends TestCase
             ],
         ]);
 
-        // postesDesenhados=300, cad=100, proj=80
-        // max(0, (300-280)+(100 + 80*1.3 - 220)) * 1.82 = 4 * 1.82 = 7.28
-        $this->assertEqualsWithDelta(7.28, $bonus, 0.0001);
+        $this->assertSame(0.0, $bonus);
+
+        $bonusMisto = $this->calculator->calcularDePartes([
+            [
+                'tipo_projeto' => TipoProjetoParte::Cad,
+                'postes_projetados' => 450,
+            ],
+            [
+                'tipo_projeto' => TipoProjetoParte::Proj,
+                'postes_projetados' => 250,
+            ],
+        ]);
+
+        // (450-400) + (250-230) = 70 → 70 * 1.82 = 127.4
+        $this->assertEqualsWithDelta(127.4, $bonusMisto, 0.0001);
     }
 
     public function test_soma_bonus_por_colaborador_sem_separar_projetos(): void
@@ -90,14 +139,14 @@ class BonusColaboradorCalculatorTest extends TestCase
                 'projeto_id' => 10,
                 'tipo_projeto' => TipoProjetoParte::Cad->value,
                 'postes_desenhados' => 140,
-                'postes_projetados' => 160,
+                'postes_projetados' => 250,
             ],
             (object) [
                 'colaborador_id' => 1,
                 'projeto_id' => 20,
                 'tipo_projeto' => TipoProjetoParte::Cad->value,
                 'postes_desenhados' => 140,
-                'postes_projetados' => 160,
+                'postes_projetados' => 250,
             ],
             (object) [
                 'colaborador_id' => 2,
@@ -108,7 +157,7 @@ class BonusColaboradorCalculatorTest extends TestCase
             ],
         ]));
 
-        // colaborador 1: (280-280)+(320-220)=100 → 182
+        // colaborador 1: (500-400)=100 → 182
         $this->assertEqualsWithDelta(182.0, $bonusPorColaborador[1], 0.0001);
         $this->assertSame(0.0, $bonusPorColaborador[2]);
     }
