@@ -44,7 +44,14 @@
                                     <tr wire:key="projeto-{{ $projeto->id }}" class="text-default-800 font-normal text-sm whitespace-nowrap">
                                         <td class="px-3.5 py-3 text-primary">#{{ $projeto->id }}</td>
                                         <td class="px-3.5 py-3">
-                                            <h6 class="mb-0.5 font-semibold text-default-800">{{ $projeto->nome }}</h6>
+                                            <span class="group relative cursor-pointer">
+                                                <h6 class="mb-0.5 font-semibold text-default-800">
+                                                    {{ Str::limit($projeto->nome, 100) }}
+                                                </h6>
+                                                <span class="opacity-0 group-hover:opacity-100 pointer-events-none absolute z-10 left-0 top-0 -translate-y-full mt-0 mb-2 px-2 py-1 text-xs leading-tight text-white bg-black rounded shadow-lg transition-opacity duration-200"
+                                                      style="white-space: pre-line; min-width: 140px; max-width: 500px;">{{ $projeto->nome }}</span>
+                                                 
+                                            </span>
                                         </td>
                                         <td class="px-3.5 py-3">
                                             <span class="py-0.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium bg-primary/10 text-primary rounded">
