@@ -2,14 +2,15 @@
 
 namespace Tests\Feature\Painel;
 
-use App\Enums\TipoProjetoParte;
 use App\Enums\UserRole;
 use App\Models\Colaborador;
-use App\Models\Parte;
 use App\Models\Projeto;
 use App\Models\User;
+use App\Queries\DashboardMetrics;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -19,47 +20,58 @@ class DashboardTest extends TestCase
     public function test_administrativo_ve_dashboard_com_dados_globais(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);
-        $coordenador = Colaborador::factory()->coordenador()->create();
-        $colaborador = Colaborador::factory()->create();
-
-        $projetoAntigo = Projeto::factory()->create([
-            'nome' => 'Projeto Antigo',
-            'colaborador_responsavel_id' => $coordenador->id,
-            'created_at' => now()->subDays(5),
+        $colaborador = Colaborador::factory()->make([
+            'id' => 1,
+            'nome' => 'Colaborador Teste',
         ]);
+        $colaborador->total_projetos = 2;
+        $colaborador->total_extensao_desenho = 300;
+        $colaborador->total_extensao_projeto = 130;
+        $colaborador->meta_cad = '20 / 300';
+        $colaborador->meta_proj = '0 / 230';
+        $colaborador->total_postes = 20;
+        $colaborador->total_bonus = 0.0;
+        $colaborador->total_segundos = 10800;
 
-        $projetoRecente = Projeto::factory()->create([
+        $projetoRecente = Projeto::factory()->make([
+            'id' => 1,
             'nome' => 'Projeto Recente',
-            'colaborador_responsavel_id' => $coordenador->id,
             'created_at' => now(),
         ]);
+        $projetoRecente->total_extensao_projeto = 80;
+        $projetoRecente->total_postes_projetados = 15;
+        $projetoRecente->total_segundos = 3600;
 
-        Projeto::factory()->create([
+        $projetoAntigo = Projeto::factory()->make([
+            'id' => 2,
+            'nome' => 'Projeto Antigo',
+            'created_at' => now()->subDays(5),
+        ]);
+        $projetoAntigo->total_extensao_projeto = 50;
+        $projetoAntigo->total_postes_projetados = 5;
+        $projetoAntigo->total_segundos = 7200;
+
+        $projetoSemPartes = Projeto::factory()->make([
+            'id' => 3,
             'nome' => 'Projeto Sem Partes',
-            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => now()->subDay(),
         ]);
+        $projetoSemPartes->total_extensao_projeto = 0;
+        $projetoSemPartes->total_postes_projetados = 0;
+        $projetoSemPartes->total_segundos = 0;
 
-        Parte::factory()->create([
-            'projeto_id' => $projetoAntigo->id,
-            'colaborador_id' => $colaborador->id,
-            'extensao_desenho' => 100,
-            'extensao_projeto' => 50,
-            'postes_desenhados' => 10,
-            'postes_projetados' => 5,
-            'data_hora_inicio' => now()->subHours(2),
-            'data_hora_fim' => now(),
-        ]);
-
-        Parte::factory()->create([
-            'projeto_id' => $projetoRecente->id,
-            'colaborador_id' => $colaborador->id,
-            'extensao_desenho' => 200,
-            'extensao_projeto' => 80,
-            'postes_desenhados' => 20,
-            'postes_projetados' => 15,
-            'data_hora_inicio' => now()->subHour(),
-            'data_hora_fim' => now(),
-        ]);
+        $this->mockDashboardMetrics(
+            totais: (object) [
+                'totalProjetos' => 3,
+                'totalExtensaoDesenho' => 300,
+                'totalExtensaoProjeto' => 130,
+                'totalPostesDesenhados' => 30,
+                'totalPostesProjetados' => 20,
+                'totalSegundos' => 10800,
+            ],
+            estatisticasProjetos: collect([$projetoRecente, $projetoSemPartes, $projetoAntigo]),
+            produtividadeColaboradores: collect([$colaborador]),
+        );
 
         $response = $this->actingAs($admin)->get(route('painel.dashboard'));
 
@@ -82,30 +94,31 @@ class DashboardTest extends TestCase
     public function test_dashboard_exibe_meta_por_tipo_de_projeto_na_performance_de_colaborador(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);
-        $coordenador = Colaborador::factory()->coordenador()->create();
-        $colaborador = Colaborador::factory()->create();
-
-        $projeto = Projeto::factory()->create([
-            'colaborador_responsavel_id' => $coordenador->id,
+        $colaborador = Colaborador::factory()->make([
+            'id' => 1,
+            'nome' => 'Colaborador Meta',
         ]);
+        $colaborador->total_projetos = 1;
+        $colaborador->total_extensao_desenho = 0;
+        $colaborador->total_extensao_projeto = 0;
+        $colaborador->meta_cad = '500 / 300';
+        $colaborador->meta_proj = '300 / 230';
+        $colaborador->total_postes = 800;
+        $colaborador->total_bonus = 491.4;
+        $colaborador->total_segundos = 7200;
 
-        Parte::factory()->create([
-            'projeto_id' => $projeto->id,
-            'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
-            'postes_projetados' => 500,
-            'data_hora_inicio' => now()->subHour(),
-            'data_hora_fim' => now(),
-        ]);
-
-        Parte::factory()->create([
-            'projeto_id' => $projeto->id,
-            'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Proj,
-            'postes_projetados' => 300,
-            'data_hora_inicio' => now()->subHour(),
-            'data_hora_fim' => now(),
-        ]);
+        $this->mockDashboardMetrics(
+            totais: (object) [
+                'totalProjetos' => 1,
+                'totalExtensaoDesenho' => 0,
+                'totalExtensaoProjeto' => 0,
+                'totalPostesDesenhados' => 0,
+                'totalPostesProjetados' => 800,
+                'totalSegundos' => 7200,
+            ],
+            estatisticasProjetos: collect(),
+            produtividadeColaboradores: collect([$colaborador]),
+        );
 
         $response = $this->actingAs($admin)->get(route('painel.dashboard'));
 
@@ -118,6 +131,8 @@ class DashboardTest extends TestCase
 
     public function test_coordenador_acessa_dashboard(): void
     {
+        $this->mockDashboardMetrics();
+
         $coordenadorUser = User::create([
             'name' => 'Coordenador',
             'email' => 'coord@test.com',
@@ -165,6 +180,33 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($admin)->get('/');
 
         $response->assertRedirect(route('painel.dashboard'));
+    }
+
+    /**
+     * @param  Collection<int, mixed>|null  $estatisticasProjetos
+     * @param  Collection<int, mixed>|null  $produtividadeColaboradores
+     */
+    private function mockDashboardMetrics(
+        ?object $totais = null,
+        ?Collection $estatisticasProjetos = null,
+        ?Collection $produtividadeColaboradores = null,
+    ): void {
+        $this->mock(DashboardMetrics::class, function (MockInterface $mock) use (
+            $totais,
+            $estatisticasProjetos,
+            $produtividadeColaboradores,
+        ): void {
+            $mock->shouldReceive('totaisGlobais')->andReturn($totais ?? (object) [
+                'totalProjetos' => 0,
+                'totalExtensaoDesenho' => 0,
+                'totalExtensaoProjeto' => 0,
+                'totalPostesDesenhados' => 0,
+                'totalPostesProjetados' => 0,
+                'totalSegundos' => 0,
+            ]);
+            $mock->shouldReceive('estatisticasPorProjeto')->andReturn($estatisticasProjetos ?? collect());
+            $mock->shouldReceive('produtividadeColaboradores')->andReturn($produtividadeColaboradores ?? collect());
+        });
     }
 
     private function createUser(UserRole $role): User

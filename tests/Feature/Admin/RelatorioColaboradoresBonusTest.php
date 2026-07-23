@@ -9,9 +9,11 @@ use App\Models\Colaborador;
 use App\Models\Parte;
 use App\Models\Projeto;
 use App\Models\User;
+use App\Queries\RelatorioColaboradoresProdutividade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class RelatorioColaboradoresBonusTest extends TestCase
@@ -58,12 +60,19 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'data_hora_fim' => '2026-06-21 09:00:00',
         ]);
 
-        // Mesmo mês: (500-400)=100 → 182
+        $this->mockProdutividadeAgregada($colaborador, [
+            'total_projetos' => 2,
+            'total_postes_projetados_cad' => 500,
+            'total_postes_projetados_proj' => 0,
+            'total_segundos' => 10800,
+        ]);
+
+        // Mesmo mês: (500-300)=200 → 364 (limite CAD atual)
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
             ->assertSee($colaborador->nome)
-            ->assertSee('R$ 182,00')
+            ->assertSee('R$ 364,00')
             ->assertSee('Junho - 2026');
     }
 
@@ -102,16 +111,24 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoParte::Proj,
             'postes_desenhados' => 280,
-            'postes_projetados' => 200,
+            'postes_projetados' => 300,
             'data_hora_inicio' => '2026-07-06 08:00:00',
             'data_hora_fim' => '2026-07-06 09:00:00',
         ]);
 
+        $this->mockProdutividadeAgregada($colaborador, [
+            'total_projetos' => 1,
+            'total_postes_projetados_cad' => 500,
+            'total_postes_projetados_proj' => 0,
+            'total_segundos' => 3600,
+        ]);
+
+        // Junho CAD: (500-300)=200 → 364; julho PROJ (300-230)=70 → 127,40 não entra
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
-            ->assertSee('R$ 182,00')
-            ->assertDontSee('R$ 72,80');
+            ->assertSee('R$ 364,00')
+            ->assertDontSee('R$ 127,40');
     }
 
     public function test_relatorio_exibe_meta_por_tipo_de_projeto(): void
@@ -145,6 +162,13 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_projetados' => 300,
             'data_hora_inicio' => '2026-06-12 08:00:00',
             'data_hora_fim' => '2026-06-12 09:00:00',
+        ]);
+
+        $this->mockProdutividadeAgregada($colaborador, [
+            'total_projetos' => 1,
+            'total_postes_projetados_cad' => 500,
+            'total_postes_projetados_proj' => 300,
+            'total_segundos' => 7200,
         ]);
 
         Livewire::actingAs($admin)
@@ -191,17 +215,55 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoParte::Proj,
             'postes_desenhados' => 280,
-            'postes_projetados' => 200,
+            'postes_projetados' => 300,
             'data_hora_inicio' => '2026-06-16 08:00:00',
             'data_hora_fim' => '2026-06-16 09:00:00',
         ]);
 
+        $this->mockProdutividadeAgregada($colaborador, [
+            'total_projetos' => 1,
+            'total_postes_projetados_cad' => 500,
+            'total_postes_projetados_proj' => 0,
+            'total_segundos' => 3600,
+        ]);
+
+        // Projeto A CAD: (500-300)=200 → 364; B PROJ (300-230)=70 → 127,40 não entra
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
             ->set('projetoId', $projetoA->id)
-            ->assertSee('R$ 182,00')
-            ->assertDontSee('R$ 72,80');
+            ->assertSee('R$ 364,00')
+            ->assertDontSee('R$ 127,40');
+    }
+
+    /**
+     * @param  array{
+     *     total_projetos?: int,
+     *     total_postes_projetados_cad?: int,
+     *     total_postes_projetados_proj?: int,
+     *     total_segundos?: int
+     * }  $atributos
+     */
+    private function mockProdutividadeAgregada(Colaborador $colaborador, array $atributos): void
+    {
+        $linha = Colaborador::factory()->make([
+            'id' => $colaborador->id,
+            'nome' => $colaborador->nome,
+        ]);
+        $linha->id = $colaborador->id;
+        $linha->total_projetos = $atributos['total_projetos'] ?? 1;
+        $linha->total_extensao_desenho = 0;
+        $linha->total_extensao_projeto = 0;
+        $linha->total_postes_desenhados = 0;
+        $linha->total_postes_projetados = ($atributos['total_postes_projetados_cad'] ?? 0)
+            + ($atributos['total_postes_projetados_proj'] ?? 0);
+        $linha->total_postes_projetados_cad = $atributos['total_postes_projetados_cad'] ?? 0;
+        $linha->total_postes_projetados_proj = $atributos['total_postes_projetados_proj'] ?? 0;
+        $linha->total_segundos = $atributos['total_segundos'] ?? 0;
+
+        $this->mock(RelatorioColaboradoresProdutividade::class, function (MockInterface $mock) use ($linha): void {
+            $mock->shouldReceive('agregar')->andReturn(collect([$linha]));
+        });
     }
 
     private function createUser(UserRole $role): User
