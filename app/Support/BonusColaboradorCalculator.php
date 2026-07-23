@@ -7,7 +7,7 @@ use Illuminate\Support\Collection;
 
 class BonusColaboradorCalculator
 {
-    private const LIMITE_POSTES_CAD = 400;
+    private const LIMITE_POSTES_CAD = 300;
 
     private const LIMITE_POSTES_PROJ = 230;
 
@@ -49,14 +49,22 @@ class BonusColaboradorCalculator
         return ($excedenteCad + $excedenteProj) * self::MULTIPLICADOR_BONUS;
     }
 
+    public function formatarMetaCad(int|float $postesProjetadosCad): string
+    {
+        return sprintf('%d / %d', (int) $postesProjetadosCad, self::LIMITE_POSTES_CAD);
+    }
+
+    public function formatarMetaProj(int|float $postesProjetadosProj): string
+    {
+        return sprintf('%d / %d', (int) $postesProjetadosProj, self::LIMITE_POSTES_PROJ);
+    }
+
     public function formatarMeta(int|float $postesProjetadosCad, int|float $postesProjetadosProj): string
     {
         return sprintf(
-            '%d/%d - %d/%d',
-            (int) $postesProjetadosCad,
-            self::LIMITE_POSTES_CAD,
-            (int) $postesProjetadosProj,
-            self::LIMITE_POSTES_PROJ,
+            '%s - %s',
+            $this->formatarMetaCad($postesProjetadosCad),
+            $this->formatarMetaProj($postesProjetadosProj),
         );
     }
 

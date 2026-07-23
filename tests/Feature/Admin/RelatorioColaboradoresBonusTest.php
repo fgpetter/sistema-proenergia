@@ -150,8 +150,10 @@ class RelatorioColaboradoresBonusTest extends TestCase
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
-            ->assertSee('Meta')
-            ->assertSee('500/400 - 300/230');
+            ->assertSee('Projetos CAD')
+            ->assertSee('Projetos PROJ')
+            ->assertSee('500 / 300')
+            ->assertSee('300 / 230');
     }
 
     public function test_relatorio_respeita_filtro_de_projeto_no_bonus(): void

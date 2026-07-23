@@ -111,7 +111,7 @@ class DashboardTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Meta');
-        $response->assertSee('500/400 - 300/230');
+        $response->assertSee('500 / 300 - 300 / 230');
     }
 
     public function test_coordenador_acessa_dashboard(): void

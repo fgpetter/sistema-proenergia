@@ -164,11 +164,14 @@ class BonusColaboradorCalculatorTest extends TestCase
 
     public function test_formatar_meta_exibe_postes_por_tipo_em_relacao_aos_limites(): void
     {
-        $meta = $this->calculator->formatarMeta(
-            postesProjetadosCad: 500,
-            postesProjetadosProj: 300,
+        $this->assertSame('500 / 300', $this->calculator->formatarMetaCad(500));
+        $this->assertSame('300 / 230', $this->calculator->formatarMetaProj(300));
+        $this->assertSame(
+            '500 / 300 - 300 / 230',
+            $this->calculator->formatarMeta(
+                postesProjetadosCad: 500,
+                postesProjetadosProj: 300,
+            ),
         );
-
-        $this->assertSame('500/400 - 300/230', $meta);
     }
 }
