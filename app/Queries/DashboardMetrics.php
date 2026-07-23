@@ -80,9 +80,19 @@ class DashboardMetrics
             ->selectRaw('COALESCE(SUM(CASE WHEN partes.data_hora_inicio IS NOT NULL AND partes.data_hora_fim IS NOT NULL THEN TIMESTAMPDIFF(SECOND, partes.data_hora_inicio, partes.data_hora_fim) ELSE 0 END), 0) as total_segundos')
             ->get()
             ->map(function (Colaborador $colaborador): Colaborador {
-                $colaborador->meta = app(BonusColaboradorCalculator::class)->formatarMeta(
+                $calculator = app(BonusColaboradorCalculator::class);
+
+                $colaborador->meta_cad = $calculator->formatarMetaCad(
                     $colaborador->total_postes_projetados_cad,
+                );
+                $colaborador->meta_proj = $calculator->formatarMetaProj(
                     $colaborador->total_postes_projetados_proj,
+                );
+                $colaborador->total_postes = (int) $colaborador->total_postes_projetados_cad
+                    + (int) $colaborador->total_postes_projetados_proj;
+                $colaborador->total_bonus = $calculator->calcular(
+                    postesProjetadosCad: $colaborador->total_postes_projetados_cad,
+                    postesProjetadosProj: $colaborador->total_postes_projetados_proj,
                 );
 
                 return $colaborador;

@@ -110,8 +110,10 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($admin)->get(route('painel.dashboard'));
 
         $response->assertOk();
-        $response->assertSee('Meta');
-        $response->assertSee('500 / 300 - 300 / 230');
+        $response->assertSee('Projetos CAD');
+        $response->assertSee('Projetos PROJ');
+        $response->assertSee('500 / 300');
+        $response->assertSee('300 / 230');
     }
 
     public function test_coordenador_acessa_dashboard(): void

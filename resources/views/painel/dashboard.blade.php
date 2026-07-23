@@ -53,12 +53,14 @@ data-sidenav-color="dark"
                         <table class="min-w-full divide-y divide-default-200">
                             <thead class="bg-default-150">
                                 <tr class="text-sm font-normal text-default-700 whitespace-nowrap">
-                                    <th class="px-3.5 py-3 text-start" scope="col">Nome</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Colaborador</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Projetos</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Projeto</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">P. Projetados</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Meta</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Hs reportadas</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Extensão total</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Projetos CAD</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Projetos PROJ</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Projetos Total</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Bônus</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Horas</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-default-200">
@@ -69,14 +71,16 @@ data-sidenav-color="dark"
                                     <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
                                         <td class="px-3.5 py-3">{{ $colaborador->nome }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_projetos }}</td>
-                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_projeto }}</td>
-                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes_projetados }}</td>
-                                        <td class="px-3.5 py-3">{{ $colaborador->meta }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_desenho + (int) $colaborador->total_extensao_projeto }}</td>
+                                        <td class="px-3.5 py-3">{{ $colaborador->meta_cad }}</td>
+                                        <td class="px-3.5 py-3">{{ $colaborador->meta_proj }}</td>
+                                        <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes }}</td>
+                                        <td class="px-3.5 py-3">R$ {{ number_format((float) $colaborador->total_bonus, 2, ',', '.') }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $interval->totalHours }}h {{ $interval->minutes }}min</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-3.5 py-8 text-center text-default-500">
+                                        <td colspan="8" class="px-3.5 py-8 text-center text-default-500">
                                             Nenhum colaborador com partes registradas foi encontrado.
                                         </td>
                                     </tr>
