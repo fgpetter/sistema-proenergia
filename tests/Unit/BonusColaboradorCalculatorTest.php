@@ -174,4 +174,24 @@ class BonusColaboradorCalculatorTest extends TestCase
             ),
         );
     }
+
+    public function test_aplica_teto_de_trinta_por_cento_da_remuneracao(): void
+    {
+        // remuneração R$ 5.000,00 = 500000 centavos → teto 1.500,00
+        $bonusReal = $this->calculator->aplicarTeto(2000.0, 500000);
+
+        $this->assertEqualsWithDelta(1500.0, $bonusReal, 0.0001);
+    }
+
+    public function test_nao_altera_bonus_quando_abaixo_do_teto(): void
+    {
+        $bonusReal = $this->calculator->aplicarTeto(364.0, 500000);
+
+        $this->assertEqualsWithDelta(364.0, $bonusReal, 0.0001);
+    }
+
+    public function test_zera_bonus_quando_remuneracao_ausente(): void
+    {
+        $this->assertSame(0.0, $this->calculator->aplicarTeto(2000.0, null));
+    }
 }

@@ -24,7 +24,9 @@ class RelatorioColaboradoresBonusTest extends TestCase
     {
         $admin = $this->createUser(UserRole::Administrativos);
         $coordenador = Colaborador::factory()->coordenador()->create();
-        $colaborador = Colaborador::factory()->create();
+        $colaborador = Colaborador::factory()->create([
+            'remuneracao' => 500000,
+        ]);
 
         $projetoA = Projeto::factory()->create([
             'nome' => 'Projeto A',
@@ -67,7 +69,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'total_segundos' => 10800,
         ]);
 
-        // Mesmo mês: (500-300)=200 → 364 (limite CAD atual)
+        // Mesmo mês: (500-300)=200 → 364 (abaixo do teto de 30% de R$ 5.000)
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
@@ -80,7 +82,9 @@ class RelatorioColaboradoresBonusTest extends TestCase
     {
         $admin = $this->createUser(UserRole::Administrativos);
         $coordenador = Colaborador::factory()->coordenador()->create();
-        $colaborador = Colaborador::factory()->create();
+        $colaborador = Colaborador::factory()->create([
+            'remuneracao' => 500000,
+        ]);
 
         $projetoJunho = Projeto::factory()->create([
             'nome' => 'Projeto Junho',
@@ -135,7 +139,9 @@ class RelatorioColaboradoresBonusTest extends TestCase
     {
         $admin = $this->createUser(UserRole::Administrativos);
         $coordenador = Colaborador::factory()->coordenador()->create();
-        $colaborador = Colaborador::factory()->create();
+        $colaborador = Colaborador::factory()->create([
+            'remuneracao' => 500000,
+        ]);
 
         $projeto = Projeto::factory()->create([
             'nome' => 'Projeto Meta',
@@ -184,7 +190,9 @@ class RelatorioColaboradoresBonusTest extends TestCase
     {
         $admin = $this->createUser(UserRole::Administrativos);
         $coordenador = Colaborador::factory()->coordenador()->create();
-        $colaborador = Colaborador::factory()->create();
+        $colaborador = Colaborador::factory()->create([
+            'remuneracao' => 500000,
+        ]);
 
         $projetoA = Projeto::factory()->create([
             'nome' => 'Projeto Filtrado A',
@@ -236,7 +244,88 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->assertDontSee('R$ 127,40');
     }
 
+    public function test_relatorio_limita_bonus_a_trinta_por_cento_da_remuneracao(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $coordenador = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->create([
+            'remuneracao' => 500000,
+        ]);
+
+        $projeto = Projeto::factory()->create([
+            'nome' => 'Projeto Teto',
+            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
+
+        // (1400-300)=1100 → 1100 * 1.82 = 2002 (acima do teto de R$ 1.500)
+        Parte::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoParte::Cad,
+            'postes_desenhados' => 100,
+            'postes_projetados' => 1400,
+            'data_hora_inicio' => '2026-06-11 08:00:00',
+            'data_hora_fim' => '2026-06-11 09:00:00',
+        ]);
+
+        $this->mockProdutividadeAgregada($colaborador, [
+            'total_projetos' => 1,
+            'total_postes_projetados_cad' => 1400,
+            'total_postes_projetados_proj' => 0,
+            'total_segundos' => 3600,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(RelatorioColaboradores::class)
+            ->set('mesAno', '2026-06')
+            ->assertSee('R$ 1.500,00')
+            ->assertDontSee('R$ 2.002,00');
+    }
+
+    public function test_relatorio_zera_bonus_quando_remuneracao_ausente(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $coordenador = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->create([
+            'remuneracao' => null,
+        ]);
+
+        $projeto = Projeto::factory()->create([
+            'nome' => 'Projeto Sem Remuneracao',
+            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
+
+        Parte::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoParte::Cad,
+            'postes_desenhados' => 100,
+            'postes_projetados' => 500,
+            'data_hora_inicio' => '2026-06-11 08:00:00',
+            'data_hora_fim' => '2026-06-11 09:00:00',
+        ]);
+
+        $this->mockProdutividadeAgregada($colaborador, [
+            'total_projetos' => 1,
+            'total_postes_projetados_cad' => 500,
+            'total_postes_projetados_proj' => 0,
+            'total_segundos' => 3600,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(RelatorioColaboradores::class)
+            ->set('mesAno', '2026-06')
+            ->assertSee('R$ 0,00')
+            ->assertDontSee('R$ 364,00');
+    }
+
     /**
+     * Mocka a query de agregação (TIMESTAMPDIFF no MySQL) para manter testes estáveis no SQLite.
+     *
      * @param  array{
      *     total_projetos?: int,
      *     total_postes_projetados_cad?: int,
@@ -249,8 +338,10 @@ class RelatorioColaboradoresBonusTest extends TestCase
         $linha = Colaborador::factory()->make([
             'id' => $colaborador->id,
             'nome' => $colaborador->nome,
+            'remuneracao' => $colaborador->remuneracao,
         ]);
         $linha->id = $colaborador->id;
+        $linha->remuneracao = $colaborador->remuneracao;
         $linha->total_projetos = $atributos['total_projetos'] ?? 1;
         $linha->total_extensao_desenho = 0;
         $linha->total_extensao_projeto = 0;

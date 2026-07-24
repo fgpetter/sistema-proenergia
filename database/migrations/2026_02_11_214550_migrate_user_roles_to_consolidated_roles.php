@@ -10,11 +10,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('
-            UPDATE users u
-            INNER JOIN colaboradores c ON c.user_id = u.id
-            SET u.role = c.tipo
-        ');
+        DB::table('colaboradores')
+            ->orderBy('id')
+            ->each(function (object $colaborador): void {
+                DB::table('users')
+                    ->where('id', $colaborador->user_id)
+                    ->update(['role' => $colaborador->tipo]);
+            });
 
         DB::table('users')->where('role', 'admin')->update(['role' => 'administrativos']);
         DB::table('users')->where('role', 'coordenador')->update(['role' => 'coordenadores']);

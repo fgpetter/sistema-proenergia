@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Colaborador;
 use App\Models\Parte;
 use App\Models\Projeto;
+use App\Queries\RelatorioColaboradoresProdutividade;
 use App\Support\BonusColaboradorCalculator;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -67,42 +68,21 @@ class RelatorioColaboradores extends Component
     {
         $bonusPorColaborador = $this->bonusPorColaborador();
 
-        $colaboradorIdEscopo = $this->colaboradorIdEscopo();
-
-        return Colaborador::query()
-            ->join('partes', 'partes.colaborador_id', '=', 'colaboradores.id')
-            ->join('projetos', 'projetos.id', '=', 'partes.projeto_id')
-            ->when($colaboradorIdEscopo !== null, function (Builder $query) use ($colaboradorIdEscopo): void {
-                $query->where('colaboradores.id', $colaboradorIdEscopo);
-            })
-            ->when($this->projetoId, function (Builder $query): void {
-                $query->where('partes.projeto_id', $this->projetoId);
-            })
-            ->when($this->mesAno, function (Builder $query): void {
-                $this->aplicarFiltroCompetencia($query);
-            })
-            ->when($this->coordenadorId, function (Builder $query): void {
-                $query->where('projetos.colaborador_responsavel_id', $this->coordenadorId);
-            })
-            ->groupBy('colaboradores.id', 'colaboradores.nome')
-            ->orderBy('colaboradores.nome')
-            ->select([
-                'colaboradores.id',
-                'colaboradores.nome',
-            ])
-            ->selectRaw('COUNT(DISTINCT partes.projeto_id) as total_projetos')
-            ->selectRaw('COALESCE(SUM(partes.extensao_desenho), 0) as total_extensao_desenho')
-            ->selectRaw('COALESCE(SUM(partes.extensao_projeto), 0) as total_extensao_projeto')
-            ->selectRaw('COALESCE(SUM(partes.postes_desenhados), 0) as total_postes_desenhados')
-            ->selectRaw('COALESCE(SUM(partes.postes_projetados), 0) as total_postes_projetados')
-            ->selectRaw("COALESCE(SUM(CASE WHEN partes.tipo_projeto = 'PROJ' THEN partes.postes_projetados ELSE 0 END), 0) as total_postes_projetados_proj")
-            ->selectRaw("COALESCE(SUM(CASE WHEN partes.tipo_projeto = 'PROJ' THEN 0 ELSE partes.postes_projetados END), 0) as total_postes_projetados_cad")
-            ->selectRaw('COALESCE(SUM(CASE WHEN partes.data_hora_inicio IS NOT NULL AND partes.data_hora_fim IS NOT NULL THEN TIMESTAMPDIFF(SECOND, partes.data_hora_inicio, partes.data_hora_fim) ELSE 0 END), 0) as total_segundos')
-            ->get()
+        return app(RelatorioColaboradoresProdutividade::class)
+            ->agregar(
+                colaboradorId: $this->colaboradorIdEscopo(),
+                projetoId: $this->projetoId,
+                mesAno: $this->mesAno,
+                coordenadorId: $this->coordenadorId,
+            )
             ->map(function (Colaborador $colaborador) use ($bonusPorColaborador): Colaborador {
                 $calculator = app(BonusColaboradorCalculator::class);
 
-                $colaborador->total_bonus = (float) ($bonusPorColaborador[$colaborador->id] ?? 0);
+                $bonusBruto = (float) ($bonusPorColaborador[$colaborador->id] ?? 0);
+                $colaborador->total_bonus = $calculator->aplicarTeto(
+                    $bonusBruto,
+                    $colaborador->remuneracao,
+                );
                 $colaborador->meta_cad = $calculator->formatarMetaCad(
                     $colaborador->total_postes_projetados_cad,
                 );

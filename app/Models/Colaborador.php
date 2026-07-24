@@ -20,6 +20,7 @@ class Colaborador extends Model
     protected $fillable = [
         'nome',
         'contrato',
+        'remuneracao',
         'user_id',
     ];
 
@@ -34,6 +35,7 @@ class Colaborador extends Model
     {
         return [
             'contrato' => TipoContrato::class,
+            'remuneracao' => 'integer',
         ];
     }
 

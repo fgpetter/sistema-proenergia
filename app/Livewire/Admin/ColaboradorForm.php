@@ -7,6 +7,7 @@ use App\Enums\TipoContrato;
 use App\Enums\UserRole;
 use App\Models\Colaborador;
 use App\Models\User;
+use App\Support\Money;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -30,6 +31,8 @@ class ColaboradorForm extends Component
 
     public string $contrato = '';
 
+    public string $remuneracao = '';
+
     public ?int $userId = null;
 
     protected function rules(): array
@@ -38,6 +41,7 @@ class ColaboradorForm extends Component
             'nome' => ['required', 'string', 'max:255'],
             'role' => ['required', Rule::enum(UserRole::class), Rule::notIn([UserRole::SuperAdmin->value])],
             'contrato' => ['required', Rule::enum(TipoContrato::class)],
+            'remuneracao' => ['nullable', 'string', 'max:32'],
         ];
 
         if ($this->editingId) {
@@ -92,12 +96,14 @@ class ColaboradorForm extends Component
             $this->email = $colaborador->user->email;
             $this->role = $colaborador->user->role->value;
             $this->contrato = $colaborador->contrato->value;
+            $this->remuneracao = Money::fromCents($colaborador->remuneracao);
             $this->userId = $colaborador->user_id;
         } else {
             $this->editingId = null;
             $this->email = '';
             $this->role = UserRole::Levantadores->value;
             $this->contrato = TipoContrato::CLT->value;
+            $this->remuneracao = '';
         }
 
         $this->showModal = true;
@@ -110,6 +116,7 @@ class ColaboradorForm extends Component
 
         $role = UserRole::from($this->role);
         $contrato = TipoContrato::from($this->contrato);
+        $remuneracao = Money::toCents($this->remuneracao);
 
         if ($this->editingId) {
             $colaborador = Colaborador::findOrFail($this->editingId);
@@ -118,14 +125,16 @@ class ColaboradorForm extends Component
                 $this->nome,
                 $role,
                 $contrato,
-                $this->userId
+                $this->userId,
+                $remuneracao,
             );
         } else {
             $action->create(
                 $this->nome,
                 $this->email,
                 $role,
-                $contrato
+                $contrato,
+                $remuneracao,
             );
         }
 
@@ -153,6 +162,7 @@ class ColaboradorForm extends Component
         $this->email = '';
         $this->role = '';
         $this->contrato = '';
+        $this->remuneracao = '';
         $this->userId = null;
         $this->editingId = null;
         $this->resetValidation();

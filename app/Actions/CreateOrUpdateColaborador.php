@@ -17,9 +17,10 @@ class CreateOrUpdateColaborador
         string $nome,
         string $email,
         UserRole $role,
-        TipoContrato $contrato
+        TipoContrato $contrato,
+        ?int $remuneracao = null,
     ): Colaborador {
-        return DB::transaction(function () use ($nome, $email, $role, $contrato) {
+        return DB::transaction(function () use ($nome, $email, $role, $contrato, $remuneracao) {
             $user = User::create([
                 'name' => $nome,
                 'email' => $email,
@@ -30,6 +31,7 @@ class CreateOrUpdateColaborador
             $colaborador = Colaborador::create([
                 'nome' => $nome,
                 'contrato' => $contrato,
+                'remuneracao' => $remuneracao,
                 'user_id' => $user->id,
             ]);
 
@@ -44,12 +46,14 @@ class CreateOrUpdateColaborador
         string $nome,
         UserRole $role,
         TipoContrato $contrato,
-        int $userId
+        int $userId,
+        ?int $remuneracao = null,
     ): Colaborador {
-        return DB::transaction(function () use ($colaborador, $nome, $role, $contrato, $userId) {
+        return DB::transaction(function () use ($colaborador, $nome, $role, $contrato, $userId, $remuneracao) {
             $colaborador->update([
                 'nome' => $nome,
                 'contrato' => $contrato,
+                'remuneracao' => $remuneracao,
                 'user_id' => $userId,
             ]);
 

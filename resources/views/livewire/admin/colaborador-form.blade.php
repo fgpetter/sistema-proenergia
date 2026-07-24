@@ -103,6 +103,25 @@
                                     @enderror
                                 </div>
 
+                                <div>
+                                    <label for="remuneracao" class="block text-sm font-medium text-default-700 mb-1">Remuneração Bruta</label>
+                                    <div class="relative">
+                                        <span class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-sm text-default-500">R$</span>
+                                        <input
+                                            wire:model="remuneracao"
+                                            type="text"
+                                            id="remuneracao"
+                                            inputmode="numeric"
+                                            x-mask:dynamic="$money($input, ',', '.')"
+                                            class="form-input w-full ps-10 @error('remuneracao') border-danger @enderror"
+                                            placeholder="0,00"
+                                        >
+                                    </div>
+                                    @error('remuneracao')
+                                        <p class="mt-1 text-sm text-danger">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
                                 @if ($editingId)
                                     <div>
                                         <label for="userName" class="block text-sm font-medium text-default-700 mb-1">Usuário</label>

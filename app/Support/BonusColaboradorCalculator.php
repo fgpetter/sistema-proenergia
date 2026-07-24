@@ -13,6 +13,8 @@ class BonusColaboradorCalculator
 
     private const MULTIPLICADOR_BONUS = 1.82;
 
+    private const PERCENTUAL_TETO_BONUS = 0.30;
+
     /**
      * @param  iterable<int, array{tipo_projeto?: string|TipoProjetoParte|null, postes_desenhados?: int|float|string|null, postes_projetados?: int|float|string|null}|object>  $partes
      */
@@ -47,6 +49,21 @@ class BonusColaboradorCalculator
         $excedenteProj = max(0, $postesProjetadosProj - self::LIMITE_POSTES_PROJ);
 
         return ($excedenteCad + $excedenteProj) * self::MULTIPLICADOR_BONUS;
+    }
+
+    /**
+     * Aplica o teto de 30% da remuneração bruta ao bônus.
+     * Sem remuneração cadastrada, o bônus real é zero.
+     */
+    public function aplicarTeto(float $bonusBruto, ?int $remuneracaoCentavos): float
+    {
+        if ($remuneracaoCentavos === null) {
+            return 0.0;
+        }
+
+        $teto = ($remuneracaoCentavos / 100) * self::PERCENTUAL_TETO_BONUS;
+
+        return min($bonusBruto, $teto);
     }
 
     public function formatarMetaCad(int|float $postesProjetadosCad): string
