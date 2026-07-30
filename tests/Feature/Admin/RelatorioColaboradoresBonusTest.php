@@ -69,12 +69,12 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'total_segundos' => 10800,
         ]);
 
-        // Mesmo mês: (500-300)=200 → 364 (abaixo do teto de 30% de R$ 5.000)
+        // Mesmo mês: 300 + (500-300)*2 = 700 (abaixo do teto de 70% de R$ 5.000)
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
             ->assertSee($colaborador->nome)
-            ->assertSee('R$ 364,00')
+            ->assertSee('R$ 700,00')
             ->assertSee('Junho - 2026');
     }
 
@@ -127,12 +127,12 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'total_segundos' => 3600,
         ]);
 
-        // Junho CAD: (500-300)=200 → 364; julho PROJ (300-230)=70 → 127,40 não entra
+        // Junho CAD: 300 + 200*2 = 700; julho PROJ 300 + 70*2 = 440 não entra
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
-            ->assertSee('R$ 364,00')
-            ->assertDontSee('R$ 127,40');
+            ->assertSee('R$ 700,00')
+            ->assertDontSee('R$ 440,00');
     }
 
     public function test_relatorio_exibe_meta_por_tipo_de_projeto(): void
@@ -180,8 +180,8 @@ class RelatorioColaboradoresBonusTest extends TestCase
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
-            ->assertSee('Projetos CAD')
-            ->assertSee('Projetos PROJ')
+            ->assertSee('Postes CAD')
+            ->assertSee('Postes PROJ')
             ->assertSee('500 / 300')
             ->assertSee('300 / 230');
     }
@@ -235,16 +235,16 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'total_segundos' => 3600,
         ]);
 
-        // Projeto A CAD: (500-300)=200 → 364; B PROJ (300-230)=70 → 127,40 não entra
+        // Projeto A CAD: 300 + 200*2 = 700; B PROJ 300 + 70*2 = 440 não entra
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
             ->set('projetoId', $projetoA->id)
-            ->assertSee('R$ 364,00')
-            ->assertDontSee('R$ 127,40');
+            ->assertSee('R$ 700,00')
+            ->assertDontSee('R$ 440,00');
     }
 
-    public function test_relatorio_limita_bonus_a_trinta_por_cento_da_remuneracao(): void
+    public function test_relatorio_limita_bonus_a_setenta_por_cento_da_remuneracao(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);
         $coordenador = Colaborador::factory()->coordenador()->create();
@@ -259,20 +259,20 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'updated_at' => '2026-06-10 10:00:00',
         ]);
 
-        // (1400-300)=1100 → 1100 * 1.82 = 2002 (acima do teto de R$ 1.500)
+        // 300 + (2000-300)*2 = 3700 (acima do teto de R$ 3.500)
         Parte::factory()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoParte::Cad,
             'postes_desenhados' => 100,
-            'postes_projetados' => 1400,
+            'postes_projetados' => 2000,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 09:00:00',
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 1400,
+            'total_postes_projetados_cad' => 2000,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 3600,
         ]);
@@ -280,8 +280,8 @@ class RelatorioColaboradoresBonusTest extends TestCase
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
-            ->assertSee('R$ 1.500,00')
-            ->assertDontSee('R$ 2.002,00');
+            ->assertSee('R$ 3.500,00')
+            ->assertDontSee('R$ 3.700,00');
     }
 
     public function test_relatorio_zera_bonus_quando_remuneracao_ausente(): void
@@ -320,7 +320,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
             ->assertSee('R$ 0,00')
-            ->assertDontSee('R$ 364,00');
+            ->assertDontSee('R$ 700,00');
     }
 
     /**

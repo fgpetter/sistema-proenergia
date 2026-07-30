@@ -3,13 +3,16 @@
 namespace Tests\Feature\Painel;
 
 use App\Enums\UserRole;
+use App\Livewire\Painel\PerformanceColaboradores;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
 use App\Queries\DashboardMetrics;
+use App\Queries\RelatorioColaboradoresProdutividade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Livewire;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -20,18 +23,16 @@ class DashboardTest extends TestCase
     public function test_administrativo_ve_dashboard_com_dados_globais(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);
-        $colaborador = Colaborador::factory()->make([
-            'id' => 1,
+        $colaborador = $this->makeColaboradorProdutividade([
             'nome' => 'Colaborador Teste',
+            'total_projetos' => 2,
+            'total_extensao_desenho' => 300,
+            'total_extensao_projeto' => 130,
+            'total_postes_projetados_cad' => 20,
+            'total_postes_projetados_proj' => 0,
+            'total_segundos' => 10800,
+            'remuneracao' => 500000,
         ]);
-        $colaborador->total_projetos = 2;
-        $colaborador->total_extensao_desenho = 300;
-        $colaborador->total_extensao_projeto = 130;
-        $colaborador->meta_cad = '20 / 300';
-        $colaborador->meta_proj = '0 / 230';
-        $colaborador->total_postes = 20;
-        $colaborador->total_bonus = 0.0;
-        $colaborador->total_segundos = 10800;
 
         $projetoRecente = Projeto::factory()->make([
             'id' => 1,
@@ -70,12 +71,13 @@ class DashboardTest extends TestCase
                 'totalSegundos' => 10800,
             ],
             estatisticasProjetos: collect([$projetoRecente, $projetoSemPartes, $projetoAntigo]),
-            produtividadeColaboradores: collect([$colaborador]),
         );
+        $this->mockProdutividadeAgregada($colaborador);
 
         $response = $this->actingAs($admin)->get(route('painel.dashboard'));
 
         $response->assertOk();
+        $response->assertSeeLivewire(PerformanceColaboradores::class);
         $response->assertSee('3', false);
         $response->assertSee('130', false);
         $response->assertSee('20', false);
@@ -94,18 +96,14 @@ class DashboardTest extends TestCase
     public function test_dashboard_exibe_meta_por_tipo_de_projeto_na_performance_de_colaborador(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);
-        $colaborador = Colaborador::factory()->make([
-            'id' => 1,
+        $colaborador = $this->makeColaboradorProdutividade([
             'nome' => 'Colaborador Meta',
+            'total_projetos' => 1,
+            'total_postes_projetados_cad' => 500,
+            'total_postes_projetados_proj' => 300,
+            'total_segundos' => 7200,
+            'remuneracao' => 500000,
         ]);
-        $colaborador->total_projetos = 1;
-        $colaborador->total_extensao_desenho = 0;
-        $colaborador->total_extensao_projeto = 0;
-        $colaborador->meta_cad = '500 / 300';
-        $colaborador->meta_proj = '300 / 230';
-        $colaborador->total_postes = 800;
-        $colaborador->total_bonus = 491.4;
-        $colaborador->total_segundos = 7200;
 
         $this->mockDashboardMetrics(
             totais: (object) [
@@ -117,21 +115,76 @@ class DashboardTest extends TestCase
                 'totalSegundos' => 7200,
             ],
             estatisticasProjetos: collect(),
-            produtividadeColaboradores: collect([$colaborador]),
         );
+        $this->mockProdutividadeAgregada($colaborador);
 
         $response = $this->actingAs($admin)->get(route('painel.dashboard'));
 
         $response->assertOk();
-        $response->assertSee('Projetos CAD');
-        $response->assertSee('Projetos PROJ');
+        $response->assertSeeLivewire(PerformanceColaboradores::class);
+        $response->assertSee('Postes CAD');
+        $response->assertSee('Postes PROJ');
         $response->assertSee('500 / 300');
         $response->assertSee('300 / 230');
+        $response->assertSee('R$ 840,00');
+    }
+
+    public function test_dashboard_aplica_teto_de_setenta_por_cento_da_remuneracao(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $colaborador = $this->makeColaboradorProdutividade([
+            'nome' => 'Colaborador Teto',
+            'total_projetos' => 1,
+            'total_postes_projetados_cad' => 2000,
+            'total_postes_projetados_proj' => 0,
+            'total_segundos' => 3600,
+            'remuneracao' => 500000,
+        ]);
+
+        $this->mockDashboardMetrics();
+        $this->mockProdutividadeAgregada($colaborador);
+
+        Livewire::actingAs($admin)
+            ->test(PerformanceColaboradores::class)
+            ->assertSee('R$ 3.500,00')
+            ->assertDontSee('R$ 3.700,00');
+    }
+
+    public function test_dashboard_filtra_performance_por_competencia(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+
+        Projeto::factory()->create([
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
+
+        $this->mockDashboardMetrics();
+        $this->mock(RelatorioColaboradoresProdutividade::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('agregar')
+                ->withArgs(fn (
+                    ?int $colaboradorId = null,
+                    ?int $projetoId = null,
+                    ?string $mesAno = null,
+                    ?int $coordenadorId = null,
+                ): bool => $colaboradorId === null
+                    && $projetoId === null
+                    && $coordenadorId === null
+                    && ($mesAno === null || $mesAno === '2026-06'))
+                ->andReturn(collect());
+        });
+
+        Livewire::actingAs($admin)
+            ->test(PerformanceColaboradores::class)
+            ->set('mesAno', '2026-06')
+            ->assertSet('mesAno', '2026-06')
+            ->assertSee('Junho - 2026');
     }
 
     public function test_coordenador_acessa_dashboard(): void
     {
         $this->mockDashboardMetrics();
+        $this->mockProdutividadeAgregada();
 
         $coordenadorUser = User::create([
             'name' => 'Coordenador',
@@ -184,17 +237,14 @@ class DashboardTest extends TestCase
 
     /**
      * @param  Collection<int, mixed>|null  $estatisticasProjetos
-     * @param  Collection<int, mixed>|null  $produtividadeColaboradores
      */
     private function mockDashboardMetrics(
         ?object $totais = null,
         ?Collection $estatisticasProjetos = null,
-        ?Collection $produtividadeColaboradores = null,
     ): void {
         $this->mock(DashboardMetrics::class, function (MockInterface $mock) use (
             $totais,
             $estatisticasProjetos,
-            $produtividadeColaboradores,
         ): void {
             $mock->shouldReceive('totaisGlobais')->andReturn($totais ?? (object) [
                 'totalProjetos' => 0,
@@ -205,7 +255,48 @@ class DashboardTest extends TestCase
                 'totalSegundos' => 0,
             ]);
             $mock->shouldReceive('estatisticasPorProjeto')->andReturn($estatisticasProjetos ?? collect());
-            $mock->shouldReceive('produtividadeColaboradores')->andReturn($produtividadeColaboradores ?? collect());
+        });
+    }
+
+    /**
+     * @param  array{
+     *     nome?: string,
+     *     total_projetos?: int,
+     *     total_extensao_desenho?: int,
+     *     total_extensao_projeto?: int,
+     *     total_postes_projetados_cad?: int,
+     *     total_postes_projetados_proj?: int,
+     *     total_segundos?: int,
+     *     remuneracao?: int|null
+     * }  $atributos
+     */
+    private function makeColaboradorProdutividade(array $atributos = []): Colaborador
+    {
+        $colaborador = Colaborador::factory()->make([
+            'id' => $atributos['id'] ?? 1,
+            'nome' => $atributos['nome'] ?? 'Colaborador',
+            'remuneracao' => $atributos['remuneracao'] ?? 500000,
+        ]);
+        $colaborador->id = $atributos['id'] ?? 1;
+        $colaborador->remuneracao = $atributos['remuneracao'] ?? 500000;
+        $colaborador->total_projetos = $atributos['total_projetos'] ?? 1;
+        $colaborador->total_extensao_desenho = $atributos['total_extensao_desenho'] ?? 0;
+        $colaborador->total_extensao_projeto = $atributos['total_extensao_projeto'] ?? 0;
+        $colaborador->total_postes_projetados_cad = $atributos['total_postes_projetados_cad'] ?? 0;
+        $colaborador->total_postes_projetados_proj = $atributos['total_postes_projetados_proj'] ?? 0;
+        $colaborador->total_postes_projetados = $colaborador->total_postes_projetados_cad
+            + $colaborador->total_postes_projetados_proj;
+        $colaborador->total_segundos = $atributos['total_segundos'] ?? 0;
+
+        return $colaborador;
+    }
+
+    private function mockProdutividadeAgregada(?Colaborador $colaborador = null): void
+    {
+        $linhas = $colaborador !== null ? collect([$colaborador]) : collect();
+
+        $this->mock(RelatorioColaboradoresProdutividade::class, function (MockInterface $mock) use ($linhas): void {
+            $mock->shouldReceive('agregar')->andReturn($linhas);
         });
     }
 

@@ -15,7 +15,6 @@ class DashboardController extends Controller
         return view('painel.dashboard', [
             'totais' => $this->metrics->totaisGlobais(),
             'estatisticasProjetos' => $this->metrics->estatisticasPorProjeto(),
-            'produtividadeColaboradores' => $this->metrics->produtividadeColaboradores(),
         ]);
     }
 }
