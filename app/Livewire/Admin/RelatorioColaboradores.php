@@ -2,18 +2,22 @@
 
 namespace App\Livewire\Admin;
 
+use App\Enums\TipoProjetoParte;
+use App\Exports\ExportacaoProdutividadeExport;
 use App\Models\Colaborador;
 use App\Models\Parte;
 use App\Models\Projeto;
 use App\Queries\RelatorioColaboradoresProdutividade;
 use App\Support\BonusColaboradorCalculator;
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RelatorioColaboradores extends Component
 {
@@ -66,7 +70,7 @@ class RelatorioColaboradores extends Component
     #[Computed]
     public function produtividadeColaboradores(): Collection
     {
-        $bonusPorColaborador = $this->bonusPorColaborador();
+        $calculator = app(BonusColaboradorCalculator::class);
 
         return app(RelatorioColaboradoresProdutividade::class)
             ->agregar(
@@ -75,59 +79,78 @@ class RelatorioColaboradores extends Component
                 mesAno: $this->mesAno,
                 coordenadorId: $this->coordenadorId,
             )
-            ->map(function (Colaborador $colaborador) use ($bonusPorColaborador): Colaborador {
-                $calculator = app(BonusColaboradorCalculator::class);
-
-                $bonusBruto = (float) ($bonusPorColaborador[$colaborador->id] ?? 0);
-                $colaborador->total_bonus = $calculator->aplicarTeto(
-                    $bonusBruto,
-                    $colaborador->remuneracao,
-                );
-                $colaborador->meta_cad = $calculator->formatarMetaCad(
-                    $colaborador->total_postes_projetados_cad,
-                );
-                $colaborador->meta_proj = $calculator->formatarMetaProj(
-                    $colaborador->total_postes_projetados_proj,
-                );
-                $colaborador->total_postes = (int) $colaborador->total_postes_projetados_cad
-                    + (int) $colaborador->total_postes_projetados_proj;
-
-                return $colaborador;
-            });
+            ->map(fn (Colaborador $colaborador): Colaborador => $calculator->enriquecerColaborador($colaborador));
     }
 
-    /**
-     * @return Collection<int|string, float>
-     */
-    protected function bonusPorColaborador(): Collection
+    #[Computed]
+    public function podeExportarProdutividade(): bool
     {
-        $colaboradorIdEscopo = $this->colaboradorIdEscopo();
+        $user = auth()->user();
 
-        $partes = Parte::query()
-            ->join('projetos', 'projetos.id', '=', 'partes.projeto_id')
-            ->whereNotNull('partes.colaborador_id')
-            ->when($colaboradorIdEscopo !== null, function (Builder $query) use ($colaboradorIdEscopo): void {
-                $query->where('partes.colaborador_id', $colaboradorIdEscopo);
-            })
-            ->when($this->projetoId, function (Builder $query): void {
-                $query->where('partes.projeto_id', $this->projetoId);
-            })
-            ->when($this->mesAno, function (Builder $query): void {
-                $this->aplicarFiltroCompetencia($query);
-            })
-            ->when($this->coordenadorId, function (Builder $query): void {
-                $query->where('projetos.colaborador_responsavel_id', $this->coordenadorId);
-            })
-            ->get([
-                'partes.colaborador_id',
-                'partes.projeto_id',
-                'partes.postes_desenhados',
-                'partes.postes_projetados',
-                'partes.tipo_projeto',
-            ]);
+        return $user !== null
+            && $user->isPrestador()
+            && $user->colaborador !== null;
+    }
 
-        return app(BonusColaboradorCalculator::class)
-            ->somarPorColaborador($partes);
+    public function exportarProdutividade(): BinaryFileResponse
+    {
+        abort_unless($this->podeExportarProdutividade, 403);
+
+        $this->validate([
+            'mesAno' => ['required', 'date_format:Y-m'],
+        ], [
+            'mesAno.required' => 'Selecione uma competência para baixar a exportação.',
+            'mesAno.date_format' => 'A competência selecionada é inválida.',
+        ]);
+
+        $calculator = app(BonusColaboradorCalculator::class);
+
+        $partes = app(RelatorioColaboradoresProdutividade::class)->listarPartes(
+            colaboradorId: $this->colaboradorIdEscopo(),
+            projetoId: $this->projetoId,
+            mesAno: $this->mesAno,
+            coordenadorId: $this->coordenadorId,
+        );
+
+        $postesCad = (int) $partes
+            ->filter(fn (Parte $parte): bool => ($parte->tipo_projeto ?? TipoProjetoParte::Cad) !== TipoProjetoParte::Proj)
+            ->sum('postes_projetados');
+        $postesProj = (int) $partes
+            ->filter(fn (Parte $parte): bool => $parte->tipo_projeto === TipoProjetoParte::Proj)
+            ->sum('postes_projetados');
+        $totalProjetos = $partes->pluck('projeto_id')->unique()->count();
+
+        $bonusBruto = $calculator->calcularDePartes($partes);
+        $bonus = $calculator->aplicarTeto(
+            $bonusBruto,
+            auth()->user()->colaborador?->remuneracao,
+        );
+
+        $linhasDetalhe = $partes->map(function (Parte $parte): array {
+            return [
+                $parte->projeto?->nome ?? '',
+                $parte->nome,
+                $parte->projeto?->created_at?->format('d/m/Y') ?? '',
+                $parte->tipo_projeto?->value ?? TipoProjetoParte::Cad->value,
+                (int) $parte->postes_projetados,
+                $this->formatarHoras($parte),
+            ];
+        })->all();
+
+        return Excel::download(
+            new ExportacaoProdutividadeExport(
+                linhasDetalhe: $linhasDetalhe,
+                resumo: [
+                    'competencia' => $this->formatarCompetencia($this->mesAno),
+                    'projetos' => $totalProjetos,
+                    'postes_cad' => $postesCad,
+                    'postes_proj' => $postesProj,
+                    'postes_total' => $postesCad + $postesProj,
+                    'bonus' => $bonus,
+                ],
+            ),
+            'exportacao-produtividade-'.$this->mesAno.'.xlsx',
+        );
     }
 
     protected function colaboradorIdEscopo(): ?int
@@ -141,19 +164,24 @@ class RelatorioColaboradores extends Component
         return $user->colaborador?->id;
     }
 
-    protected function aplicarFiltroCompetencia(Builder $query): void
-    {
-        $inicio = Carbon::createFromFormat('Y-m', $this->mesAno)->startOfMonth();
-        $fim = $inicio->copy()->endOfMonth();
-
-        $query->whereBetween('projetos.created_at', [$inicio, $fim]);
-    }
-
     protected function formatarCompetencia(string $competencia): string
     {
         $data = Carbon::createFromFormat('Y-m', $competencia)->locale('pt_BR');
 
         return ucfirst($data->translatedFormat('F')).' - '.$data->format('Y');
+    }
+
+    protected function formatarHoras(Parte $parte): string
+    {
+        $segundos = 0;
+
+        if ($parte->data_hora_inicio !== null && $parte->data_hora_fim !== null) {
+            $segundos = (int) $parte->data_hora_inicio->diffInSeconds($parte->data_hora_fim);
+        }
+
+        $interval = CarbonInterval::seconds($segundos)->cascade();
+
+        return ((int) $interval->totalHours).'h '.$interval->minutes.'min';
     }
 
     public function render(): View
