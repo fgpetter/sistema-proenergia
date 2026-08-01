@@ -31,6 +31,7 @@ class CreateOrUpdateParte
                 'postes_desenhados' => $dados['postes_desenhados'] ?? 0,
                 'postes_projetados' => $dados['postes_projetados'] ?? 0,
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoParte::Cad->value,
+                'observacoes' => $dados['observacoes'] ?? null,
             ]);
         });
     }
@@ -52,6 +53,7 @@ class CreateOrUpdateParte
                 'postes_desenhados' => $dados['postes_desenhados'] ?? 0,
                 'postes_projetados' => $dados['postes_projetados'] ?? 0,
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoParte::Cad->value,
+                'observacoes' => $dados['observacoes'] ?? null,
             ];
 
             if ($datetimes !== null) {

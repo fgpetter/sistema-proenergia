@@ -66,6 +66,7 @@ class ProjetoEditDrawer extends Component
             'partes.*.tipo_projeto' => ['required', Rule::enum(TipoProjetoParte::class)],
             'partes.*.data_hora_inicio' => ['nullable', 'string', 'max:32'],
             'partes.*.data_hora_fim' => ['nullable', 'string', 'max:32'],
+            'partes.*.observacoes' => ['nullable', 'string'],
         ];
     }
 
@@ -128,6 +129,7 @@ class ProjetoEditDrawer extends Component
             'tipo_projeto' => $parteData['tipo_projeto'] ?? TipoProjetoParte::Cad->value,
             'data_hora_inicio' => $parteData['data_hora_inicio'] ?? '',
             'data_hora_fim' => $parteData['data_hora_fim'] ?? '',
+            'observacoes' => $parteData['observacoes'] ?? '',
         ];
     }
 
@@ -160,6 +162,7 @@ class ProjetoEditDrawer extends Component
             'tipo_projeto' => $parte->tipo_projeto?->value ?? TipoProjetoParte::Cad->value,
             'data_hora_inicio' => $parte->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
             'data_hora_fim' => $parte->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
+            'observacoes' => $parte->observacoes ?? '',
             '_delete' => false,
         ])->toArray();
 
@@ -187,6 +190,7 @@ class ProjetoEditDrawer extends Component
             'tipo_projeto' => $parte->tipo_projeto?->value ?? TipoProjetoParte::Cad->value,
             'data_hora_inicio' => $parte->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
             'data_hora_fim' => $parte->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
+            'observacoes' => $parte->observacoes ?? '',
             '_delete' => false,
         ])->toArray();
 
@@ -277,6 +281,7 @@ class ProjetoEditDrawer extends Component
             'tipo_projeto' => TipoProjetoParte::Cad->value,
             'data_hora_inicio' => '',
             'data_hora_fim' => '',
+            'observacoes' => '',
             '_delete' => false,
         ];
 
@@ -318,6 +323,7 @@ class ProjetoEditDrawer extends Component
             "partes.{$index}.tipo_projeto" => ['required', Rule::enum(TipoProjetoParte::class)],
             "partes.{$index}.data_hora_inicio" => ['nullable', 'string', 'max:32'],
             "partes.{$index}.data_hora_fim" => ['nullable', 'string', 'max:32'],
+            "partes.{$index}.observacoes" => ['nullable', 'string'],
         ]);
 
         $parteData = $this->partes[$index];

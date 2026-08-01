@@ -23,6 +23,7 @@ class Parte extends Model
         'tipo_projeto',
         'data_hora_inicio',
         'data_hora_fim',
+        'observacoes',
     ];
 
     protected function casts(): array

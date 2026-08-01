@@ -293,6 +293,18 @@
                                                         </div>
                                                     </div>
 
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-default-700 mb-1">Observações</label>
+                                                        <textarea
+                                                            wire:model="partes.{{ $index }}.observacoes"
+                                                            rows="3"
+                                                            class="form-input w-full text-sm @error('partes.'.$index.'.observacoes') border-danger @enderror"
+                                                            placeholder="Observações sobre esta parte..."
+                                                        ></textarea>
+                                                        @error('partes.'.$index.'.observacoes')
+                                                            <p class="mt-1 text-xs text-danger">{{ $message }}</p>
+                                                        @enderror
+                                                    </div>
 
                                                     <!-- Totais (Read-only) -->
                                                     <div class="bg-primary/5 border border-primary/20 rounded p-2 mt-2">
