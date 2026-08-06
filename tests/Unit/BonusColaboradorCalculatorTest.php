@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Models\Colaborador;
 use App\Support\BonusColaboradorCalculator;
 use Illuminate\Support\Collection;
@@ -110,16 +110,16 @@ class BonusColaboradorCalculatorTest extends TestCase
         $this->assertSame(0.0, $bonus);
     }
 
-    public function test_calcula_de_partes_agregando_cad_e_proj(): void
+    public function test_calcula_de_atividades_agregando_cad_e_proj(): void
     {
-        $bonus = $this->calculator->calcularDePartes([
+        $bonus = $this->calculator->calcularDeAtividades([
             [
-                'tipo_projeto' => TipoProjetoParte::Cad,
+                'tipo_projeto' => TipoProjetoAtividade::Cad,
                 'postes_desenhados' => 150,
                 'postes_projetados' => 100,
             ],
             [
-                'tipo_projeto' => TipoProjetoParte::Proj,
+                'tipo_projeto' => TipoProjetoAtividade::Proj,
                 'postes_desenhados' => 150,
                 'postes_projetados' => 80,
             ],
@@ -127,13 +127,13 @@ class BonusColaboradorCalculatorTest extends TestCase
 
         $this->assertSame(0.0, $bonus);
 
-        $bonusMisto = $this->calculator->calcularDePartes([
+        $bonusMisto = $this->calculator->calcularDeAtividades([
             [
-                'tipo_projeto' => TipoProjetoParte::Cad,
+                'tipo_projeto' => TipoProjetoAtividade::Cad,
                 'postes_projetados' => 450,
             ],
             [
-                'tipo_projeto' => TipoProjetoParte::Proj,
+                'tipo_projeto' => TipoProjetoAtividade::Proj,
                 'postes_projetados' => 250,
             ],
         ]);
@@ -148,21 +148,21 @@ class BonusColaboradorCalculatorTest extends TestCase
             (object) [
                 'colaborador_id' => 1,
                 'projeto_id' => 10,
-                'tipo_projeto' => TipoProjetoParte::Cad->value,
+                'tipo_projeto' => TipoProjetoAtividade::Cad->value,
                 'postes_desenhados' => 140,
                 'postes_projetados' => 250,
             ],
             (object) [
                 'colaborador_id' => 1,
                 'projeto_id' => 20,
-                'tipo_projeto' => TipoProjetoParte::Cad->value,
+                'tipo_projeto' => TipoProjetoAtividade::Cad->value,
                 'postes_desenhados' => 140,
                 'postes_projetados' => 250,
             ],
             (object) [
                 'colaborador_id' => 2,
                 'projeto_id' => 10,
-                'tipo_projeto' => TipoProjetoParte::Cad->value,
+                'tipo_projeto' => TipoProjetoAtividade::Cad->value,
                 'postes_desenhados' => 50,
                 'postes_projetados' => 10,
             ],

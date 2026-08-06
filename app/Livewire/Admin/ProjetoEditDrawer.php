@@ -2,12 +2,13 @@
 
 namespace App\Livewire\Admin;
 
-use App\Actions\CreateOrUpdateParte;
+use App\Actions\CreateOrUpdateAtividade;
 use App\Actions\CreateOrUpdateProjeto;
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Enums\UserRole;
+use App\Models\Atividade;
 use App\Models\Colaborador;
-use App\Models\Parte;
+use App\Models\LogAtividade;
 use App\Models\Projeto;
 use App\Models\User;
 use Closure;
@@ -28,21 +29,23 @@ class ProjetoEditDrawer extends Component
 
     public ?int $editingProjetoId = null;
 
+    public int $atividadesLimite = 10;
+
     public string $nome = '';
 
     public ?int $colaboradorResponsavelId = null;
 
-    public array $partes = [];
+    public array $atividades = [];
 
     /**
      * @var array<int, string>
      */
-    public array $partesDataHoraInicio = [];
+    public array $atividadesDataHoraInicio = [];
 
     /**
      * @var array<int, string>
      */
-    public array $partesDataHoraFim = [];
+    public array $atividadesDataHoraFim = [];
 
     protected function rules(): array
     {
@@ -53,20 +56,20 @@ class ProjetoEditDrawer extends Component
                 'exists:colaboradores,id',
                 $this->coordenadorValidationRule(),
             ],
-            'partes.*.nome' => ['required', 'string', 'max:255'],
-            'partes.*.colaborador_id' => [
+            'atividades.*.nome' => ['required', 'string', 'max:255'],
+            'atividades.*.colaborador_id' => [
                 'nullable',
                 'exists:colaboradores,id',
-                $this->parteColaboradorValidationRule(),
+                $this->atividadeColaboradorValidationRule(),
             ],
-            'partes.*.extensao_desenho' => ['required', 'integer', 'min:0'],
-            'partes.*.extensao_projeto' => ['required', 'integer', 'min:0'],
-            'partes.*.postes_desenhados' => ['required', 'integer', 'min:0'],
-            'partes.*.postes_projetados' => ['required', 'integer', 'min:0'],
-            'partes.*.tipo_projeto' => ['required', Rule::enum(TipoProjetoParte::class)],
-            'partes.*.data_hora_inicio' => ['nullable', 'string', 'max:32'],
-            'partes.*.data_hora_fim' => ['nullable', 'string', 'max:32'],
-            'partes.*.observacoes' => ['nullable', 'string'],
+            'atividades.*.extensao_desenho' => ['required', 'integer', 'min:0'],
+            'atividades.*.extensao_projeto' => ['required', 'integer', 'min:0'],
+            'atividades.*.postes_desenhados' => ['required', 'integer', 'min:0'],
+            'atividades.*.postes_projetados' => ['required', 'integer', 'min:0'],
+            'atividades.*.tipo_projeto' => ['required', Rule::enum(TipoProjetoAtividade::class)],
+            'atividades.*.data_hora_inicio' => ['nullable', 'string', 'max:32'],
+            'atividades.*.data_hora_fim' => ['nullable', 'string', 'max:32'],
+            'atividades.*.observacoes' => ['nullable', 'string'],
         ];
     }
 
@@ -75,12 +78,12 @@ class ProjetoEditDrawer extends Component
         return [
             'nome.required' => 'O nome do projeto é obrigatório.',
             'colaboradorResponsavelId.required' => 'O responsável é obrigatório.',
-            'partes.*.nome.required' => 'O nome da parte é obrigatório.',
-            'partes.*.extensao_desenho.required' => 'A extensão de desenho é obrigatória.',
-            'partes.*.extensao_projeto.required' => 'A extensão de projeto é obrigatória.',
-            'partes.*.postes_desenhados.required' => 'O número de postes desenhados é obrigatório.',
-            'partes.*.postes_projetados.required' => 'O número de postes projetados é obrigatório.',
-            'partes.*.tipo_projeto.required' => 'O tipo de projeto é obrigatório.',
+            'atividades.*.nome.required' => 'O nome da atividade é obrigatório.',
+            'atividades.*.extensao_desenho.required' => 'A extensão de desenho é obrigatória.',
+            'atividades.*.extensao_projeto.required' => 'A extensão de projeto é obrigatória.',
+            'atividades.*.postes_desenhados.required' => 'O número de postes desenhados é obrigatório.',
+            'atividades.*.postes_projetados.required' => 'O número de postes projetados é obrigatório.',
+            'atividades.*.tipo_projeto.required' => 'O tipo de projeto é obrigatório.',
         ];
     }
 
@@ -94,7 +97,7 @@ class ProjetoEditDrawer extends Component
         };
     }
 
-    protected function parteColaboradorValidationRule(): Closure
+    protected function atividadeColaboradorValidationRule(): Closure
     {
         return function (string $attribute, mixed $value, callable $fail): void {
             if (! $value) {
@@ -116,20 +119,20 @@ class ProjetoEditDrawer extends Component
     }
 
     /**
-     * @param  array<string, mixed>  $parteData
+     * @param  array<string, mixed>  $atividadeData
      * @return array<string, mixed>
      */
-    protected function buildPartePayload(array $parteData): array
+    protected function buildAtividadePayload(array $atividadeData): array
     {
         return [
-            'extensao_desenho' => $parteData['extensao_desenho'],
-            'extensao_projeto' => $parteData['extensao_projeto'],
-            'postes_desenhados' => $parteData['postes_desenhados'],
-            'postes_projetados' => $parteData['postes_projetados'],
-            'tipo_projeto' => $parteData['tipo_projeto'] ?? TipoProjetoParte::Cad->value,
-            'data_hora_inicio' => $parteData['data_hora_inicio'] ?? '',
-            'data_hora_fim' => $parteData['data_hora_fim'] ?? '',
-            'observacoes' => $parteData['observacoes'] ?? '',
+            'extensao_desenho' => $atividadeData['extensao_desenho'],
+            'extensao_projeto' => $atividadeData['extensao_projeto'],
+            'postes_desenhados' => $atividadeData['postes_desenhados'],
+            'postes_projetados' => $atividadeData['postes_projetados'],
+            'tipo_projeto' => $atividadeData['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
+            'data_hora_inicio' => $atividadeData['data_hora_inicio'] ?? '',
+            'data_hora_fim' => $atividadeData['data_hora_fim'] ?? '',
+            'observacoes' => $atividadeData['observacoes'] ?? '',
         ];
     }
 
@@ -144,63 +147,100 @@ class ProjetoEditDrawer extends Component
             return;
         }
 
-        $projeto = Projeto::with('partes')->findOrFail($projetoId);
+        $projeto = Projeto::with('atividades')->findOrFail($projetoId);
         $this->authorize('view', $projeto);
 
         $this->editingProjetoId = $projeto->id;
         $this->nome = $projeto->nome;
         $this->colaboradorResponsavelId = $projeto->colaborador_responsavel_id;
 
-        $this->partes = $projeto->partes->map(fn (Parte $parte) => [
-            'id' => $parte->id,
-            'nome' => $parte->nome,
-            'colaborador_id' => $parte->colaborador_id,
-            'extensao_desenho' => $parte->extensao_desenho,
-            'extensao_projeto' => $parte->extensao_projeto,
-            'postes_desenhados' => $parte->postes_desenhados,
-            'postes_projetados' => $parte->postes_projetados,
-            'tipo_projeto' => $parte->tipo_projeto?->value ?? TipoProjetoParte::Cad->value,
-            'data_hora_inicio' => $parte->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
-            'data_hora_fim' => $parte->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
-            'observacoes' => $parte->observacoes ?? '',
+        $this->atividades = $projeto->atividades->map(fn (Atividade $atividade) => [
+            'id' => $atividade->id,
+            'nome' => $atividade->nome,
+            'colaborador_id' => $atividade->colaborador_id,
+            'extensao_desenho' => $atividade->extensao_desenho,
+            'extensao_projeto' => $atividade->extensao_projeto,
+            'postes_desenhados' => $atividade->postes_desenhados,
+            'postes_projetados' => $atividade->postes_projetados,
+            'tipo_projeto' => $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
+            'data_hora_inicio' => $atividade->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
+            'data_hora_fim' => $atividade->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
+            'observacoes' => $atividade->observacoes ?? '',
             '_delete' => false,
         ])->toArray();
 
-        $this->syncPartesDatetimesToParallel();
+        $this->syncAtividadesDatetimesToParallel();
 
+        $this->atividadesLimite = 10;
         $this->showDrawer = true;
     }
 
-    protected function refreshPartesFromProjeto(): void
+    protected function refreshAtividadesFromProjeto(): void
     {
         if (! $this->editingProjetoId) {
             return;
         }
 
-        $projeto = Projeto::with('partes')->findOrFail($this->editingProjetoId);
+        $projeto = Projeto::with('atividades')->findOrFail($this->editingProjetoId);
 
-        $this->partes = $projeto->partes->map(fn (Parte $parte) => [
-            'id' => $parte->id,
-            'nome' => $parte->nome,
-            'colaborador_id' => $parte->colaborador_id,
-            'extensao_desenho' => $parte->extensao_desenho,
-            'extensao_projeto' => $parte->extensao_projeto,
-            'postes_desenhados' => $parte->postes_desenhados,
-            'postes_projetados' => $parte->postes_projetados,
-            'tipo_projeto' => $parte->tipo_projeto?->value ?? TipoProjetoParte::Cad->value,
-            'data_hora_inicio' => $parte->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
-            'data_hora_fim' => $parte->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
-            'observacoes' => $parte->observacoes ?? '',
+        $this->atividades = $projeto->atividades->map(fn (Atividade $atividade) => [
+            'id' => $atividade->id,
+            'nome' => $atividade->nome,
+            'colaborador_id' => $atividade->colaborador_id,
+            'extensao_desenho' => $atividade->extensao_desenho,
+            'extensao_projeto' => $atividade->extensao_projeto,
+            'postes_desenhados' => $atividade->postes_desenhados,
+            'postes_projetados' => $atividade->postes_projetados,
+            'tipo_projeto' => $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
+            'data_hora_inicio' => $atividade->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
+            'data_hora_fim' => $atividade->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
+            'observacoes' => $atividade->observacoes ?? '',
             '_delete' => false,
         ])->toArray();
 
-        $this->syncPartesDatetimesToParallel();
+        $this->syncAtividadesDatetimesToParallel();
     }
 
     #[Computed]
     public function editingProjeto(): ?Projeto
     {
         return $this->editingProjetoId ? Projeto::find($this->editingProjetoId) : null;
+    }
+
+    #[Computed]
+    public function logAtividades()
+    {
+        if (! $this->editingProjetoId) {
+            return collect();
+        }
+
+        return LogAtividade::query()
+            ->where('projeto_id', $this->editingProjetoId)
+            ->with(['user', 'atividade'])
+            ->orderByDesc('created_at')
+            ->limit($this->atividadesLimite)
+            ->get();
+    }
+
+    public function carregarMaisAtividades(): void
+    {
+        $this->atividadesLimite += 10;
+        unset($this->logAtividades);
+    }
+
+    public function nomeUsuarioAtividade(?User $user, int $userId): string
+    {
+        return $user?->name ?? "Usuário removido {$userId}";
+    }
+
+    public function nomeAtividadeLog(?Atividade $atividade, int $atividadeId): string
+    {
+        return $atividade?->nome ?? "Atividade removida {$atividadeId}";
+    }
+
+    public function labelItemAtividade(string $item): string
+    {
+        return $item === 'postes_desenhados' ? 'Postes Desenhados' : 'Postes Projetados';
     }
 
     #[Computed]
@@ -217,7 +257,7 @@ class ProjetoEditDrawer extends Component
     }
 
     #[Computed]
-    public function colaboradoresParaPartes(): array
+    public function colaboradoresParaAtividades(): array
     {
         return Colaborador::whereHas('user', fn ($q) => $q->whereIn('role', [
             UserRole::Levantadores,
@@ -239,14 +279,14 @@ class ProjetoEditDrawer extends Component
     #[Computed]
     public function tiposProjetoDisponiveis(): array
     {
-        return TipoProjetoParte::options();
+        return TipoProjetoAtividade::options();
     }
 
-    public function addParte(CreateOrUpdateProjeto $projetoAction): void
+    public function addAtividade(CreateOrUpdateProjeto $projetoAction): void
     {
-        $this->authorize('create', Parte::class);
+        $this->authorize('create', Atividade::class);
 
-        if (! $this->editingProjetoId && empty($this->partes)) {
+        if (! $this->editingProjetoId && empty($this->atividades)) {
             $this->validate([
                 'nome' => ['required', 'string', 'max:255'],
                 'colaboradorResponsavelId' => [
@@ -271,36 +311,36 @@ class ProjetoEditDrawer extends Component
             ]);
         }
 
-        $this->partes[] = [
+        $this->atividades[] = [
             'nome' => '',
             'colaborador_id' => null,
             'extensao_desenho' => 0,
             'extensao_projeto' => 0,
             'postes_desenhados' => 0,
             'postes_projetados' => 0,
-            'tipo_projeto' => TipoProjetoParte::Cad->value,
+            'tipo_projeto' => TipoProjetoAtividade::Cad->value,
             'data_hora_inicio' => '',
             'data_hora_fim' => '',
             'observacoes' => '',
             '_delete' => false,
         ];
 
-        $this->partesDataHoraInicio[] = '';
-        $this->partesDataHoraFim[] = '';
+        $this->atividadesDataHoraInicio[] = '';
+        $this->atividadesDataHoraFim[] = '';
     }
 
-    public function saveParte(int $index, CreateOrUpdateParte $parteAction): void
+    public function saveAtividade(int $index, CreateOrUpdateAtividade $atividadeAction): void
     {
-        if (! isset($this->partes[$index])) {
+        if (! isset($this->atividades[$index])) {
             return;
         }
 
-        $this->syncPartesDatetimesFromParallel();
+        $this->syncAtividadesDatetimesFromParallel();
 
         if (! $this->editingProjetoId) {
             $this->swalToastWarning([
                 'title' => 'Salve o projeto primeiro!',
-                'text' => 'É necessário salvar o projeto antes de salvar partes individualmente.',
+                'text' => 'É necessário salvar o projeto antes de salvar atividades individualmente.',
                 'showConfirmButton' => false,
                 'position' => 'top-end',
                 'timer' => 3000,
@@ -310,144 +350,144 @@ class ProjetoEditDrawer extends Component
         }
 
         $this->validate([
-            "partes.{$index}.nome" => ['required', 'string', 'max:255'],
-            "partes.{$index}.colaborador_id" => [
+            "atividades.{$index}.nome" => ['required', 'string', 'max:255'],
+            "atividades.{$index}.colaborador_id" => [
                 'nullable',
                 'exists:colaboradores,id',
-                $this->parteColaboradorValidationRule(),
+                $this->atividadeColaboradorValidationRule(),
             ],
-            "partes.{$index}.extensao_desenho" => ['required', 'integer', 'min:0'],
-            "partes.{$index}.extensao_projeto" => ['required', 'integer', 'min:0'],
-            "partes.{$index}.postes_desenhados" => ['required', 'integer', 'min:0'],
-            "partes.{$index}.postes_projetados" => ['required', 'integer', 'min:0'],
-            "partes.{$index}.tipo_projeto" => ['required', Rule::enum(TipoProjetoParte::class)],
-            "partes.{$index}.data_hora_inicio" => ['nullable', 'string', 'max:32'],
-            "partes.{$index}.data_hora_fim" => ['nullable', 'string', 'max:32'],
-            "partes.{$index}.observacoes" => ['nullable', 'string'],
+            "atividades.{$index}.extensao_desenho" => ['required', 'integer', 'min:0'],
+            "atividades.{$index}.extensao_projeto" => ['required', 'integer', 'min:0'],
+            "atividades.{$index}.postes_desenhados" => ['required', 'integer', 'min:0'],
+            "atividades.{$index}.postes_projetados" => ['required', 'integer', 'min:0'],
+            "atividades.{$index}.tipo_projeto" => ['required', Rule::enum(TipoProjetoAtividade::class)],
+            "atividades.{$index}.data_hora_inicio" => ['nullable', 'string', 'max:32'],
+            "atividades.{$index}.data_hora_fim" => ['nullable', 'string', 'max:32'],
+            "atividades.{$index}.observacoes" => ['nullable', 'string'],
         ]);
 
-        $parteData = $this->partes[$index];
+        $atividadeData = $this->atividades[$index];
 
-        if (isset($parteData['id'])) {
-            $parte = Parte::findOrFail($parteData['id']);
-            $this->authorize('update', $parte);
-            $this->validateParteDatetimeFields($index, $parte);
+        if (isset($atividadeData['id'])) {
+            $atividade = Atividade::findOrFail($atividadeData['id']);
+            $this->authorize('update', $atividade);
+            $this->validateAtividadeDatetimeFields($index, $atividade);
         } else {
-            $this->authorize('create', Parte::class);
+            $this->authorize('create', Atividade::class);
         }
 
         $user = auth()->user();
 
-        DB::transaction(function () use ($parteData, $parteAction, $index, $user) {
-            if (isset($parteData['id'])) {
-                $parte = Parte::findOrFail($parteData['id']);
-                $parteAtualizada = $parteAction->update(
-                    $parte,
-                    $parteData['nome'],
-                    $parteData['colaborador_id'],
-                    $this->buildPartePayload($parteData),
+        DB::transaction(function () use ($atividadeData, $atividadeAction, $index, $user) {
+            if (isset($atividadeData['id'])) {
+                $atividade = Atividade::findOrFail($atividadeData['id']);
+                $atividadeAtualizada = $atividadeAction->update(
+                    $atividade,
+                    $atividadeData['nome'],
+                    $atividadeData['colaborador_id'],
+                    $this->buildAtividadePayload($atividadeData),
                     $user
                 );
 
-                $this->partes[$index]['data_hora_inicio'] = $parteAtualizada->data_hora_inicio?->format('Y-m-d\TH:i') ?? '';
-                $this->partes[$index]['data_hora_fim'] = $parteAtualizada->data_hora_fim?->format('Y-m-d\TH:i') ?? '';
-                $this->partesDataHoraInicio[$index] = $this->partes[$index]['data_hora_inicio'];
-                $this->partesDataHoraFim[$index] = $this->partes[$index]['data_hora_fim'];
+                $this->atividades[$index]['data_hora_inicio'] = $atividadeAtualizada->data_hora_inicio?->format('Y-m-d\TH:i') ?? '';
+                $this->atividades[$index]['data_hora_fim'] = $atividadeAtualizada->data_hora_fim?->format('Y-m-d\TH:i') ?? '';
+                $this->atividadesDataHoraInicio[$index] = $this->atividades[$index]['data_hora_inicio'];
+                $this->atividadesDataHoraFim[$index] = $this->atividades[$index]['data_hora_fim'];
             } else {
-                $novaParte = $parteAction->create(
+                $novaAtividade = $atividadeAction->create(
                     $this->editingProjetoId,
-                    $parteData['nome'],
-                    $parteData['colaborador_id'],
-                    $this->buildPartePayload($parteData),
+                    $atividadeData['nome'],
+                    $atividadeData['colaborador_id'],
+                    $this->buildAtividadePayload($atividadeData),
                     $user
                 );
 
-                $this->partes[$index]['id'] = $novaParte->id;
-                $this->partesDataHoraInicio[$index] = '';
-                $this->partesDataHoraFim[$index] = '';
+                $this->atividades[$index]['id'] = $novaAtividade->id;
+                $this->atividadesDataHoraInicio[$index] = '';
+                $this->atividadesDataHoraFim[$index] = '';
             }
         });
 
-        $this->refreshPartesFromProjeto();
+        $this->refreshAtividadesFromProjeto();
 
         $this->swalToastSuccess([
-            'title' => 'Parte salva!',
+            'title' => 'Atividade salva!',
             'showConfirmButton' => false,
             'position' => 'top-end',
             'timer' => 2000,
         ]);
     }
 
-    public ?int $removingParteIndex = null;
+    public ?int $removingAtividadeIndex = null;
 
-    public function confirmRemoveParte(int $index): void
+    public function confirmRemoveAtividade(int $index): void
     {
-        if (isset($this->partes[$index]['id'])) {
-            $parte = Parte::findOrFail($this->partes[$index]['id']);
-            $this->authorize('delete', $parte);
+        if (isset($this->atividades[$index]['id'])) {
+            $atividade = Atividade::findOrFail($this->atividades[$index]['id']);
+            $this->authorize('delete', $atividade);
         }
 
-        $this->removingParteIndex = $index;
+        $this->removingAtividadeIndex = $index;
 
         $componentId = $this->getId();
         $this->swalFire([
-            'title' => 'Remover parte?',
-            'text' => 'Tem certeza que deseja remover esta parte? Esta ação não pode ser desfeita.',
+            'title' => 'Remover atividade?',
+            'text' => 'Tem certeza que deseja remover esta atividade? Esta ação não pode ser desfeita.',
             'icon' => 'warning',
             'showCancelButton' => true,
             'confirmButtonText' => 'Sim, remover',
             'cancelButtonText' => 'Cancelar',
-            'preConfirm' => "() => Livewire.find('{$componentId}').\$call('removeParteConfirmed')",
+            'preConfirm' => "() => Livewire.find('{$componentId}').\$call('removeAtividadeConfirmed')",
         ]);
     }
 
-    public function removeParteConfirmed(): void
+    public function removeAtividadeConfirmed(): void
     {
-        if ($this->removingParteIndex === null) {
+        if ($this->removingAtividadeIndex === null) {
             return;
         }
 
-        $index = $this->removingParteIndex;
+        $index = $this->removingAtividadeIndex;
 
-        if (isset($this->partes[$index])) {
-            if (isset($this->partes[$index]['id'])) {
-                $parte = Parte::findOrFail($this->partes[$index]['id']);
-                $this->authorize('delete', $parte);
-                $parte->delete();
+        if (isset($this->atividades[$index])) {
+            if (isset($this->atividades[$index]['id'])) {
+                $atividade = Atividade::findOrFail($this->atividades[$index]['id']);
+                $this->authorize('delete', $atividade);
+                $atividade->delete();
             }
 
-            unset($this->partes[$index]);
-            $this->partes = array_values($this->partes);
-            $this->syncPartesDatetimesToParallel();
+            unset($this->atividades[$index]);
+            $this->atividades = array_values($this->atividades);
+            $this->syncAtividadesDatetimesToParallel();
         }
 
-        $this->removingParteIndex = null;
-        $this->refreshPartesFromProjeto();
+        $this->removingAtividadeIndex = null;
+        $this->refreshAtividadesFromProjeto();
 
         $this->swalToastWarning([
-            'title' => 'Parte removida!',
+            'title' => 'Atividade removida!',
             'showConfirmButton' => false,
             'position' => 'top-end',
             'timer' => 2000,
         ]);
     }
 
-    public function removeParte(int $index): void
+    public function removeAtividade(int $index): void
     {
-        if (isset($this->partes[$index])) {
-            if (isset($this->partes[$index]['id'])) {
-                $this->partes[$index]['_delete'] = true;
+        if (isset($this->atividades[$index])) {
+            if (isset($this->atividades[$index]['id'])) {
+                $this->atividades[$index]['_delete'] = true;
             } else {
-                unset($this->partes[$index]);
-                $this->partes = array_values($this->partes);
-                $this->syncPartesDatetimesToParallel();
+                unset($this->atividades[$index]);
+                $this->atividades = array_values($this->atividades);
+                $this->syncAtividadesDatetimesToParallel();
             }
         }
     }
 
-    public function save(CreateOrUpdateProjeto $projetoAction, CreateOrUpdateParte $parteAction): void
+    public function save(CreateOrUpdateProjeto $projetoAction, CreateOrUpdateAtividade $atividadeAction): void
     {
-        $this->syncPartesDatetimesFromParallel();
+        $this->syncAtividadesDatetimesFromParallel();
 
         $this->validate();
 
@@ -458,18 +498,18 @@ class ProjetoEditDrawer extends Component
             $this->authorize('create', Projeto::class);
         }
 
-        foreach ($this->partes as $index => $parteData) {
-            if ($parteData['_delete'] ?? false) {
+        foreach ($this->atividades as $index => $atividadeData) {
+            if ($atividadeData['_delete'] ?? false) {
                 continue;
             }
-            if (isset($parteData['id'])) {
-                $this->validateParteDatetimeFields($index, Parte::findOrFail($parteData['id']));
+            if (isset($atividadeData['id'])) {
+                $this->validateAtividadeDatetimeFields($index, Atividade::findOrFail($atividadeData['id']));
             }
         }
 
         $user = auth()->user();
 
-        DB::transaction(function () use ($projetoAction, $parteAction, $user) {
+        DB::transaction(function () use ($projetoAction, $atividadeAction, $user) {
             if ($this->editingProjetoId) {
                 $projeto = Projeto::findOrFail($this->editingProjetoId);
                 $projeto = $projetoAction->update(
@@ -484,30 +524,30 @@ class ProjetoEditDrawer extends Component
                 );
             }
 
-            foreach ($this->partes as $parteData) {
-                if ($parteData['_delete'] ?? false) {
-                    if (isset($parteData['id'])) {
-                        $parte = Parte::findOrFail($parteData['id']);
-                        $this->authorize('delete', $parte);
-                        $parte->delete();
+            foreach ($this->atividades as $atividadeData) {
+                if ($atividadeData['_delete'] ?? false) {
+                    if (isset($atividadeData['id'])) {
+                        $atividade = Atividade::findOrFail($atividadeData['id']);
+                        $this->authorize('delete', $atividade);
+                        $atividade->delete();
                     }
-                } elseif (isset($parteData['id'])) {
-                    $parte = Parte::findOrFail($parteData['id']);
-                    $this->authorize('update', $parte);
-                    $parteAction->update(
-                        $parte,
-                        $parteData['nome'],
-                        $parteData['colaborador_id'],
-                        $this->buildPartePayload($parteData),
+                } elseif (isset($atividadeData['id'])) {
+                    $atividade = Atividade::findOrFail($atividadeData['id']);
+                    $this->authorize('update', $atividade);
+                    $atividadeAction->update(
+                        $atividade,
+                        $atividadeData['nome'],
+                        $atividadeData['colaborador_id'],
+                        $this->buildAtividadePayload($atividadeData),
                         $user
                     );
                 } else {
-                    $this->authorize('create', Parte::class);
-                    $parteAction->create(
+                    $this->authorize('create', Atividade::class);
+                    $atividadeAction->create(
                         $projeto->id,
-                        $parteData['nome'],
-                        $parteData['colaborador_id'],
-                        $this->buildPartePayload($parteData),
+                        $atividadeData['nome'],
+                        $atividadeData['colaborador_id'],
+                        $this->buildAtividadePayload($atividadeData),
                         $user
                     );
                 }
@@ -535,32 +575,33 @@ class ProjetoEditDrawer extends Component
     {
         $this->nome = '';
         $this->colaboradorResponsavelId = null;
-        $this->partes = [];
-        $this->partesDataHoraInicio = [];
-        $this->partesDataHoraFim = [];
+        $this->atividades = [];
+        $this->atividadesDataHoraInicio = [];
+        $this->atividadesDataHoraFim = [];
         $this->editingProjetoId = null;
+        $this->atividadesLimite = 10;
         $this->resetValidation();
     }
 
-    protected function syncPartesDatetimesFromParallel(): void
+    protected function syncAtividadesDatetimesFromParallel(): void
     {
-        foreach ($this->partes as $i => $parteRow) {
-            $this->partes[$i]['data_hora_inicio'] = $this->partesDataHoraInicio[$i] ?? ($parteRow['data_hora_inicio'] ?? '');
-            $this->partes[$i]['data_hora_fim'] = $this->partesDataHoraFim[$i] ?? ($parteRow['data_hora_fim'] ?? '');
+        foreach ($this->atividades as $i => $atividadeRow) {
+            $this->atividades[$i]['data_hora_inicio'] = $this->atividadesDataHoraInicio[$i] ?? ($atividadeRow['data_hora_inicio'] ?? '');
+            $this->atividades[$i]['data_hora_fim'] = $this->atividadesDataHoraFim[$i] ?? ($atividadeRow['data_hora_fim'] ?? '');
         }
     }
 
-    protected function syncPartesDatetimesToParallel(): void
+    protected function syncAtividadesDatetimesToParallel(): void
     {
-        $this->partesDataHoraInicio = [];
-        $this->partesDataHoraFim = [];
-        foreach ($this->partes as $i => $parteRow) {
-            $this->partesDataHoraInicio[$i] = $parteRow['data_hora_inicio'] ?? '';
-            $this->partesDataHoraFim[$i] = $parteRow['data_hora_fim'] ?? '';
+        $this->atividadesDataHoraInicio = [];
+        $this->atividadesDataHoraFim = [];
+        foreach ($this->atividades as $i => $atividadeRow) {
+            $this->atividadesDataHoraInicio[$i] = $atividadeRow['data_hora_inicio'] ?? '';
+            $this->atividadesDataHoraFim[$i] = $atividadeRow['data_hora_fim'] ?? '';
         }
     }
 
-    protected function validateParteDatetimeFields(int $index, Parte $dbParte): void
+    protected function validateAtividadeDatetimeFields(int $index, Atividade $dbAtividade): void
     {
         $user = auth()->user();
         if (! $user instanceof User) {
@@ -569,22 +610,22 @@ class ProjetoEditDrawer extends Component
 
         $user->loadMissing('colaborador');
 
-        $parteRow = $this->partes[$index] ?? [];
-        $inicio = $this->normalizeDatetimeInput($parteRow['data_hora_inicio'] ?? null);
-        $fim = $this->normalizeDatetimeInput($parteRow['data_hora_fim'] ?? null);
+        $atividadeRow = $this->atividades[$index] ?? [];
+        $inicio = $this->normalizeDatetimeInput($atividadeRow['data_hora_inicio'] ?? null);
+        $fim = $this->normalizeDatetimeInput($atividadeRow['data_hora_fim'] ?? null);
 
-        $inicioDb = $dbParte->data_hora_inicio !== null;
-        $fimDb = $dbParte->data_hora_fim !== null;
+        $inicioDb = $dbAtividade->data_hora_inicio !== null;
+        $fimDb = $dbAtividade->data_hora_fim !== null;
         $hasBothStored = $inicioDb && $fimDb;
         $hasNeitherStored = ! $inicioDb && ! $fimDb;
 
         $isAdminOrCoord = $user->isAdminOrSuperAdmin() || $user->isCoordenador();
-        $isAssignedCollaborator = $dbParte->colaborador_id === $user->colaborador?->id;
+        $isAssignedCollaborator = $dbAtividade->colaborador_id === $user->colaborador?->id;
 
-        $keyInicio = "partes.{$index}.data_hora_inicio";
-        $keyFim = "partes.{$index}.data_hora_fim";
+        $keyInicio = "atividades.{$index}.data_hora_inicio";
+        $keyFim = "atividades.{$index}.data_hora_fim";
         $validationData = [
-            'partes' => [
+            'atividades' => [
                 $index => [
                     'data_hora_inicio' => $inicio,
                     'data_hora_fim' => $fim,

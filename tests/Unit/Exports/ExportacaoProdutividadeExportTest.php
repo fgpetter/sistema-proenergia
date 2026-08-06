@@ -13,14 +13,14 @@ class ExportacaoProdutividadeExportTest extends TestCase
     public function test_inclui_linha_em_branco_entre_detalhe_e_dados_gerais(): void
     {
         $export = $this->makeExport([
-            ['Projeto A', 'Parte 1', '10/06/2026', 'CAD', 10, '1h 0min'],
-            ['Projeto B', 'Parte 2', '11/06/2026', 'PROJ', 5, '2h 0min'],
+            ['Projeto A', 'Atividade 1', '10/06/2026', 'CAD', 10, '1h 0min'],
+            ['Projeto B', 'Atividade 2', '11/06/2026', 'PROJ', 5, '2h 0min'],
         ]);
 
         $linhas = $export->array();
 
-        $this->assertSame(['Projeto', 'Parte', 'Data', 'Tipo de Projeto', 'Postes Projetados', 'Horas'], $linhas[0]);
-        $this->assertSame(['Projeto B', 'Parte 2', '11/06/2026', 'PROJ', 5, '2h 0min'], $linhas[2]);
+        $this->assertSame(['Projeto', 'Atividade', 'Data', 'Tipo de Projeto', 'Postes Projetados', 'Horas'], $linhas[0]);
+        $this->assertSame(['Projeto B', 'Atividade 2', '11/06/2026', 'PROJ', 5, '2h 0min'], $linhas[2]);
         $this->assertSame(['', '', '', '', '', ''], $linhas[3]);
         $this->assertSame(['Competência', 'Projetos', 'Postes CAD', 'Postes PROJ', 'Postes Total', 'Bônus'], $linhas[4]);
     }
@@ -28,7 +28,7 @@ class ExportacaoProdutividadeExportTest extends TestCase
     public function test_mescla_colunas_a_f_na_linha_da_legenda(): void
     {
         $export = $this->makeExport([
-            ['Projeto A', 'Parte 1', '10/06/2026', 'CAD', 10, '1h 0min'],
+            ['Projeto A', 'Atividade 1', '10/06/2026', 'CAD', 10, '1h 0min'],
         ]);
 
         $conteudo = Excel::raw($export, ExcelFormat::XLSX);

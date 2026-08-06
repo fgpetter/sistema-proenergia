@@ -22,8 +22,13 @@ class Projeto extends Model
         return $this->belongsTo(Colaborador::class, 'colaborador_responsavel_id');
     }
 
-    public function partes(): HasMany
+    public function atividades(): HasMany
     {
-        return $this->hasMany(Parte::class);
+        return $this->hasMany(Atividade::class);
+    }
+
+    public function logAtividades(): HasMany
+    {
+        return $this->hasMany(LogAtividade::class);
     }
 }

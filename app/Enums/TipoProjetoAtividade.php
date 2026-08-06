@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum TipoProjetoParte: string
+enum TipoProjetoAtividade: string
 {
     case Cad = 'CAD';
     case Proj = 'PROJ';

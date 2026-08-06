@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateParteRequest extends FormRequest
+class StoreAtividadeRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -18,6 +18,7 @@ class UpdateParteRequest extends FormRequest
     {
         return [
             'nome' => ['required', 'string', 'max:255'],
+            'projeto_id' => ['required', 'exists:projetos,id'],
             'colaborador_id' => [
                 'nullable',
                 'exists:colaboradores,id',
@@ -41,15 +42,17 @@ class UpdateParteRequest extends FormRequest
             'extensao_projeto' => ['required', 'integer', 'min:0'],
             'postes_desenhados' => ['required', 'integer', 'min:0'],
             'postes_projetados' => ['required', 'integer', 'min:0'],
-            'tipo_projeto' => ['required', Rule::enum(TipoProjetoParte::class)],
+            'tipo_projeto' => ['required', Rule::enum(TipoProjetoAtividade::class)],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'nome.required' => 'O nome da parte é obrigatório.',
+            'nome.required' => 'O nome da atividade é obrigatório.',
             'nome.max' => 'O nome não pode ter mais de 255 caracteres.',
+            'projeto_id.required' => 'O projeto é obrigatório.',
+            'projeto_id.exists' => 'O projeto selecionado não existe.',
             'extensao_desenho.required' => 'A extensão de desenho é obrigatória.',
             'extensao_desenho.integer' => 'A extensão de desenho deve ser um número inteiro.',
             'extensao_desenho.min' => 'A extensão de desenho não pode ser negativa.',

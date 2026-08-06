@@ -147,7 +147,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="8" class="px-3.5 py-8 text-center text-default-500">
-                                            Nenhum colaborador com partes atribuídas foi encontrado.
+                                            Nenhum colaborador com atividades atribuídas foi encontrado.
                                         </td>
                                     </tr>
                                 @endforelse

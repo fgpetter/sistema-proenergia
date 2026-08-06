@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Enums\UserRole;
 use App\Livewire\Admin\RelatorioColaboradores;
+use App\Models\Atividade;
 use App\Models\Colaborador;
-use App\Models\Parte;
 use App\Models\Projeto;
 use App\Models\User;
 use App\Queries\RelatorioColaboradoresProdutividade;
@@ -33,11 +33,11 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'updated_at' => '2026-06-10 10:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
-            'nome' => 'Parte A',
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'nome' => 'Atividade A',
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 320,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 10:30:00',
@@ -124,31 +124,31 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'updated_at' => '2026-07-05 10:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoJunho->id,
             'colaborador_id' => $colaborador->id,
-            'nome' => 'Parte Propria',
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'nome' => 'Atividade Propria',
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 50,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 09:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoJunho->id,
             'colaborador_id' => $outroColaborador->id,
-            'nome' => 'Parte Alheia',
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'nome' => 'Atividade Alheia',
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 999,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 09:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoJulho->id,
             'colaborador_id' => $colaborador->id,
-            'nome' => 'Parte Outra Competencia',
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'nome' => 'Atividade Outra Competencia',
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 80,
             'data_hora_inicio' => '2026-07-06 08:00:00',
             'data_hora_fim' => '2026-07-06 09:00:00',
@@ -167,13 +167,13 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             ->call('exportarProdutividade')
             ->assertFileDownloaded('exportacao-produtividade-2026-06.xlsx');
 
-        $partes = app(RelatorioColaboradoresProdutividade::class)->listarPartes(
+        $atividades = app(RelatorioColaboradoresProdutividade::class)->listarAtividades(
             colaboradorId: $colaborador->id,
             mesAno: '2026-06',
         );
 
-        $this->assertCount(1, $partes);
-        $this->assertSame('Parte Propria', $partes->first()->nome);
+        $this->assertCount(1, $atividades);
+        $this->assertSame('Atividade Propria', $atividades->first()->nome);
     }
 
     public function test_prestador_ve_botao_de_exportacao(): void

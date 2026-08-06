@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Models\Colaborador;
 use Illuminate\Support\Collection;
 
@@ -19,18 +19,18 @@ class BonusColaboradorCalculator
     private const PERCENTUAL_TETO_BONUS = 0.70;
 
     /**
-     * @param  iterable<int, array{tipo_projeto?: string|TipoProjetoParte|null, postes_desenhados?: int|float|string|null, postes_projetados?: int|float|string|null}|object>  $partes
+     * @param  iterable<int, array{tipo_projeto?: string|TipoProjetoAtividade|null, postes_desenhados?: int|float|string|null, postes_projetados?: int|float|string|null}|object>  $atividades
      */
-    public function calcularDePartes(iterable $partes): float
+    public function calcularDeAtividades(iterable $atividades): float
     {
         $postesProjetadosCad = 0.0;
         $postesProjetadosProj = 0.0;
 
-        foreach ($partes as $parte) {
-            $tipoProjeto = $this->resolveTipoProjeto($parte);
-            $postesProjetados = (float) data_get($parte, 'postes_projetados', 0);
+        foreach ($atividades as $atividade) {
+            $tipoProjeto = $this->resolveTipoProjeto($atividade);
+            $postesProjetados = (float) data_get($atividade, 'postes_projetados', 0);
 
-            if ($tipoProjeto === TipoProjetoParte::Proj) {
+            if ($tipoProjeto === TipoProjetoAtividade::Proj) {
                 $postesProjetadosProj += $postesProjetados;
             } else {
                 $postesProjetadosCad += $postesProjetados;
@@ -122,30 +122,30 @@ class BonusColaboradorCalculator
     }
 
     /**
-     * Soma o bônus por colaborador a partir de todas as partes da competência filtrada.
+     * Soma o bônus por colaborador a partir de todas as atividades da competência filtrada.
      *
-     * @param  Collection<int, object|array<string, mixed>>  $partes
+     * @param  Collection<int, object|array<string, mixed>>  $atividades
      * @return Collection<int|string, float>
      */
-    public function somarPorColaborador(Collection $partes): Collection
+    public function somarPorColaborador(Collection $atividades): Collection
     {
-        return $partes
-            ->groupBy(fn ($parte) => data_get($parte, 'colaborador_id'))
-            ->map(fn (Collection $partesDoColaborador): float => $this->calcularDePartes($partesDoColaborador));
+        return $atividades
+            ->groupBy(fn ($atividade) => data_get($atividade, 'colaborador_id'))
+            ->map(fn (Collection $atividadesDoColaborador): float => $this->calcularDeAtividades($atividadesDoColaborador));
     }
 
-    private function resolveTipoProjeto(mixed $parte): TipoProjetoParte
+    private function resolveTipoProjeto(mixed $atividade): TipoProjetoAtividade
     {
-        $tipo = data_get($parte, 'tipo_projeto');
+        $tipo = data_get($atividade, 'tipo_projeto');
 
-        if ($tipo instanceof TipoProjetoParte) {
+        if ($tipo instanceof TipoProjetoAtividade) {
             return $tipo;
         }
 
         if (is_string($tipo) && $tipo !== '') {
-            return TipoProjetoParte::from($tipo);
+            return TipoProjetoAtividade::from($tipo);
         }
 
-        return TipoProjetoParte::Cad;
+        return TipoProjetoAtividade::Cad;
     }
 }

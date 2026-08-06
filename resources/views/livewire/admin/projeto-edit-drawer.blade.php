@@ -1,7 +1,7 @@
 <div
     x-data="{
         showDrawer: @entangle('showDrawer'),
-        expandedParte: null
+        expandedAtividade: null
     }"
     x-init="
         $watch('showDrawer', value => {
@@ -92,14 +92,14 @@
                                 @enderror
                             </div>
 
-                            <!-- Partes do Projeto -->
-                            <div>
+                            <!-- Atividades do Projeto -->
+                            <div id="atividades-projeto">
                                 <div class="flex items-center justify-between mb-3">
-                                    <h4 class="font-semibold text-default-800">Partes do Projeto</h4>
-                                    @can('create', App\Models\Parte::class)
+                                    <h4 class="font-semibold text-default-800">Atividades do Projeto</h4>
+                                    @can('create', App\Models\Atividade::class)
                                         <button
                                             type="button"
-                                            @click="$wire.addParte()"
+                                            @click="$wire.addAtividade()"
                                             class="btn btn-sm bg-success text-white"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -109,20 +109,20 @@
                                 </div>
 
                                 <div class="space-y-4">
-                                    @forelse ($partes as $index => $parte)
+                                    @forelse ($atividades as $index => $atividade)
                                         @php
-                                            $parteModel = isset($parte['id']) ? \App\Models\Parte::find($parte['id']) : null;
-                                            $datasPreenchidas = $parteModel && $parteModel->data_hora_inicio && $parteModel->data_hora_fim;
-                                            $ehColaboradorAtribuido = auth()->user()->colaborador && (int) ($parte['colaborador_id'] ?? 0) === auth()->user()->colaborador->id;
+                                            $atividadeModel = isset($atividade['id']) ? \App\Models\Atividade::find($atividade['id']) : null;
+                                            $datasPreenchidas = $atividadeModel && $atividadeModel->data_hora_inicio && $atividadeModel->data_hora_fim;
+                                            $ehColaboradorAtribuido = auth()->user()->colaborador && (int) ($atividade['colaborador_id'] ?? 0) === auth()->user()->colaborador->id;
                                             $podeEditarDatasAdmin = auth()->user()->isAdminOrSuperAdmin() || auth()->user()->isCoordenador();
                                             $camposDataEditaveis = ($ehColaboradorAtribuido && ! $datasPreenchidas) || ($datasPreenchidas && $podeEditarDatasAdmin);
                                         @endphp
-                                        @if (!($parte['_delete'] ?? false))
-                                            <div class="border border-default-200 rounded-md overflow-hidden" wire:key="parte-{{ $index }}">
+                                        @if (!($atividade['_delete'] ?? false))
+                                            <div class="border border-default-200 rounded-md overflow-hidden" wire:key="atividade-{{ $index }}">
                                                 <!-- Header do Card -->
                                                 <button
                                                     type="button"
-                                                    @click="expandedParte = expandedParte === {{ $index }} ? null : {{ $index }}"
+                                                    @click="expandedAtividade = expandedAtividade === {{ $index }} ? null : {{ $index }}"
                                                     class="w-full flex items-center justify-between p-3 hover:bg-default-50 transition"
                                                 >
                                                     <div class="flex items-center gap-2 flex-1 text-left">
@@ -137,30 +137,30 @@
                                                             stroke-linecap="round"
                                                             stroke-linejoin="round"
                                                             class="flex-shrink-0 transition-transform"
-                                                            :class="expandedParte === {{ $index }} ? 'rotate-180' : ''"
+                                                            :class="expandedAtividade === {{ $index }} ? 'rotate-180' : ''"
                                                         ><polyline points="6 9 12 15 18 9"/></svg>
                                                         <span class="font-medium text-default-800">
-                                                            {{ $parte['nome'] ?: 'Parte sem nome' }}
+                                                            {{ $atividade['nome'] ?: 'Atividade sem nome' }}
                                                         </span>
-                                                        @if ($parte['colaborador_id'])
+                                                        @if ($atividade['colaborador_id'])
                                                             <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                                                                {{ $this->colaboradoresParaPartes[$parte['colaborador_id']] ?? 'Colaborador' }}
+                                                                {{ $this->colaboradoresParaAtividades[$atividade['colaborador_id']] ?? 'Colaborador' }}
                                                             </span>
                                                         @endif
                                                     </div>
                                                 </button>
 
                                                 <!-- Conteúdo Expandível -->
-                                                <div x-show="expandedParte === {{ $index }}" class="border-t border-default-200 p-3 space-y-3 bg-default-50">
+                                                <div x-show="expandedAtividade === {{ $index }}" class="border-t border-default-200 p-3 space-y-3 bg-default-50">
                                                     <div>
                                                         <label class="block text-sm font-medium text-default-700 mb-1">Nome</label>
                                                         <input
-                                                            wire:model="partes.{{ $index }}.nome"
+                                                            wire:model="atividades.{{ $index }}.nome"
                                                             type="text"
-                                                            class="form-input w-full text-sm @error('partes.'.$index.'.nome') border-danger @enderror"
-                                                            placeholder="Nome da parte"
+                                                            class="form-input w-full text-sm @error('atividades.'.$index.'.nome') border-danger @enderror"
+                                                            placeholder="Nome da atividade"
                                                         >
-                                                        @error('partes.'.$index.'.nome')
+                                                        @error('atividades.'.$index.'.nome')
                                                             <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                         @enderror
                                                     </div>
@@ -168,18 +168,18 @@
                                                     <div>
                                                         <label class="block text-sm font-medium text-default-700 mb-1">Colaborador</label>
                                                         <select
-                                                            wire:model="partes.{{ $index }}.colaborador_id"
-                                                            class="form-input w-full text-sm @error('partes.'.$index.'.colaborador_id') border-danger @enderror"
-                                                            @if (!auth()->user()?->can('create', App\Models\Parte::class))
-                                                                :disabled="$wire.partes[{{ $index }}]?.colaborador_id && $wire.partes[{{ $index }}]?.colaborador_id !== @js(auth()->user()->colaborador?->id)"
+                                                            wire:model="atividades.{{ $index }}.colaborador_id"
+                                                            class="form-input w-full text-sm @error('atividades.'.$index.'.colaborador_id') border-danger @enderror"
+                                                            @if (!auth()->user()?->can('create', App\Models\Atividade::class))
+                                                                :disabled="$wire.atividades[{{ $index }}]?.colaborador_id && $wire.atividades[{{ $index }}]?.colaborador_id !== @js(auth()->user()->colaborador?->id)"
                                                             @endif
                                                         >
                                                             <option value="">Sem atribuição</option>
-                                                            @foreach ($this->colaboradoresParaPartes as $colabId => $colabNome)
+                                                            @foreach ($this->colaboradoresParaAtividades as $colabId => $colabNome)
                                                                 <option value="{{ $colabId }}">{{ $colabNome }}</option>
                                                             @endforeach
                                                         </select>
-                                                        @error('partes.'.$index.'.colaborador_id')
+                                                        @error('atividades.'.$index.'.colaborador_id')
                                                             <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                         @enderror
                                                     </div>
@@ -188,24 +188,24 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Extensão Desenho (m)</label>
                                                             <input
-                                                                wire:model.live="partes.{{ $index }}.extensao_desenho"
+                                                                wire:model.live="atividades.{{ $index }}.extensao_desenho"
                                                                 type="number"
                                                                 min="0"
-                                                                class="form-input w-full text-sm @error('partes.'.$index.'.extensao_desenho') border-danger @enderror"
+                                                                class="form-input w-full text-sm @error('atividades.'.$index.'.extensao_desenho') border-danger @enderror"
                                                             >
-                                                            @error('partes.'.$index.'.extensao_desenho')
+                                                            @error('atividades.'.$index.'.extensao_desenho')
                                                                 <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                             @enderror
                                                         </div>
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Extensão Projeto (m)</label>
                                                             <input
-                                                                wire:model.live="partes.{{ $index }}.extensao_projeto"
+                                                                wire:model.live="atividades.{{ $index }}.extensao_projeto"
                                                                 type="number"
                                                                 min="0"
-                                                                class="form-input w-full text-sm @error('partes.'.$index.'.extensao_projeto') border-danger @enderror"
+                                                                class="form-input w-full text-sm @error('atividades.'.$index.'.extensao_projeto') border-danger @enderror"
                                                             >
-                                                            @error('partes.'.$index.'.extensao_projeto')
+                                                            @error('atividades.'.$index.'.extensao_projeto')
                                                                 <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                             @enderror
                                                         </div>
@@ -215,24 +215,24 @@
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Postes Desenhados</label>
                                                             <input
-                                                                wire:model.live="partes.{{ $index }}.postes_desenhados"
+                                                                wire:model.live="atividades.{{ $index }}.postes_desenhados"
                                                                 type="number"
                                                                 min="0"
-                                                                class="form-input w-full text-sm @error('partes.'.$index.'.postes_desenhados') border-danger @enderror"
+                                                                class="form-input w-full text-sm @error('atividades.'.$index.'.postes_desenhados') border-danger @enderror"
                                                             >
-                                                            @error('partes.'.$index.'.postes_desenhados')
+                                                            @error('atividades.'.$index.'.postes_desenhados')
                                                                 <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                             @enderror
                                                         </div>
                                                         <div>
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Postes Projetados</label>
                                                             <input
-                                                                wire:model.live="partes.{{ $index }}.postes_projetados"
+                                                                wire:model.live="atividades.{{ $index }}.postes_projetados"
                                                                 type="number"
                                                                 min="0"
-                                                                class="form-input w-full text-sm @error('partes.'.$index.'.postes_projetados') border-danger @enderror"
+                                                                class="form-input w-full text-sm @error('atividades.'.$index.'.postes_projetados') border-danger @enderror"
                                                             >
-                                                            @error('partes.'.$index.'.postes_projetados')
+                                                            @error('atividades.'.$index.'.postes_projetados')
                                                                 <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                             @enderror
                                                         </div>
@@ -241,14 +241,14 @@
                                                     <div>
                                                         <label class="block text-sm font-medium text-default-700 mb-1">Tipo de Projeto</label>
                                                         <select
-                                                            wire:model.live="partes.{{ $index }}.tipo_projeto"
-                                                            class="form-input w-full text-sm @error('partes.'.$index.'.tipo_projeto') border-danger @enderror"
+                                                            wire:model.live="atividades.{{ $index }}.tipo_projeto"
+                                                            class="form-input w-full text-sm @error('atividades.'.$index.'.tipo_projeto') border-danger @enderror"
                                                         >
                                                             @foreach ($this->tiposProjetoDisponiveis as $tipoValue => $tipoLabel)
                                                                 <option value="{{ $tipoValue }}">{{ $tipoLabel }}</option>
                                                             @endforeach
                                                         </select>
-                                                        @error('partes.'.$index.'.tipo_projeto')
+                                                        @error('atividades.'.$index.'.tipo_projeto')
                                                             <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                         @enderror
                                                     </div>
@@ -258,16 +258,16 @@
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Data e hora início</label>
                                                             @if ($camposDataEditaveis)
                                                                 <input
-                                                                    wire:model="partesDataHoraInicio.{{ $index }}"
+                                                                    wire:model="atividadesDataHoraInicio.{{ $index }}"
                                                                     type="datetime-local"
-                                                                    class="form-input w-full text-sm @error('partes.'.$index.'.data_hora_inicio') border-danger @enderror"
+                                                                    class="form-input w-full text-sm @error('atividades.'.$index.'.data_hora_inicio') border-danger @enderror"
                                                                 >
-                                                                @error('partes.'.$index.'.data_hora_inicio')
+                                                                @error('atividades.'.$index.'.data_hora_inicio')
                                                                     <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                                 @enderror
                                                             @else
                                                                 <p class="text-sm text-default-800 py-2 px-3 bg-default-100 rounded border border-default-200">
-                                                                    {{ $parteModel?->data_hora_inicio?->format('d/m/Y H:i') ?? '—' }}
+                                                                    {{ $atividadeModel?->data_hora_inicio?->format('d/m/Y H:i') ?? '—' }}
                                                                 </p>
                                                                 @if (! $datasPreenchidas && $podeEditarDatasAdmin)
                                                                     <p class="mt-1 text-xs text-default-500">Preenchimento inicial pelo colaborador atribuído.</p>
@@ -278,16 +278,16 @@
                                                             <label class="block text-sm font-medium text-default-700 mb-1">Data e hora fim</label>
                                                             @if ($camposDataEditaveis)
                                                                 <input
-                                                                    wire:model="partesDataHoraFim.{{ $index }}"
+                                                                    wire:model="atividadesDataHoraFim.{{ $index }}"
                                                                     type="datetime-local"
-                                                                    class="form-input w-full text-sm @error('partes.'.$index.'.data_hora_fim') border-danger @enderror"
+                                                                    class="form-input w-full text-sm @error('atividades.'.$index.'.data_hora_fim') border-danger @enderror"
                                                                 >
-                                                                @error('partes.'.$index.'.data_hora_fim')
+                                                                @error('atividades.'.$index.'.data_hora_fim')
                                                                     <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                                 @enderror
                                                             @else
                                                                 <p class="text-sm text-default-800 py-2 px-3 bg-default-100 rounded border border-default-200">
-                                                                    {{ $parteModel?->data_hora_fim?->format('d/m/Y H:i') ?? '—' }}
+                                                                    {{ $atividadeModel?->data_hora_fim?->format('d/m/Y H:i') ?? '—' }}
                                                                 </p>
                                                             @endif
                                                         </div>
@@ -296,12 +296,12 @@
                                                     <div>
                                                         <label class="block text-sm font-medium text-default-700 mb-1">Observações</label>
                                                         <textarea
-                                                            wire:model="partes.{{ $index }}.observacoes"
+                                                            wire:model="atividades.{{ $index }}.observacoes"
                                                             rows="3"
-                                                            class="form-input w-full text-sm @error('partes.'.$index.'.observacoes') border-danger @enderror"
-                                                            placeholder="Observações sobre esta parte..."
+                                                            class="form-input w-full text-sm @error('atividades.'.$index.'.observacoes') border-danger @enderror"
+                                                            placeholder="Observações sobre esta atividade..."
                                                         ></textarea>
-                                                        @error('partes.'.$index.'.observacoes')
+                                                        @error('atividades.'.$index.'.observacoes')
                                                             <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                         @enderror
                                                     </div>
@@ -312,40 +312,40 @@
                                                             <div>
                                                                 <p class="text-xs text-default-600">Total Extensão</p>
                                                                 <p class="text-sm font-semibold text-primary">
-                                                                    {{ ($parte['extensao_desenho'] ?? 0) + ($parte['extensao_projeto'] ?? 0) }} m
+                                                                    {{ ($atividade['extensao_desenho'] ?? 0) + ($atividade['extensao_projeto'] ?? 0) }} m
                                                                 </p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-xs text-default-600">Total Postes</p>
                                                                 <p class="text-sm font-semibold text-primary">
-                                                                    {{ ($parte['postes_desenhados'] ?? 0) + ($parte['postes_projetados'] ?? 0) }}
+                                                                    {{ ($atividade['postes_desenhados'] ?? 0) + ($atividade['postes_projetados'] ?? 0) }}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <!-- Botões de Ação da Parte -->
+                                                    <!-- Botões de Ação da Atividade -->
                                                     <div class="flex items-center justify-end gap-2 pt-3 border-t border-default-200 mt-3">
-                                                        @if (!isset($parte['id']) || ($parteModel && auth()->user()?->can('delete', $parteModel)))
+                                                        @if (!isset($atividade['id']) || ($atividadeModel && auth()->user()?->can('delete', $atividadeModel)))
                                                             <button type="button"
-                                                                wire:click="confirmRemoveParte({{ $index }})"
+                                                                wire:click="confirmRemoveAtividade({{ $index }})"
                                                                 class="btn btn-sm bg-danger text-white hover:bg-danger/90"
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                                                 Remover
                                                             </button>
                                                         @endif
-                                                        @if (!isset($parte['id']) ? auth()->user()?->can('create', App\Models\Parte::class) : ($parteModel && auth()->user()?->can('update', $parteModel)))
+                                                        @if (!isset($atividade['id']) ? auth()->user()?->can('create', App\Models\Atividade::class) : ($atividadeModel && auth()->user()?->can('update', $atividadeModel)))
                                                             <button type="button"
-                                                                wire:click="saveParte({{ $index }})"
+                                                                wire:click="saveAtividade({{ $index }})"
                                                                 class="btn btn-sm bg-primary text-white hover:bg-primary/90 inline-flex items-center gap-1"
                                                                 wire:loading.attr="disabled"
                                                             >
-                                                            <span wire:loading.remove wire:target="saveParte({{ $index }})" class="inline-flex items-center gap-1">
+                                                            <span wire:loading.remove wire:target="saveAtividade({{ $index }})" class="inline-flex items-center gap-1">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                                                 Salvar
                                                             </span>
-                                                            <span wire:loading wire:target="saveParte({{ $index }})">Salvando...</span>
+                                                            <span wire:loading wire:target="saveAtividade({{ $index }})">Salvando...</span>
                                                         </button>
                                                         @endif
                                                     </div>
@@ -354,11 +354,48 @@
                                         @endif
                                     @empty
                                         <div class="text-center py-4 text-default-500 text-sm">
-                                            Nenhuma parte adicionada. Use o botão acima para adicionar.
+                                            Nenhuma atividade adicionada. Use o botão acima para adicionar.
                                         </div>
                                     @endforelse
                                 </div>
                             </div>
+
+                            <!-- Timeline de Atividades -->
+                            @if ($editingProjetoId && $this->logAtividades->isNotEmpty())
+                                <div>
+                                    <h4 class="font-semibold text-default-800 mb-4">Histórico de Atividades</h4>
+                                    <div>
+                                        @foreach ($this->logAtividades as $atividade)
+                                            <div wire:key="atividade-{{ $atividade->id }}" class="relative px-6 before:absolute before:border-s before:start-0.75 before:border-default-200 before:end-0.75 before:top-1.5 before:-bottom-1.5 after:absolute after:size-2 after:bg-primary after:rounded-full after:start-0 after:end-0 after:top-1.5 {{ $loop->last ? '' : 'pb-4' }}">
+                                                <p class="text-sm text-default-800">
+                                                    {{ $this->nomeUsuarioAtividade($atividade->user, $atividade->user_id) }}
+                                                    {{ $atividade->acao }}
+                                                    {{ $this->labelItemAtividade($atividade->item) }}
+                                                    {{ $atividade->valor }}
+                                                    em
+                                                    {{ $this->nomeAtividadeLog($atividade->atividade, $atividade->atividade_id) }}
+                                                </p>
+                                                <p class="text-xs text-default-400 mt-1">
+                                                    {{ $atividade->created_at->format('d/m/Y H:i') }}
+                                                </p>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    @if ($this->logAtividades->count() === $atividadesLimite)
+                                        <div class="mt-3 text-center">
+                                            <button
+                                                type="button"
+                                                wire:click="carregarMaisAtividades"
+                                                class="btn btn-sm bg-default-100 text-default-600 hover:bg-default-200"
+                                                wire:loading.attr="disabled"
+                                            >
+                                                <span wire:loading.remove wire:target="carregarMaisAtividades">Carregar mais</span>
+                                                <span wire:loading wire:target="carregarMaisAtividades">Carregando...</span>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
 

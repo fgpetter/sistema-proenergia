@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Actions\CreateOrUpdateParte;
+use App\Actions\CreateOrUpdateAtividade;
 use App\Actions\CreateOrUpdateProjeto;
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Models\Colaborador;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -15,9 +15,9 @@ class ImportarProjetosCsv extends Command
 {
     private const int COLABORADOR_RESPONSAVEL_ID = 4;
 
-    private const int COLABORADOR_PARTE_ID = 1;
+    private const int COLABORADOR_ATIVIDADE_ID = 1;
 
-    private const string PARTE_NOME = 'Parte 1';
+    private const string ATIVIDADE_NOME = 'Atividade 1';
 
     /**
      * @var string
@@ -27,9 +27,9 @@ class ImportarProjetosCsv extends Command
     /**
      * @var string
      */
-    protected $description = 'Importa projetos e partes a partir de um CSV de produtividade';
+    protected $description = 'Importa projetos e atividades a partir de um CSV de produtividade';
 
-    public function handle(CreateOrUpdateProjeto $projetoAction, CreateOrUpdateParte $parteAction): int
+    public function handle(CreateOrUpdateProjeto $projetoAction, CreateOrUpdateAtividade $atividadeAction): int
     {
         $caminho = $this->argument('caminho');
         $caminhoResolvido = $this->resolverCaminho($caminho);
@@ -61,7 +61,7 @@ class ImportarProjetosCsv extends Command
         $ator = $this->resolverUsuarioAtor();
 
         if ($ator === null) {
-            $this->error('Não foi possível resolver um usuário para executar a criação das partes.');
+            $this->error('Não foi possível resolver um usuário para executar a criação das atividades.');
 
             return self::FAILURE;
         }
@@ -72,28 +72,28 @@ class ImportarProjetosCsv extends Command
         foreach ($linhas as $linha) {
             $nome = $linha['projeto.nome'];
 
-            $tipoProjeto = TipoProjetoParte::tryFrom($linha['partes.tipo_projeto']);
+            $tipoProjeto = TipoProjetoAtividade::tryFrom($linha['atividades.tipo_projeto']);
 
             if ($tipoProjeto === null) {
-                $this->error("  [erro] tipo_projeto inválido em \"{$nome}\": {$linha['partes.tipo_projeto']}");
+                $this->error("  [erro] tipo_projeto inválido em \"{$nome}\": {$linha['atividades.tipo_projeto']}");
                 $erros++;
 
                 continue;
             }
 
             try {
-                DB::transaction(function () use ($projetoAction, $parteAction, $linha, $nome, $tipoProjeto, $ator): void {
+                DB::transaction(function () use ($projetoAction, $atividadeAction, $linha, $nome, $tipoProjeto, $ator): void {
                     $projeto = $projetoAction->create($nome, self::COLABORADOR_RESPONSAVEL_ID);
 
-                    $parteAction->create(
+                    $atividadeAction->create(
                         $projeto->id,
-                        self::PARTE_NOME,
-                        self::COLABORADOR_PARTE_ID,
+                        self::ATIVIDADE_NOME,
+                        self::COLABORADOR_ATIVIDADE_ID,
                         [
-                            'extensao_desenho' => (int) $linha['partes.extensao_desenho'],
-                            'extensao_projeto' => (int) $linha['partes.extensao_projeto'],
-                            'postes_desenhados' => (int) $linha['partes.postes_desenhados'],
-                            'postes_projetados' => (int) $linha['partes.postes_projetados'],
+                            'extensao_desenho' => (int) $linha['atividades.extensao_desenho'],
+                            'extensao_projeto' => (int) $linha['atividades.extensao_projeto'],
+                            'postes_desenhados' => (int) $linha['atividades.postes_desenhados'],
+                            'postes_projetados' => (int) $linha['atividades.postes_projetados'],
                             'tipo_projeto' => $tipoProjeto->value,
                         ],
                         $ator,
@@ -139,11 +139,11 @@ class ImportarProjetosCsv extends Command
     /**
      * @return list<array{
      *     projeto.nome: string,
-     *     partes.extensao_desenho: string,
-     *     partes.extensao_projeto: string,
-     *     partes.tipo_projeto: string,
-     *     partes.postes_desenhados: string,
-     *     partes.postes_projetados: string
+     *     atividades.extensao_desenho: string,
+     *     atividades.extensao_projeto: string,
+     *     atividades.tipo_projeto: string,
+     *     atividades.postes_desenhados: string,
+     *     atividades.postes_projetados: string
      * }>
      */
     private function lerCsv(string $caminho): array
@@ -165,11 +165,11 @@ class ImportarProjetosCsv extends Command
 
             $obrigatorias = [
                 'projeto.nome',
-                'partes.extensao_desenho',
-                'partes.extensao_projeto',
-                'partes.tipo_projeto',
-                'partes.postes_desenhados',
-                'partes.postes_projetados',
+                'atividades.extensao_desenho',
+                'atividades.extensao_projeto',
+                'atividades.tipo_projeto',
+                'atividades.postes_desenhados',
+                'atividades.postes_projetados',
             ];
 
             foreach ($obrigatorias as $coluna) {

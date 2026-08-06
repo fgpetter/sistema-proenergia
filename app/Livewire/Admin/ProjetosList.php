@@ -34,7 +34,7 @@ class ProjetosList extends Component
     public function projetos()
     {
         $query = Projeto::query()
-            ->with('responsavel', 'partes');
+            ->with('responsavel', 'atividades');
 
         if ($this->search) {
             $query->where('nome', 'like', "%{$this->search}%");
@@ -43,7 +43,7 @@ class ProjetosList extends Component
         $user = auth()->user();
         if ($user && ! $user->can('create', Projeto::class)) {
             if ($user->colaborador) {
-                $query->whereHas('partes', fn ($q) => $q->where('colaborador_id', $user->colaborador->id));
+                $query->whereHas('atividades', fn ($q) => $q->where('colaborador_id', $user->colaborador->id));
             } else {
                 $query->whereRaw('1 = 0');
             }
@@ -74,7 +74,7 @@ class ProjetosList extends Component
         $componentId = $this->getId();
         $this->swalFire([
             'title' => 'Excluir projeto?',
-            'text' => 'Tem certeza que deseja excluir este projeto e todas as suas partes? Esta ação não pode ser desfeita.',
+            'text' => 'Tem certeza que deseja excluir este projeto e todas as suas atividades? Esta ação não pode ser desfeita.',
             'icon' => 'warning',
             'showCancelButton' => true,
             'confirmButtonText' => 'Sim, excluir',

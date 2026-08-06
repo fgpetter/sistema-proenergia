@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Enums\UserRole;
 use App\Livewire\Admin\ProjetoEditDrawer;
+use App\Models\Atividade;
 use App\Models\Colaborador;
-use App\Models\Parte;
 use App\Models\Projeto;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,10 +34,10 @@ class ProjetoEditDrawerBonusTest extends TestCase
             'colaborador_responsavel_id' => $coordenador->id,
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 280,
             'postes_projetados' => 320,
         ]);

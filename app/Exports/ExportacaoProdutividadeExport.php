@@ -28,7 +28,7 @@ class ExportacaoProdutividadeExport implements FromArray, WithEvents
     public function array(): array
     {
         return [
-            ['Projeto', 'Parte', 'Data', 'Tipo de Projeto', 'Postes Projetados', 'Horas'],
+            ['Projeto', 'Atividade', 'Data', 'Tipo de Projeto', 'Postes Projetados', 'Horas'],
             ...$this->linhasDetalhe,
             ['', '', '', '', '', ''],
             ['Competência', 'Projetos', 'Postes CAD', 'Postes PROJ', 'Postes Total', 'Bônus'],

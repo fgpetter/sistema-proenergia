@@ -2,23 +2,23 @@
 
 namespace App\Policies;
 
-use App\Models\Parte;
+use App\Models\Atividade;
 use App\Models\User;
 
-class PartePolicy
+class AtividadePolicy
 {
     public function viewAny(User $user): bool
     {
         return true;
     }
 
-    public function view(User $user, Parte $parte): bool
+    public function view(User $user, Atividade $atividade): bool
     {
         if ($user->isAdminOrSuperAdmin() || $user->isCoordenador()) {
             return true;
         }
 
-        return $user->can('view', $parte->projeto);
+        return $user->can('view', $atividade->projeto);
     }
 
     public function create(User $user): bool
@@ -26,30 +26,30 @@ class PartePolicy
         return $user->isAdminOrSuperAdmin() || $user->isCoordenador();
     }
 
-    public function update(User $user, Parte $parte): bool
+    public function update(User $user, Atividade $atividade): bool
     {
         if ($user->isAdminOrSuperAdmin() || $user->isCoordenador()) {
             return true;
         }
 
-        return $parte->colaborador_id === $user->colaborador?->id;
+        return $atividade->colaborador_id === $user->colaborador?->id;
     }
 
-    public function delete(User $user, Parte $parte): bool
+    public function delete(User $user, Atividade $atividade): bool
     {
         if ($user->isAdminOrSuperAdmin() || $user->isCoordenador()) {
             return true;
         }
 
-        return $parte->colaborador_id === $user->colaborador?->id;
+        return $atividade->colaborador_id === $user->colaborador?->id;
     }
 
-    public function restore(User $user, Parte $parte): bool
+    public function restore(User $user, Atividade $atividade): bool
     {
         return false;
     }
 
-    public function forceDelete(User $user, Parte $parte): bool
+    public function forceDelete(User $user, Atividade $atividade): bool
     {
         return false;
     }

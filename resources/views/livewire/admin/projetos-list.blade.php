@@ -34,7 +34,7 @@
                                     <th class="px-3.5 py-3 text-start" scope="col">ID</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Nome</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Responsável</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Qtd Partes</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Qtd Atividades</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Criado em</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Ações</th>
                                 </tr>
@@ -60,7 +60,7 @@
                                         </td>
                                         <td class="px-3.5 py-3">
                                             <span class="py-0.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium bg-info/10 text-info rounded">
-                                                {{ $projeto->partes->count() }}
+                                                {{ $projeto->atividades->count() }}
                                             </span>
                                         </td>
                                         <td class="py-3 px-3.5">{{ $projeto->created_at->format('d/m/Y') }}</td>

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('partes', function (Blueprint $table) {
+        Schema::table('atividades', function (Blueprint $table) {
             $table->string('tipo_projeto', 10)->default('CAD')->after('postes_projetados');
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('partes', function (Blueprint $table) {
+        Schema::table('atividades', function (Blueprint $table) {
             $table->dropColumn('tipo_projeto');
         });
     }

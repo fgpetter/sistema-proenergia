@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Admin;
 
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Exports\ExportacaoProdutividadeExport;
+use App\Models\Atividade;
 use App\Models\Colaborador;
-use App\Models\Parte;
 use App\Models\Projeto;
 use App\Queries\RelatorioColaboradoresProdutividade;
 use App\Support\BonusColaboradorCalculator;
@@ -105,35 +105,35 @@ class RelatorioColaboradores extends Component
 
         $calculator = app(BonusColaboradorCalculator::class);
 
-        $partes = app(RelatorioColaboradoresProdutividade::class)->listarPartes(
+        $atividades = app(RelatorioColaboradoresProdutividade::class)->listarAtividades(
             colaboradorId: $this->colaboradorIdEscopo(),
             projetoId: $this->projetoId,
             mesAno: $this->mesAno,
             coordenadorId: $this->coordenadorId,
         );
 
-        $postesCad = (int) $partes
-            ->filter(fn (Parte $parte): bool => ($parte->tipo_projeto ?? TipoProjetoParte::Cad) !== TipoProjetoParte::Proj)
+        $postesCad = (int) $atividades
+            ->filter(fn (Atividade $atividade): bool => ($atividade->tipo_projeto ?? TipoProjetoAtividade::Cad) !== TipoProjetoAtividade::Proj)
             ->sum('postes_projetados');
-        $postesProj = (int) $partes
-            ->filter(fn (Parte $parte): bool => $parte->tipo_projeto === TipoProjetoParte::Proj)
+        $postesProj = (int) $atividades
+            ->filter(fn (Atividade $atividade): bool => $atividade->tipo_projeto === TipoProjetoAtividade::Proj)
             ->sum('postes_projetados');
-        $totalProjetos = $partes->pluck('projeto_id')->unique()->count();
+        $totalProjetos = $atividades->pluck('projeto_id')->unique()->count();
 
-        $bonusBruto = $calculator->calcularDePartes($partes);
+        $bonusBruto = $calculator->calcularDeAtividades($atividades);
         $bonus = $calculator->aplicarTeto(
             $bonusBruto,
             auth()->user()->colaborador?->remuneracao,
         );
 
-        $linhasDetalhe = $partes->map(function (Parte $parte): array {
+        $linhasDetalhe = $atividades->map(function (Atividade $atividade): array {
             return [
-                $parte->projeto?->nome ?? '',
-                $parte->nome,
-                $parte->projeto?->created_at?->format('d/m/Y') ?? '',
-                $parte->tipo_projeto?->value ?? TipoProjetoParte::Cad->value,
-                (int) $parte->postes_projetados,
-                $this->formatarHoras($parte),
+                $atividade->projeto?->nome ?? '',
+                $atividade->nome,
+                $atividade->projeto?->created_at?->format('d/m/Y') ?? '',
+                $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
+                (int) $atividade->postes_projetados,
+                $this->formatarHoras($atividade),
             ];
         })->all();
 
@@ -171,12 +171,12 @@ class RelatorioColaboradores extends Component
         return ucfirst($data->translatedFormat('F')).' - '.$data->format('Y');
     }
 
-    protected function formatarHoras(Parte $parte): string
+    protected function formatarHoras(Atividade $atividade): string
     {
         $segundos = 0;
 
-        if ($parte->data_hora_inicio !== null && $parte->data_hora_fim !== null) {
-            $segundos = (int) $parte->data_hora_inicio->diffInSeconds($parte->data_hora_fim);
+        if ($atividade->data_hora_inicio !== null && $atividade->data_hora_fim !== null) {
+            $segundos = (int) $atividade->data_hora_inicio->diffInSeconds($atividade->data_hora_fim);
         }
 
         $interval = CarbonInterval::seconds($segundos)->cascade();

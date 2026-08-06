@@ -52,14 +52,14 @@ class DashboardTest extends TestCase
         $projetoAntigo->total_postes_projetados = 5;
         $projetoAntigo->total_segundos = 7200;
 
-        $projetoSemPartes = Projeto::factory()->make([
+        $projetoSemAtividades = Projeto::factory()->make([
             'id' => 3,
-            'nome' => 'Projeto Sem Partes',
+            'nome' => 'Projeto Sem Atividades',
             'created_at' => now()->subDay(),
         ]);
-        $projetoSemPartes->total_extensao_projeto = 0;
-        $projetoSemPartes->total_postes_projetados = 0;
-        $projetoSemPartes->total_segundos = 0;
+        $projetoSemAtividades->total_extensao_projeto = 0;
+        $projetoSemAtividades->total_postes_projetados = 0;
+        $projetoSemAtividades->total_segundos = 0;
 
         $this->mockDashboardMetrics(
             totais: (object) [
@@ -70,7 +70,7 @@ class DashboardTest extends TestCase
                 'totalPostesProjetados' => 20,
                 'totalSegundos' => 10800,
             ],
-            estatisticasProjetos: collect([$projetoRecente, $projetoSemPartes, $projetoAntigo]),
+            estatisticasProjetos: collect([$projetoRecente, $projetoSemAtividades, $projetoAntigo]),
         );
         $this->mockProdutividadeAgregada($colaborador);
 
@@ -84,7 +84,7 @@ class DashboardTest extends TestCase
         $response->assertSee($colaborador->nome);
         $response->assertSee('Projeto Recente', false);
         $response->assertSee('Projeto Antigo', false);
-        $response->assertSee('Projeto Sem Partes', false);
+        $response->assertSee('Projeto Sem Atividades', false);
 
         $posRecente = strpos($response->getContent(), 'Projeto Recente');
         $posAntigo = strpos($response->getContent(), 'Projeto Antigo');

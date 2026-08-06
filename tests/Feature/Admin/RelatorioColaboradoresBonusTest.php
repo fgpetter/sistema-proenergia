@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Enums\TipoProjetoParte;
+use App\Enums\TipoProjetoAtividade;
 use App\Enums\UserRole;
 use App\Livewire\Admin\RelatorioColaboradores;
+use App\Models\Atividade;
 use App\Models\Colaborador;
-use App\Models\Parte;
 use App\Models\Projeto;
 use App\Models\User;
 use App\Queries\RelatorioColaboradoresProdutividade;
@@ -42,20 +42,20 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'updated_at' => '2026-06-20 10:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoA->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 140,
             'postes_projetados' => 250,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 10:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoB->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 140,
             'postes_projetados' => 250,
             'data_hora_inicio' => '2026-06-21 08:00:00',
@@ -100,20 +100,20 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'updated_at' => '2026-07-05 10:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoJunho->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 280,
             'postes_projetados' => 500,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 09:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoJulho->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Proj,
+            'tipo_projeto' => TipoProjetoAtividade::Proj,
             'postes_desenhados' => 280,
             'postes_projetados' => 300,
             'data_hora_inicio' => '2026-07-06 08:00:00',
@@ -150,20 +150,20 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'updated_at' => '2026-06-10 10:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 100,
             'postes_projetados' => 500,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 09:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Proj,
+            'tipo_projeto' => TipoProjetoAtividade::Proj,
             'postes_desenhados' => 50,
             'postes_projetados' => 300,
             'data_hora_inicio' => '2026-06-12 08:00:00',
@@ -208,20 +208,20 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'updated_at' => '2026-06-15 10:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoA->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 280,
             'postes_projetados' => 500,
             'data_hora_inicio' => '2026-06-11 08:00:00',
             'data_hora_fim' => '2026-06-11 09:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projetoB->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Proj,
+            'tipo_projeto' => TipoProjetoAtividade::Proj,
             'postes_desenhados' => 280,
             'postes_projetados' => 300,
             'data_hora_inicio' => '2026-06-16 08:00:00',
@@ -260,10 +260,10 @@ class RelatorioColaboradoresBonusTest extends TestCase
         ]);
 
         // 300 + (2000-300)*2 = 3700 (acima do teto de R$ 3.500)
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 100,
             'postes_projetados' => 2000,
             'data_hora_inicio' => '2026-06-11 08:00:00',
@@ -299,10 +299,10 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'updated_at' => '2026-06-10 10:00:00',
         ]);
 
-        Parte::factory()->create([
+        Atividade::factory()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
-            'tipo_projeto' => TipoProjetoParte::Cad,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 100,
             'postes_projetados' => 500,
             'data_hora_inicio' => '2026-06-11 08:00:00',

@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('partes', function (Blueprint $table) {
-            $table->dateTime('data_hora_inicio')->nullable()->after('postes_projetados');
-            $table->dateTime('data_hora_fim')->nullable()->after('data_hora_inicio');
+        Schema::table('atividades', function (Blueprint $table) {
+            $table->text('observacoes')->nullable()->after('data_hora_fim');
         });
     }
 
@@ -22,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('partes', function (Blueprint $table) {
-            $table->dropColumn(['data_hora_inicio', 'data_hora_fim']);
+        Schema::table('atividades', function (Blueprint $table) {
+            $table->dropColumn('observacoes');
         });
     }
 };

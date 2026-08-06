@@ -23,7 +23,7 @@ class ProjetoPolicy
             return false;
         }
 
-        return $projeto->partes()->where('colaborador_id', $colaborador->id)->exists();
+        return $projeto->atividades()->where('colaborador_id', $colaborador->id)->exists();
     }
 
     public function create(User $user): bool
