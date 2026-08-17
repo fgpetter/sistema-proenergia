@@ -3,14 +3,14 @@
 namespace Tests\Feature\Painel;
 
 use App\Enums\UserRole;
+use App\Livewire\Painel\Dashboard;
 use App\Livewire\Painel\PerformanceColaboradores;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
-use App\Queries\DashboardMetrics;
 use App\Queries\RelatorioColaboradoresProdutividade;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Mockery\MockInterface;
@@ -19,6 +19,20 @@ use Tests\TestCase;
 class DashboardTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Carbon::setTestNow('2026-08-17 12:00:00');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
 
     public function test_administrativo_ve_dashboard_com_dados_globais(): void
     {
@@ -34,63 +48,42 @@ class DashboardTest extends TestCase
             'remuneracao' => 500000,
         ]);
 
-        $projetoRecente = Projeto::factory()->make([
-            'id' => 1,
+        Projeto::factory()->create([
             'nome' => 'Projeto Recente',
-            'created_at' => now(),
+            'created_at' => '2026-08-17 10:00:00',
+            'updated_at' => '2026-08-17 10:00:00',
         ]);
-        $projetoRecente->total_extensao_projeto = 80;
-        $projetoRecente->total_postes_projetados = 15;
-        $projetoRecente->total_segundos = 3600;
-
-        $projetoAntigo = Projeto::factory()->make([
-            'id' => 2,
-            'nome' => 'Projeto Antigo',
-            'created_at' => now()->subDays(5),
-        ]);
-        $projetoAntigo->total_extensao_projeto = 50;
-        $projetoAntigo->total_postes_projetados = 5;
-        $projetoAntigo->total_segundos = 7200;
-
-        $projetoSemAtividades = Projeto::factory()->make([
-            'id' => 3,
+        Projeto::factory()->create([
             'nome' => 'Projeto Sem Atividades',
-            'created_at' => now()->subDay(),
+            'created_at' => '2026-08-16 10:00:00',
+            'updated_at' => '2026-08-16 10:00:00',
         ]);
-        $projetoSemAtividades->total_extensao_projeto = 0;
-        $projetoSemAtividades->total_postes_projetados = 0;
-        $projetoSemAtividades->total_segundos = 0;
+        Projeto::factory()->create([
+            'nome' => 'Projeto Antigo',
+            'created_at' => '2026-08-12 10:00:00',
+            'updated_at' => '2026-08-12 10:00:00',
+        ]);
 
-        $this->mockDashboardMetrics(
-            totais: (object) [
-                'totalProjetos' => 3,
-                'totalExtensaoDesenho' => 300,
-                'totalExtensaoProjeto' => 130,
-                'totalPostesDesenhados' => 30,
-                'totalPostesProjetados' => 20,
-                'totalSegundos' => 10800,
-            ],
-            estatisticasProjetos: collect([$projetoRecente, $projetoSemAtividades, $projetoAntigo]),
-        );
         $this->mockProdutividadeAgregada($colaborador);
 
         $response = $this->actingAs($admin)->get(route('painel.dashboard'));
 
         $response->assertOk();
+        $response->assertSeeLivewire(Dashboard::class);
         $response->assertSeeLivewire(PerformanceColaboradores::class);
         $response->assertSee('3', false);
-        $response->assertSee('130', false);
-        $response->assertSee('20', false);
         $response->assertSee($colaborador->nome);
         $response->assertSee('Projeto Recente', false);
         $response->assertSee('Projeto Antigo', false);
         $response->assertSee('Projeto Sem Atividades', false);
+        $response->assertSee('Mês/Ano', false);
 
         $posRecente = strpos($response->getContent(), 'Projeto Recente');
         $posAntigo = strpos($response->getContent(), 'Projeto Antigo');
         $this->assertNotFalse($posRecente);
         $this->assertNotFalse($posAntigo);
         $this->assertLessThan($posAntigo, $posRecente);
+        $this->assertSame(1, substr_count($response->getContent(), 'Mês/Ano'));
     }
 
     public function test_dashboard_exibe_meta_por_tipo_de_projeto_na_performance_de_colaborador(): void
@@ -105,17 +98,6 @@ class DashboardTest extends TestCase
             'remuneracao' => 500000,
         ]);
 
-        $this->mockDashboardMetrics(
-            totais: (object) [
-                'totalProjetos' => 1,
-                'totalExtensaoDesenho' => 0,
-                'totalExtensaoProjeto' => 0,
-                'totalPostesDesenhados' => 0,
-                'totalPostesProjetados' => 800,
-                'totalSegundos' => 7200,
-            ],
-            estatisticasProjetos: collect(),
-        );
         $this->mockProdutividadeAgregada($colaborador);
 
         $response = $this->actingAs($admin)->get(route('painel.dashboard'));
@@ -141,7 +123,6 @@ class DashboardTest extends TestCase
             'remuneracao' => 500000,
         ]);
 
-        $this->mockDashboardMetrics();
         $this->mockProdutividadeAgregada($colaborador);
 
         Livewire::actingAs($admin)
@@ -150,40 +131,111 @@ class DashboardTest extends TestCase
             ->assertDontSee('R$ 3.700,00');
     }
 
-    public function test_dashboard_filtra_performance_por_competencia(): void
+    public function test_dashboard_usa_mes_calendario_atual_sem_query(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);
+        $this->mockProdutividadeAgregada();
+
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->assertSet('mesAno', '2026-08')
+            ->assertSee('Agosto - 2026');
+    }
+
+    public function test_dashboard_mes_atual_sem_projeto_zera_cards_e_tabela(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $this->mockProdutividadeAgregada();
 
         Projeto::factory()->create([
+            'nome' => 'Projeto Junho',
             'created_at' => '2026-06-10 10:00:00',
             'updated_at' => '2026-06-10 10:00:00',
         ]);
 
-        $this->mockDashboardMetrics();
-        $this->mock(RelatorioColaboradoresProdutividade::class, function (MockInterface $mock): void {
-            $mock->shouldReceive('agregar')
-                ->withArgs(fn (
-                    ?int $colaboradorId = null,
-                    ?int $projetoId = null,
-                    ?string $mesAno = null,
-                    ?int $coordenadorId = null,
-                ): bool => $colaboradorId === null
-                    && $projetoId === null
-                    && $coordenadorId === null
-                    && ($mesAno === null || $mesAno === '2026-06'))
-                ->andReturn(collect());
-        });
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->assertSet('mesAno', '2026-08')
+            ->assertSee('Agosto - 2026')
+            ->assertSee('Nenhum projeto cadastrado foi encontrado.')
+            ->assertDontSee('Projeto Junho');
+    }
+
+    public function test_dashboard_todas_as_competencias_permanece_na_url(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $this->mockProdutividadeAgregada();
+
+        Projeto::factory()->create([
+            'nome' => 'Projeto Junho',
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
 
         Livewire::actingAs($admin)
-            ->test(PerformanceColaboradores::class)
+            ->withQueryParams(['mes' => 'todas'])
+            ->test(Dashboard::class)
+            ->assertSet('mesAno', 'todas')
+            ->assertSee('Projeto Junho');
+
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->set('mesAno', 'todas')
+            ->assertSet('mesAno', 'todas')
+            ->assertSee('Projeto Junho');
+    }
+
+    public function test_dashboard_filtra_por_competencia_de_junho(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $this->mockProdutividadeAgregada();
+
+        Projeto::factory()->create([
+            'nome' => 'Projeto Junho',
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
+        Projeto::factory()->create([
+            'nome' => 'Projeto Julho',
+            'created_at' => '2026-07-05 10:00:00',
+            'updated_at' => '2026-07-05 10:00:00',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
             ->set('mesAno', '2026-06')
             ->assertSet('mesAno', '2026-06')
-            ->assertSee('Junho - 2026');
+            ->assertSee('Junho - 2026')
+            ->assertSee('Projeto Junho')
+            ->assertDontSee('Projeto Julho');
+    }
+
+    public function test_dashboard_pagina_estatisticas_com_quinze_itens_e_reseta_ao_filtrar(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $this->mockProdutividadeAgregada();
+
+        foreach (range(1, 16) as $indice) {
+            Projeto::factory()->create([
+                'nome' => sprintf('Projeto-%02d', $indice),
+                'created_at' => Carbon::parse('2026-08-01 00:00:00')->addHours($indice),
+                'updated_at' => Carbon::parse('2026-08-01 00:00:00')->addHours($indice),
+            ]);
+        }
+
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->assertSee('Projeto-16')
+            ->assertDontSee('Projeto-01')
+            ->call('nextPage')
+            ->assertSee('Projeto-01')
+            ->set('mesAno', 'todas')
+            ->assertSee('Projeto-16')
+            ->assertDontSee('Projeto-01');
     }
 
     public function test_coordenador_acessa_dashboard(): void
     {
-        $this->mockDashboardMetrics();
         $this->mockProdutividadeAgregada();
 
         $coordenadorUser = User::create([
@@ -236,30 +288,8 @@ class DashboardTest extends TestCase
     }
 
     /**
-     * @param  Collection<int, mixed>|null  $estatisticasProjetos
-     */
-    private function mockDashboardMetrics(
-        ?object $totais = null,
-        ?Collection $estatisticasProjetos = null,
-    ): void {
-        $this->mock(DashboardMetrics::class, function (MockInterface $mock) use (
-            $totais,
-            $estatisticasProjetos,
-        ): void {
-            $mock->shouldReceive('totaisGlobais')->andReturn($totais ?? (object) [
-                'totalProjetos' => 0,
-                'totalExtensaoDesenho' => 0,
-                'totalExtensaoProjeto' => 0,
-                'totalPostesDesenhados' => 0,
-                'totalPostesProjetados' => 0,
-                'totalSegundos' => 0,
-            ]);
-            $mock->shouldReceive('estatisticasPorProjeto')->andReturn($estatisticasProjetos ?? collect());
-        });
-    }
-
-    /**
      * @param  array{
+     *     id?: int,
      *     nome?: string,
      *     total_projetos?: int,
      *     total_extensao_desenho?: int,
