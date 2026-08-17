@@ -10,7 +10,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class ExportacaoProdutividadeExport implements FromArray, WithEvents
 {
     /**
-     * @param  list<array{0: string, 1: string, 2: string, 3: string, 4: int, 5: string}>  $linhasDetalhe
+     * @param  list<array{0: string, 1: string, 2: string, 3: string, 4: int, 5: int, 6: string}>  $linhasDetalhe
      * @param  array{
      *     competencia: string,
      *     projetos: int,
@@ -28,9 +28,9 @@ class ExportacaoProdutividadeExport implements FromArray, WithEvents
     public function array(): array
     {
         return [
-            ['Projeto', 'Atividade', 'Data', 'Tipo de Projeto', 'Postes Projetados', 'Horas'],
+            ['Projeto', 'Atividade', 'Data', 'Tipo de Projeto', 'Postes Desenhados', 'Postes Projetados', 'Horas'],
             ...$this->linhasDetalhe,
-            ['', '', '', '', '', ''],
+            ['', '', '', '', '', '', ''],
             ['Competência', 'Projetos', 'Postes CAD', 'Postes PROJ', 'Postes Total', 'Bônus'],
             [
                 $this->resumo['competencia'],
@@ -52,7 +52,7 @@ class ExportacaoProdutividadeExport implements FromArray, WithEvents
             AfterSheet::class => function (AfterSheet $event) use ($linhaLegenda): void {
                 /** @var Worksheet $sheet */
                 $sheet = $event->sheet->getDelegate();
-                $sheet->mergeCells("A{$linhaLegenda}:F{$linhaLegenda}");
+                $sheet->mergeCells("A{$linhaLegenda}:G{$linhaLegenda}");
             },
         ];
     }

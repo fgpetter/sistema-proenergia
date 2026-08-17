@@ -99,13 +99,42 @@ class BonusColaboradorCalculatorTest extends TestCase
         $this->assertEqualsWithDelta(340.0, $bonusPositivo, 0.0001);
     }
 
-    public function test_ignora_postes_desenhados_no_calculo(): void
+    public function test_soma_desenhados_e_projetados_em_atividade_cad(): void
     {
-        $bonus = $this->calculator->calcular(
-            postesDesenhados: 500,
-            postesProjetadosCad: 100,
-            postesProjetadosProj: 0,
-        );
+        $bonus = $this->calculator->calcularDeAtividades([
+            [
+                'tipo_projeto' => TipoProjetoAtividade::Cad,
+                'postes_desenhados' => 200,
+                'postes_projetados' => 400,
+            ],
+        ]);
+
+        // 600 Postes CAD: 300 + (600-300)*2 = 900
+        $this->assertEqualsWithDelta(900.0, $bonus, 0.0001);
+    }
+
+    public function test_cad_so_com_desenhados_atinge_meta(): void
+    {
+        $bonus = $this->calculator->calcularDeAtividades([
+            [
+                'tipo_projeto' => TipoProjetoAtividade::Cad,
+                'postes_desenhados' => 300,
+                'postes_projetados' => 0,
+            ],
+        ]);
+
+        $this->assertSame(300.0, $bonus);
+    }
+
+    public function test_ignora_postes_desenhados_em_atividade_proj(): void
+    {
+        $bonus = $this->calculator->calcularDeAtividades([
+            [
+                'tipo_projeto' => TipoProjetoAtividade::Proj,
+                'postes_desenhados' => 200,
+                'postes_projetados' => 100,
+            ],
+        ]);
 
         $this->assertSame(0.0, $bonus);
     }
@@ -168,8 +197,8 @@ class BonusColaboradorCalculatorTest extends TestCase
             ],
         ]));
 
-        // colaborador 1: 300 + (500-300)*2 = 700
-        $this->assertEqualsWithDelta(700.0, $bonusPorColaborador[1], 0.0001);
+        // colaborador 1: 780 Postes CAD → 300 + (780-300)*2 = 1260
+        $this->assertEqualsWithDelta(1260.0, $bonusPorColaborador[1], 0.0001);
         $this->assertSame(0.0, $bonusPorColaborador[2]);
     }
 

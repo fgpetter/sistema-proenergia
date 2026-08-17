@@ -29,11 +29,12 @@ class BonusColaboradorCalculator
         foreach ($atividades as $atividade) {
             $tipoProjeto = $this->resolveTipoProjeto($atividade);
             $postesProjetados = (float) data_get($atividade, 'postes_projetados', 0);
+            $postesDesenhados = (float) data_get($atividade, 'postes_desenhados', 0);
 
             if ($tipoProjeto === TipoProjetoAtividade::Proj) {
                 $postesProjetadosProj += $postesProjetados;
             } else {
-                $postesProjetadosCad += $postesProjetados;
+                $postesProjetadosCad += $postesProjetados + $postesDesenhados;
             }
         }
 

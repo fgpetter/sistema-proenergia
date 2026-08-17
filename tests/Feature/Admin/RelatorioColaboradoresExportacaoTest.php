@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\TipoProjetoAtividade;
 use App\Enums\UserRole;
+use App\Exports\ExportacaoProdutividadeExport;
 use App\Livewire\Admin\RelatorioColaboradores;
 use App\Models\Atividade;
 use App\Models\Colaborador;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Queries\RelatorioColaboradoresProdutividade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Maatwebsite\Excel\Facades\Excel;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -174,6 +176,76 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
 
         $this->assertCount(1, $atividades);
         $this->assertSame('Atividade Propria', $atividades->first()->nome);
+    }
+
+    public function test_exportacao_inclui_desenhados_no_detalhe_e_soma_na_meta_cad(): void
+    {
+        [$user, $colaborador] = $this->createPrestadorComColaborador([
+            'remuneracao' => 500000,
+        ]);
+        $coordenador = Colaborador::factory()->coordenador()->create();
+
+        $projeto = Projeto::factory()->create([
+            'nome' => 'Projeto Exportacao CAD',
+            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'nome' => 'Atividade CAD',
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'postes_desenhados' => 200,
+            'postes_projetados' => 400,
+            'data_hora_inicio' => '2026-06-11 08:00:00',
+            'data_hora_fim' => '2026-06-11 10:00:00',
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'nome' => 'Atividade PROJ',
+            'tipo_projeto' => TipoProjetoAtividade::Proj,
+            'postes_desenhados' => 50,
+            'postes_projetados' => 230,
+            'data_hora_inicio' => '2026-06-12 08:00:00',
+            'data_hora_fim' => '2026-06-12 09:00:00',
+        ]);
+
+        $this->mockAgregarParaTela($colaborador, [
+            'total_projetos' => 1,
+            'total_postes_projetados_cad' => 600,
+            'total_postes_projetados_proj' => 230,
+            'total_segundos' => 10800,
+        ]);
+
+        Excel::fake();
+
+        Livewire::actingAs($user)
+            ->test(RelatorioColaboradores::class)
+            ->set('mesAno', '2026-06')
+            ->call('exportarProdutividade')
+            ->assertHasNoErrors();
+
+        Excel::assertDownloaded('exportacao-produtividade-2026-06.xlsx', function (ExportacaoProdutividadeExport $export): bool {
+            $linhas = $export->array();
+
+            $this->assertSame(
+                ['Projeto', 'Atividade', 'Data', 'Tipo de Projeto', 'Postes Desenhados', 'Postes Projetados', 'Horas'],
+                $linhas[0],
+            );
+            $this->assertSame('CAD', $linhas[1][3]);
+            $this->assertSame(200, $linhas[1][4]);
+            $this->assertSame(400, $linhas[1][5]);
+            $this->assertSame(['Competência', 'Projetos', 'Postes CAD', 'Postes PROJ', 'Postes Total', 'Bônus'], $linhas[4]);
+            $this->assertSame(600, $linhas[5][2]);
+            $this->assertSame(230, $linhas[5][3]);
+            $this->assertSame(830, $linhas[5][4]);
+
+            return true;
+        });
     }
 
     public function test_prestador_ve_botao_de_exportacao(): void

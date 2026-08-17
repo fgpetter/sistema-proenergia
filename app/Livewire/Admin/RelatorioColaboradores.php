@@ -112,9 +112,9 @@ class RelatorioColaboradores extends Component
             coordenadorId: $this->coordenadorId,
         );
 
-        $postesCad = (int) $atividades
-            ->filter(fn (Atividade $atividade): bool => ($atividade->tipo_projeto ?? TipoProjetoAtividade::Cad) !== TipoProjetoAtividade::Proj)
-            ->sum('postes_projetados');
+        $atividadesCad = $atividades
+            ->filter(fn (Atividade $atividade): bool => ($atividade->tipo_projeto ?? TipoProjetoAtividade::Cad) !== TipoProjetoAtividade::Proj);
+        $postesCad = (int) $atividadesCad->sum('postes_projetados') + (int) $atividadesCad->sum('postes_desenhados');
         $postesProj = (int) $atividades
             ->filter(fn (Atividade $atividade): bool => $atividade->tipo_projeto === TipoProjetoAtividade::Proj)
             ->sum('postes_projetados');
@@ -132,6 +132,7 @@ class RelatorioColaboradores extends Component
                 $atividade->nome,
                 $atividade->projeto?->created_at?->format('d/m/Y') ?? '',
                 $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
+                (int) $atividade->postes_desenhados,
                 (int) $atividade->postes_projetados,
                 $this->formatarHoras($atividade),
             ];

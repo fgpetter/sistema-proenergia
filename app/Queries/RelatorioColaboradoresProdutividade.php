@@ -43,8 +43,8 @@ class RelatorioColaboradoresProdutividade
             ->selectRaw('COALESCE(SUM(atividades.postes_desenhados), 0) as total_postes_desenhados')
             ->selectRaw('COALESCE(SUM(atividades.postes_projetados), 0) as total_postes_projetados')
             ->selectRaw("COALESCE(SUM(CASE WHEN atividades.tipo_projeto = 'PROJ' THEN atividades.postes_projetados ELSE 0 END), 0) as total_postes_projetados_proj")
-            ->selectRaw("COALESCE(SUM(CASE WHEN atividades.tipo_projeto = 'PROJ' THEN 0 ELSE atividades.postes_projetados END), 0) as total_postes_projetados_cad")
-            ->selectRaw('COALESCE(SUM(CASE WHEN atividades.data_hora_inicio IS NOT NULL AND atividades.data_hora_fim IS NOT NULL THEN TIMESTAMPDIFF(SECOND, atividades.data_hora_inicio, atividades.data_hora_fim) ELSE 0 END), 0) as total_segundos')
+            ->selectRaw("COALESCE(SUM(CASE WHEN atividades.tipo_projeto = 'PROJ' THEN 0 ELSE atividades.postes_projetados + atividades.postes_desenhados END), 0) as total_postes_projetados_cad")
+            ->selectRaw('COALESCE(SUM('.$this->sqlSegundosAtividade().'), 0) as total_segundos')
             ->get();
     }
 
@@ -72,6 +72,18 @@ class RelatorioColaboradoresProdutividade
             ->orderBy('projetos.created_at')
             ->orderBy('atividades.nome')
             ->get();
+    }
+
+    private function sqlSegundosAtividade(): string
+    {
+        $inicio = 'atividades.data_hora_inicio';
+        $fim = 'atividades.data_hora_fim';
+
+        if (Colaborador::query()->getConnection()->getDriverName() === 'sqlite') {
+            return "CASE WHEN {$inicio} IS NOT NULL AND {$fim} IS NOT NULL THEN CAST(strftime('%s', {$fim}) AS INTEGER) - CAST(strftime('%s', {$inicio}) AS INTEGER) ELSE 0 END";
+        }
+
+        return "CASE WHEN {$inicio} IS NOT NULL AND {$fim} IS NOT NULL THEN TIMESTAMPDIFF(SECOND, {$inicio}, {$fim}) ELSE 0 END";
     }
 
     private function aplicarFiltros(

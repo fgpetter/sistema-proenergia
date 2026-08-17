@@ -323,6 +323,59 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->assertDontSee('R$ 700,00');
     }
 
+    public function test_relatorio_inclui_postes_desenhados_na_meta_cad_e_ignora_em_proj(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $coordenador = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->create([
+            'remuneracao' => 500000,
+        ]);
+
+        $projeto = Projeto::factory()->create([
+            'nome' => 'Projeto CAD Desenhados',
+            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'postes_desenhados' => 200,
+            'postes_projetados' => 400,
+            'data_hora_inicio' => '2026-06-11 08:00:00',
+            'data_hora_fim' => '2026-06-11 09:00:00',
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoAtividade::Proj,
+            'postes_desenhados' => 50,
+            'postes_projetados' => 230,
+            'data_hora_inicio' => '2026-06-12 08:00:00',
+            'data_hora_fim' => '2026-06-12 09:00:00',
+        ]);
+
+        $agregado = app(RelatorioColaboradoresProdutividade::class)
+            ->agregar(mesAno: '2026-06')
+            ->first();
+
+        $this->assertNotNull($agregado);
+        $this->assertSame(600, (int) $agregado->total_postes_projetados_cad);
+        $this->assertSame(230, (int) $agregado->total_postes_projetados_proj);
+
+        Livewire::actingAs($admin)
+            ->test(RelatorioColaboradores::class)
+            ->set('mesAno', '2026-06')
+            ->assertSee($colaborador->nome)
+            ->assertSee('600 / 300')
+            ->assertSee('230 / 230')
+            ->assertSee('830')
+            ->assertSee('R$ 900,00');
+    }
+
     /**
      * Mocka a query de agregação (TIMESTAMPDIFF no MySQL) para manter testes estáveis no SQLite.
      *
