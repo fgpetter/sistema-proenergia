@@ -22,8 +22,8 @@ class ExportacaoProdutividadeExportTest extends TestCase
         $this->assertSame(['Projeto', 'Atividade', 'Data', 'Tipo de Projeto', 'Postes Desenhados', 'Postes Projetados', 'Horas'], $linhas[0]);
         $this->assertSame(['Projeto B', 'Atividade 2', '11/06/2026', 'PROJ', 50, 5, '2h 0min'], $linhas[2]);
         $this->assertSame(['', '', '', '', '', '', ''], $linhas[3]);
-        $this->assertSame(['Competência', 'Projetos', 'Postes CAD', 'Postes PROJ', 'Postes Total', 'Bônus'], $linhas[4]);
-        $this->assertSame(['Junho - 2026', 2, 600, 5, 605, 0.0], $linhas[5]);
+        $this->assertSame(['Competência', 'Projetos', 'Desenho CAD', 'Projeto CAD', 'Projeto PROJ', 'Postes Total', 'Bônus'], $linhas[4]);
+        $this->assertSame(['Junho - 2026', 2, 200, 400, 5, 605, 0.0], $linhas[5]);
     }
 
     public function test_mescla_colunas_a_f_na_linha_da_legenda(): void
@@ -52,14 +52,16 @@ class ExportacaoProdutividadeExportTest extends TestCase
      */
     private function makeExport(array $linhasDetalhe): ExportacaoProdutividadeExport
     {
-        $postesCad = 0;
+        $postesDesenhoCad = 0;
+        $postesProjetoCad = 0;
         $postesProj = 0;
 
         foreach ($linhasDetalhe as $linha) {
             if ($linha[3] === 'PROJ') {
                 $postesProj += $linha[5];
             } else {
-                $postesCad += $linha[4] + $linha[5];
+                $postesDesenhoCad += $linha[4];
+                $postesProjetoCad += $linha[5];
             }
         }
 
@@ -68,9 +70,10 @@ class ExportacaoProdutividadeExportTest extends TestCase
             resumo: [
                 'competencia' => 'Junho - 2026',
                 'projetos' => count($linhasDetalhe),
-                'postes_cad' => $postesCad,
+                'postes_desenho_cad' => $postesDesenhoCad,
+                'postes_projeto_cad' => $postesProjetoCad,
                 'postes_proj' => $postesProj,
-                'postes_total' => $postesCad + $postesProj,
+                'postes_total' => $postesDesenhoCad + $postesProjetoCad + $postesProj,
                 'bonus' => 0.0,
             ],
         );

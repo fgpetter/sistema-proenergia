@@ -14,7 +14,8 @@ class ExportacaoProdutividadeExport implements FromArray, WithEvents
      * @param  array{
      *     competencia: string,
      *     projetos: int,
-     *     postes_cad: int,
+     *     postes_desenho_cad: int,
+     *     postes_projeto_cad: int,
      *     postes_proj: int,
      *     postes_total: int,
      *     bonus: float
@@ -31,16 +32,17 @@ class ExportacaoProdutividadeExport implements FromArray, WithEvents
             ['Projeto', 'Atividade', 'Data', 'Tipo de Projeto', 'Postes Desenhados', 'Postes Projetados', 'Horas'],
             ...$this->linhasDetalhe,
             ['', '', '', '', '', '', ''],
-            ['Competência', 'Projetos', 'Postes CAD', 'Postes PROJ', 'Postes Total', 'Bônus'],
+            ['Competência', 'Projetos', 'Desenho CAD', 'Projeto CAD', 'Projeto PROJ', 'Postes Total', 'Bônus'],
             [
                 $this->resumo['competencia'],
                 $this->resumo['projetos'],
-                $this->resumo['postes_cad'],
+                $this->resumo['postes_desenho_cad'],
+                $this->resumo['postes_projeto_cad'],
                 $this->resumo['postes_proj'],
                 $this->resumo['postes_total'],
                 $this->resumo['bonus'],
             ],
-            ['* a meta para projetos no PROJ é de 230 postes, para projetos no CAD é de 300 postes.'],
+            ['* a meta para Desenho CAD é de 400 postes, para Projeto CAD é de 300 postes, para Projeto PROJ é de 230 postes.'],
         ];
     }
 

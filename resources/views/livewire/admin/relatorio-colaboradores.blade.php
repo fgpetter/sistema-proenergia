@@ -120,8 +120,9 @@
                                     <th class="px-3.5 py-3 text-start" scope="col">Colaborador</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Projetos</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Extensão total</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Postes CAD</th>
-                                    <th class="px-3.5 py-3 text-start" scope="col">Postes PROJ</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Desenho CAD</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Projeto CAD</th>
+                                    <th class="px-3.5 py-3 text-start" scope="col">Projeto PROJ</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Postes Total</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Bônus</th>
                                     <th class="px-3.5 py-3 text-start" scope="col">Horas</th>
@@ -138,7 +139,8 @@
                                         </td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_projetos }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_extensao_desenho + (int) $colaborador->total_extensao_projeto }}</td>
-                                        <td class="px-3.5 py-3">{{ $colaborador->meta_cad }}</td>
+                                        <td class="px-3.5 py-3">{{ $colaborador->meta_desenho_cad }}</td>
+                                        <td class="px-3.5 py-3">{{ $colaborador->meta_projeto_cad }}</td>
                                         <td class="px-3.5 py-3">{{ $colaborador->meta_proj }}</td>
                                         <td class="px-3.5 py-3">{{ (int) $colaborador->total_postes }}</td>
                                         <td class="px-3.5 py-3">R$ {{ number_format((float) $colaborador->total_bonus, 2, ',', '.') }}</td>
@@ -146,7 +148,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="px-3.5 py-8 text-center text-default-500">
+                                        <td colspan="9" class="px-3.5 py-8 text-center text-default-500">
                                             Nenhum colaborador com atividades atribuídas foi encontrado.
                                         </td>
                                     </tr>
@@ -159,6 +161,6 @@
         </div>
     </div>
     <p class="px-3.5 pb-3 text-sm text-primary">
-        * a meta para projetos no PROJ é de 230 postes, para projetos no CAD é de 300 postes.
+        * a meta para Desenho CAD é de 400 postes, para Projeto CAD é de 300 postes, para Projeto PROJ é de 230 postes.
     </p>
 </div>

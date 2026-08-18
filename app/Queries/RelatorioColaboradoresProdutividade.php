@@ -42,8 +42,9 @@ class RelatorioColaboradoresProdutividade
             ->selectRaw('COALESCE(SUM(atividades.extensao_projeto), 0) as total_extensao_projeto')
             ->selectRaw('COALESCE(SUM(atividades.postes_desenhados), 0) as total_postes_desenhados')
             ->selectRaw('COALESCE(SUM(atividades.postes_projetados), 0) as total_postes_projetados')
+            ->selectRaw("COALESCE(SUM(CASE WHEN atividades.tipo_projeto = 'PROJ' THEN 0 ELSE atividades.postes_desenhados END), 0) as total_postes_desenho_cad")
+            ->selectRaw("COALESCE(SUM(CASE WHEN atividades.tipo_projeto = 'PROJ' THEN 0 ELSE atividades.postes_projetados END), 0) as total_postes_projeto_cad")
             ->selectRaw("COALESCE(SUM(CASE WHEN atividades.tipo_projeto = 'PROJ' THEN atividades.postes_projetados ELSE 0 END), 0) as total_postes_projetados_proj")
-            ->selectRaw("COALESCE(SUM(CASE WHEN atividades.tipo_projeto = 'PROJ' THEN 0 ELSE atividades.postes_projetados + atividades.postes_desenhados END), 0) as total_postes_projetados_cad")
             ->selectRaw('COALESCE(SUM('.$this->sqlSegundosAtividade().'), 0) as total_segundos')
             ->get();
     }

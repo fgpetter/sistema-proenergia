@@ -8,7 +8,9 @@ use Illuminate\Support\Collection;
 
 class BonusColaboradorCalculator
 {
-    private const LIMITE_POSTES_CAD = 300;
+    private const LIMITE_POSTES_DESENHO_CAD = 400;
+
+    private const LIMITE_POSTES_PROJETO_CAD = 300;
 
     private const LIMITE_POSTES_PROJ = 230;
 
@@ -23,8 +25,9 @@ class BonusColaboradorCalculator
      */
     public function calcularDeAtividades(iterable $atividades): float
     {
-        $postesProjetadosCad = 0.0;
-        $postesProjetadosProj = 0.0;
+        $postesDesenhoCad = 0.0;
+        $postesProjetoCad = 0.0;
+        $postesProjetoProj = 0.0;
 
         foreach ($atividades as $atividade) {
             $tipoProjeto = $this->resolveTipoProjeto($atividade);
@@ -32,36 +35,45 @@ class BonusColaboradorCalculator
             $postesDesenhados = (float) data_get($atividade, 'postes_desenhados', 0);
 
             if ($tipoProjeto === TipoProjetoAtividade::Proj) {
-                $postesProjetadosProj += $postesProjetados;
-            } else {
-                $postesProjetadosCad += $postesProjetados + $postesDesenhados;
+                $postesProjetoProj += $postesProjetados;
+
+                continue;
             }
+
+            $postesDesenhoCad += $postesDesenhados;
+            $postesProjetoCad += $postesProjetados;
         }
 
         return $this->calcular(
-            postesProjetadosCad: $postesProjetadosCad,
-            postesProjetadosProj: $postesProjetadosProj,
+            postesDesenhoCad: $postesDesenhoCad,
+            postesProjetoCad: $postesProjetoCad,
+            postesProjetoProj: $postesProjetoProj,
         );
     }
 
     public function calcular(
-        int|float $postesDesenhados = 0,
-        int|float $postesProjetadosCad = 0,
-        int|float $postesProjetadosProj = 0,
+        int|float $postesDesenhoCad = 0,
+        int|float $postesProjetoCad = 0,
+        int|float $postesProjetoProj = 0,
     ): float {
-        $excedenteCad = max(0, $postesProjetadosCad - self::LIMITE_POSTES_CAD);
-        $excedenteProj = max(0, $postesProjetadosProj - self::LIMITE_POSTES_PROJ);
-        $bonusFixo = $this->metaAtingida($postesProjetadosCad, $postesProjetadosProj)
+        $excedenteDesenhoCad = max(0, $postesDesenhoCad - self::LIMITE_POSTES_DESENHO_CAD);
+        $excedenteProjetoCad = max(0, $postesProjetoCad - self::LIMITE_POSTES_PROJETO_CAD);
+        $excedenteProj = max(0, $postesProjetoProj - self::LIMITE_POSTES_PROJ);
+        $bonusFixo = $this->metaAtingida($postesDesenhoCad, $postesProjetoCad, $postesProjetoProj)
             ? self::BONUS_FIXO_META
             : 0.0;
 
-        return $bonusFixo + (($excedenteCad + $excedenteProj) * self::MULTIPLICADOR_BONUS);
+        return $bonusFixo + (($excedenteDesenhoCad + $excedenteProjetoCad + $excedenteProj) * self::MULTIPLICADOR_BONUS);
     }
 
-    public function metaAtingida(int|float $postesProjetadosCad, int|float $postesProjetadosProj): bool
-    {
-        return $postesProjetadosCad >= self::LIMITE_POSTES_CAD
-            || $postesProjetadosProj >= self::LIMITE_POSTES_PROJ;
+    public function metaAtingida(
+        int|float $postesDesenhoCad,
+        int|float $postesProjetoCad,
+        int|float $postesProjetoProj,
+    ): bool {
+        return $postesDesenhoCad >= self::LIMITE_POSTES_DESENHO_CAD
+            || $postesProjetoCad >= self::LIMITE_POSTES_PROJETO_CAD
+            || $postesProjetoProj >= self::LIMITE_POSTES_PROJ;
     }
 
     /**
@@ -84,41 +96,53 @@ class BonusColaboradorCalculator
      */
     public function enriquecerColaborador(Colaborador $colaborador): Colaborador
     {
-        $postesCad = (float) ($colaborador->total_postes_projetados_cad ?? 0);
+        $postesDesenhoCad = (float) ($colaborador->total_postes_desenho_cad ?? 0);
+        $postesProjetoCad = (float) ($colaborador->total_postes_projeto_cad ?? 0);
         $postesProj = (float) ($colaborador->total_postes_projetados_proj ?? 0);
 
         $bonusBruto = $this->calcular(
-            postesProjetadosCad: $postesCad,
-            postesProjetadosProj: $postesProj,
+            postesDesenhoCad: $postesDesenhoCad,
+            postesProjetoCad: $postesProjetoCad,
+            postesProjetoProj: $postesProj,
         );
 
         $colaborador->total_bonus = $this->aplicarTeto(
             $bonusBruto,
             $colaborador->remuneracao,
         );
-        $colaborador->meta_cad = $this->formatarMetaCad($postesCad);
+        $colaborador->meta_desenho_cad = $this->formatarMetaDesenhoCad($postesDesenhoCad);
+        $colaborador->meta_projeto_cad = $this->formatarMetaProjetoCad($postesProjetoCad);
         $colaborador->meta_proj = $this->formatarMetaProj($postesProj);
-        $colaborador->total_postes = (int) $postesCad + (int) $postesProj;
+        $colaborador->total_postes = (int) $postesDesenhoCad + (int) $postesProjetoCad + (int) $postesProj;
 
         return $colaborador;
     }
 
-    public function formatarMetaCad(int|float $postesProjetadosCad): string
+    public function formatarMetaDesenhoCad(int|float $postesDesenhoCad): string
     {
-        return sprintf('%d / %d', (int) $postesProjetadosCad, self::LIMITE_POSTES_CAD);
+        return sprintf('%d / %d', (int) $postesDesenhoCad, self::LIMITE_POSTES_DESENHO_CAD);
     }
 
-    public function formatarMetaProj(int|float $postesProjetadosProj): string
+    public function formatarMetaProjetoCad(int|float $postesProjetoCad): string
     {
-        return sprintf('%d / %d', (int) $postesProjetadosProj, self::LIMITE_POSTES_PROJ);
+        return sprintf('%d / %d', (int) $postesProjetoCad, self::LIMITE_POSTES_PROJETO_CAD);
     }
 
-    public function formatarMeta(int|float $postesProjetadosCad, int|float $postesProjetadosProj): string
+    public function formatarMetaProj(int|float $postesProjetoProj): string
     {
+        return sprintf('%d / %d', (int) $postesProjetoProj, self::LIMITE_POSTES_PROJ);
+    }
+
+    public function formatarMeta(
+        int|float $postesDesenhoCad,
+        int|float $postesProjetoCad,
+        int|float $postesProjetoProj,
+    ): string {
         return sprintf(
-            '%s - %s',
-            $this->formatarMetaCad($postesProjetadosCad),
-            $this->formatarMetaProj($postesProjetadosProj),
+            '%s - %s - %s',
+            $this->formatarMetaDesenhoCad($postesDesenhoCad),
+            $this->formatarMetaProjetoCad($postesProjetoCad),
+            $this->formatarMetaProj($postesProjetoProj),
         );
     }
 

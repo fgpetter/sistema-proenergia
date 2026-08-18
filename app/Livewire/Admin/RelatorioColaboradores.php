@@ -114,7 +114,8 @@ class RelatorioColaboradores extends Component
 
         $atividadesCad = $atividades
             ->filter(fn (Atividade $atividade): bool => ($atividade->tipo_projeto ?? TipoProjetoAtividade::Cad) !== TipoProjetoAtividade::Proj);
-        $postesCad = (int) $atividadesCad->sum('postes_projetados') + (int) $atividadesCad->sum('postes_desenhados');
+        $postesDesenhoCad = (int) $atividadesCad->sum('postes_desenhados');
+        $postesProjetoCad = (int) $atividadesCad->sum('postes_projetados');
         $postesProj = (int) $atividades
             ->filter(fn (Atividade $atividade): bool => $atividade->tipo_projeto === TipoProjetoAtividade::Proj)
             ->sum('postes_projetados');
@@ -144,9 +145,10 @@ class RelatorioColaboradores extends Component
                 resumo: [
                     'competencia' => $this->formatarCompetencia($this->mesAno),
                     'projetos' => $totalProjetos,
-                    'postes_cad' => $postesCad,
+                    'postes_desenho_cad' => $postesDesenhoCad,
+                    'postes_projeto_cad' => $postesProjetoCad,
                     'postes_proj' => $postesProj,
-                    'postes_total' => $postesCad + $postesProj,
+                    'postes_total' => $postesDesenhoCad + $postesProjetoCad + $postesProj,
                     'bonus' => $bonus,
                 ],
             ),

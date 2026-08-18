@@ -42,7 +42,7 @@ class DashboardTest extends TestCase
             'total_projetos' => 2,
             'total_extensao_desenho' => 300,
             'total_extensao_projeto' => 130,
-            'total_postes_projetados_cad' => 20,
+            'total_postes_projeto_cad' => 20,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 10800,
             'remuneracao' => 500000,
@@ -92,7 +92,8 @@ class DashboardTest extends TestCase
         $colaborador = $this->makeColaboradorProdutividade([
             'nome' => 'Colaborador Meta',
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 500,
+            'total_postes_desenho_cad' => 0,
+            'total_postes_projeto_cad' => 500,
             'total_postes_projetados_proj' => 300,
             'total_segundos' => 7200,
             'remuneracao' => 500000,
@@ -104,8 +105,10 @@ class DashboardTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeLivewire(PerformanceColaboradores::class);
-        $response->assertSee('Postes CAD');
-        $response->assertSee('Postes PROJ');
+        $response->assertSee('Desenho CAD');
+        $response->assertSee('Projeto CAD');
+        $response->assertSee('Projeto PROJ');
+        $response->assertSee('0 / 400');
         $response->assertSee('500 / 300');
         $response->assertSee('300 / 230');
         $response->assertSee('R$ 840,00');
@@ -117,7 +120,7 @@ class DashboardTest extends TestCase
         $colaborador = $this->makeColaboradorProdutividade([
             'nome' => 'Colaborador Teto',
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 2000,
+            'total_postes_projeto_cad' => 2000,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 3600,
             'remuneracao' => 500000,
@@ -294,7 +297,8 @@ class DashboardTest extends TestCase
      *     total_projetos?: int,
      *     total_extensao_desenho?: int,
      *     total_extensao_projeto?: int,
-     *     total_postes_projetados_cad?: int,
+     *     total_postes_desenho_cad?: int,
+     *     total_postes_projeto_cad?: int,
      *     total_postes_projetados_proj?: int,
      *     total_segundos?: int,
      *     remuneracao?: int|null
@@ -312,9 +316,11 @@ class DashboardTest extends TestCase
         $colaborador->total_projetos = $atributos['total_projetos'] ?? 1;
         $colaborador->total_extensao_desenho = $atributos['total_extensao_desenho'] ?? 0;
         $colaborador->total_extensao_projeto = $atributos['total_extensao_projeto'] ?? 0;
-        $colaborador->total_postes_projetados_cad = $atributos['total_postes_projetados_cad'] ?? 0;
+        $colaborador->total_postes_desenho_cad = $atributos['total_postes_desenho_cad'] ?? 0;
+        $colaborador->total_postes_projeto_cad = $atributos['total_postes_projeto_cad'] ?? 0;
         $colaborador->total_postes_projetados_proj = $atributos['total_postes_projetados_proj'] ?? 0;
-        $colaborador->total_postes_projetados = $colaborador->total_postes_projetados_cad
+        $colaborador->total_postes_projetados = $colaborador->total_postes_desenho_cad
+            + $colaborador->total_postes_projeto_cad
             + $colaborador->total_postes_projetados_proj;
         $colaborador->total_segundos = $atributos['total_segundos'] ?? 0;
 

@@ -46,7 +46,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
 
         $this->mockAgregarParaTela($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 320,
+            'total_postes_projeto_cad' => 320,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 9000,
         ]);
@@ -154,7 +154,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
 
         $this->mockAgregarParaTela($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 50,
+            'total_postes_projeto_cad' => 50,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 3600,
         ]);
@@ -174,7 +174,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
         $this->assertSame('Atividade Propria', $atividades->first()->nome);
     }
 
-    public function test_exportacao_inclui_desenhados_no_detalhe_e_soma_na_meta_cad(): void
+    public function test_exportacao_inclui_desenhados_no_detalhe_e_separa_metas(): void
     {
         [$user, $colaborador] = $this->createPrestadorComColaborador([
             'remuneracao' => 500000,
@@ -210,7 +210,8 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
 
         $this->mockAgregarParaTela($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 600,
+            'total_postes_desenho_cad' => 200,
+            'total_postes_projeto_cad' => 400,
             'total_postes_projetados_proj' => 230,
             'total_segundos' => 10800,
         ]);
@@ -233,10 +234,14 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             $this->assertSame('CAD', $linhas[1][3]);
             $this->assertSame(200, $linhas[1][4]);
             $this->assertSame(400, $linhas[1][5]);
-            $this->assertSame(['Competência', 'Projetos', 'Postes CAD', 'Postes PROJ', 'Postes Total', 'Bônus'], $linhas[4]);
-            $this->assertSame(600, $linhas[5][2]);
-            $this->assertSame(230, $linhas[5][3]);
-            $this->assertSame(830, $linhas[5][4]);
+            $this->assertSame(
+                ['Competência', 'Projetos', 'Desenho CAD', 'Projeto CAD', 'Projeto PROJ', 'Postes Total', 'Bônus'],
+                $linhas[4],
+            );
+            $this->assertSame(200, $linhas[5][2]);
+            $this->assertSame(400, $linhas[5][3]);
+            $this->assertSame(230, $linhas[5][4]);
+            $this->assertSame(830, $linhas[5][5]);
 
             return true;
         });
@@ -269,7 +274,8 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
     /**
      * @param  array{
      *     total_projetos?: int,
-     *     total_postes_projetados_cad?: int,
+     *     total_postes_desenho_cad?: int,
+     *     total_postes_projeto_cad?: int,
      *     total_postes_projetados_proj?: int,
      *     total_segundos?: int
      * }  $atributos
@@ -286,10 +292,11 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
         $linha->total_projetos = $atributos['total_projetos'] ?? 0;
         $linha->total_extensao_desenho = 0;
         $linha->total_extensao_projeto = 0;
-        $linha->total_postes_desenhados = 0;
-        $linha->total_postes_projetados = ($atributos['total_postes_projetados_cad'] ?? 0)
+        $linha->total_postes_desenhados = $atributos['total_postes_desenho_cad'] ?? 0;
+        $linha->total_postes_projetados = ($atributos['total_postes_projeto_cad'] ?? 0)
             + ($atributos['total_postes_projetados_proj'] ?? 0);
-        $linha->total_postes_projetados_cad = $atributos['total_postes_projetados_cad'] ?? 0;
+        $linha->total_postes_desenho_cad = $atributos['total_postes_desenho_cad'] ?? 0;
+        $linha->total_postes_projeto_cad = $atributos['total_postes_projeto_cad'] ?? 0;
         $linha->total_postes_projetados_proj = $atributos['total_postes_projetados_proj'] ?? 0;
         $linha->total_segundos = $atributos['total_segundos'] ?? 0;
 

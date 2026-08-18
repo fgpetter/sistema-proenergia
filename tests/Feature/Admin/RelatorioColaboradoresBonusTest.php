@@ -62,7 +62,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
 
         $this->mockProdutividadeAgregada($colaborador, [
             'total_projetos' => 2,
-            'total_postes_projetados_cad' => 500,
+            'total_postes_projeto_cad' => 500,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 10800,
         ]);
@@ -118,12 +118,12 @@ class RelatorioColaboradoresBonusTest extends TestCase
 
         $this->mockProdutividadeAgregada($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 500,
+            'total_postes_projeto_cad' => 500,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 3600,
         ]);
 
-        // Junho CAD: 300 + 200*2 = 700; julho PROJ 300 + 70*2 = 440 não entra
+        // Junho Projeto CAD: 300 + 200*2 = 700; julho PROJ 300 + 70*2 = 440 não entra
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
@@ -166,7 +166,8 @@ class RelatorioColaboradoresBonusTest extends TestCase
 
         $this->mockProdutividadeAgregada($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 500,
+            'total_postes_desenho_cad' => 100,
+            'total_postes_projeto_cad' => 500,
             'total_postes_projetados_proj' => 300,
             'total_segundos' => 7200,
         ]);
@@ -174,8 +175,10 @@ class RelatorioColaboradoresBonusTest extends TestCase
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
-            ->assertSee('Postes CAD')
-            ->assertSee('Postes PROJ')
+            ->assertSee('Desenho CAD')
+            ->assertSee('Projeto CAD')
+            ->assertSee('Projeto PROJ')
+            ->assertSee('100 / 400')
             ->assertSee('500 / 300')
             ->assertSee('300 / 230');
     }
@@ -222,12 +225,12 @@ class RelatorioColaboradoresBonusTest extends TestCase
 
         $this->mockProdutividadeAgregada($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 500,
+            'total_postes_projeto_cad' => 500,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 3600,
         ]);
 
-        // Projeto A CAD: 300 + 200*2 = 700; B PROJ 300 + 70*2 = 440 não entra
+        // Projeto A Projeto CAD: 300 + 200*2 = 700; B PROJ 300 + 70*2 = 440 não entra
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
@@ -263,7 +266,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
 
         $this->mockProdutividadeAgregada($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 2000,
+            'total_postes_projeto_cad' => 2000,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 3600,
         ]);
@@ -301,7 +304,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
 
         $this->mockProdutividadeAgregada($colaborador, [
             'total_projetos' => 1,
-            'total_postes_projetados_cad' => 500,
+            'total_postes_projeto_cad' => 500,
             'total_postes_projetados_proj' => 0,
             'total_segundos' => 3600,
         ]);
@@ -313,7 +316,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->assertDontSee('R$ 700,00');
     }
 
-    public function test_relatorio_inclui_postes_desenhados_na_meta_cad_e_ignora_em_proj(): void
+    public function test_relatorio_separa_desenho_cad_de_projeto_cad_e_ignora_desenho_em_proj(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);
         $coordenador = Colaborador::factory()->coordenador()->create();
@@ -351,17 +354,19 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->first();
 
         $this->assertNotNull($agregado);
-        $this->assertSame(600, (int) $agregado->total_postes_projetados_cad);
+        $this->assertSame(200, (int) $agregado->total_postes_desenho_cad);
+        $this->assertSame(400, (int) $agregado->total_postes_projeto_cad);
         $this->assertSame(230, (int) $agregado->total_postes_projetados_proj);
 
         Livewire::actingAs($admin)
             ->test(RelatorioColaboradores::class)
             ->set('mesAno', '2026-06')
             ->assertSee($colaborador->nome)
-            ->assertSee('600 / 300')
+            ->assertSee('200 / 400')
+            ->assertSee('400 / 300')
             ->assertSee('230 / 230')
             ->assertSee('830')
-            ->assertSee('R$ 900,00');
+            ->assertSee('R$ 500,00');
     }
 
     public function test_agregar_soma_duracao_em_segundos(): void
@@ -398,7 +403,8 @@ class RelatorioColaboradoresBonusTest extends TestCase
      *
      * @param  array{
      *     total_projetos?: int,
-     *     total_postes_projetados_cad?: int,
+     *     total_postes_desenho_cad?: int,
+     *     total_postes_projeto_cad?: int,
      *     total_postes_projetados_proj?: int,
      *     total_segundos?: int
      * }  $atributos
@@ -415,10 +421,11 @@ class RelatorioColaboradoresBonusTest extends TestCase
         $linha->total_projetos = $atributos['total_projetos'] ?? 1;
         $linha->total_extensao_desenho = 0;
         $linha->total_extensao_projeto = 0;
-        $linha->total_postes_desenhados = 0;
-        $linha->total_postes_projetados = ($atributos['total_postes_projetados_cad'] ?? 0)
+        $linha->total_postes_desenhados = $atributos['total_postes_desenho_cad'] ?? 0;
+        $linha->total_postes_projetados = ($atributos['total_postes_projeto_cad'] ?? 0)
             + ($atributos['total_postes_projetados_proj'] ?? 0);
-        $linha->total_postes_projetados_cad = $atributos['total_postes_projetados_cad'] ?? 0;
+        $linha->total_postes_desenho_cad = $atributos['total_postes_desenho_cad'] ?? 0;
+        $linha->total_postes_projeto_cad = $atributos['total_postes_projeto_cad'] ?? 0;
         $linha->total_postes_projetados_proj = $atributos['total_postes_projetados_proj'] ?? 0;
         $linha->total_segundos = $atributos['total_segundos'] ?? 0;
 
