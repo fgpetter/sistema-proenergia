@@ -20,16 +20,14 @@ class DashboardMetricsTest extends TestCase
             createdAt: '2026-06-10 10:00:00',
             extensaoProjeto: 80,
             postesProjetados: 15,
-            inicio: '2026-06-11 08:00:00',
-            fim: '2026-06-11 10:00:00',
+            duracaoMinutos: 120,
         );
         $this->criarProjetoComAtividade(
             nome: 'Projeto Julho',
             createdAt: '2026-07-05 10:00:00',
             extensaoProjeto: 50,
             postesProjetados: 5,
-            inicio: '2026-07-06 08:00:00',
-            fim: '2026-07-06 09:00:00',
+            duracaoMinutos: 60,
         );
 
         $metrics = app(DashboardMetrics::class);
@@ -56,16 +54,14 @@ class DashboardMetricsTest extends TestCase
             createdAt: '2026-06-10 10:00:00',
             extensaoProjeto: 80,
             postesProjetados: 15,
-            inicio: '2026-06-11 08:00:00',
-            fim: '2026-06-11 10:00:00',
+            duracaoMinutos: 120,
         );
         $this->criarProjetoComAtividade(
             nome: 'Projeto Julho',
             createdAt: '2026-07-05 10:00:00',
             extensaoProjeto: 50,
             postesProjetados: 5,
-            inicio: '2026-07-06 08:00:00',
-            fim: '2026-07-06 09:00:00',
+            duracaoMinutos: 60,
         );
 
         $metrics = app(DashboardMetrics::class);
@@ -88,8 +84,7 @@ class DashboardMetricsTest extends TestCase
             createdAt: '2026-06-10 10:00:00',
             extensaoProjeto: 80,
             postesProjetados: 15,
-            inicio: '2026-06-11 08:00:00',
-            fim: '2026-06-11 10:00:00',
+            duracaoMinutos: 120,
         );
 
         $metrics = app(DashboardMetrics::class);
@@ -107,8 +102,7 @@ class DashboardMetricsTest extends TestCase
         string $createdAt,
         int $extensaoProjeto,
         int $postesProjetados,
-        string $inicio,
-        string $fim,
+        int $duracaoMinutos,
     ): void {
         $colaborador = Colaborador::factory()->create();
         $projeto = Projeto::factory()->create([
@@ -124,8 +118,7 @@ class DashboardMetricsTest extends TestCase
             'extensao_projeto' => $extensaoProjeto,
             'postes_desenhados' => 0,
             'postes_projetados' => $postesProjetados,
-            'data_hora_inicio' => $inicio,
-            'data_hora_fim' => $fim,
+            'duracao_minutos' => $duracaoMinutos,
         ]);
     }
 }

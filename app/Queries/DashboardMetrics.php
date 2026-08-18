@@ -67,14 +67,7 @@ class DashboardMetrics
 
     private function sqlSegundosAtividade(): string
     {
-        $inicio = 'atividades.data_hora_inicio';
-        $fim = 'atividades.data_hora_fim';
-
-        if (Projeto::query()->getConnection()->getDriverName() === 'sqlite') {
-            return "CASE WHEN {$inicio} IS NOT NULL AND {$fim} IS NOT NULL THEN CAST(strftime('%s', {$fim}) AS INTEGER) - CAST(strftime('%s', {$inicio}) AS INTEGER) ELSE 0 END";
-        }
-
-        return "CASE WHEN {$inicio} IS NOT NULL AND {$fim} IS NOT NULL THEN TIMESTAMPDIFF(SECOND, {$inicio}, {$fim}) ELSE 0 END";
+        return 'COALESCE(atividades.duracao_minutos, 0) * 60';
     }
 
     private function aplicarCompetencia(Builder $query, ?string $mesAno): void

@@ -41,8 +41,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'nome' => 'Atividade A',
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 320,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 10:30:00',
+            'duracao_minutos' => 150,
         ]);
 
         $this->mockAgregarParaTela($colaborador, [
@@ -132,8 +131,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'nome' => 'Atividade Propria',
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 50,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         Atividade::factory()->create([
@@ -142,8 +140,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'nome' => 'Atividade Alheia',
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 999,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         Atividade::factory()->create([
@@ -152,8 +149,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'nome' => 'Atividade Outra Competencia',
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 80,
-            'data_hora_inicio' => '2026-07-06 08:00:00',
-            'data_hora_fim' => '2026-07-06 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $this->mockAgregarParaTela($colaborador, [
@@ -199,8 +195,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 200,
             'postes_projetados' => 400,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 10:00:00',
+            'duracao_minutos' => 120,
         ]);
 
         Atividade::factory()->create([
@@ -210,8 +205,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Proj,
             'postes_desenhados' => 50,
             'postes_projetados' => 230,
-            'data_hora_inicio' => '2026-06-12 08:00:00',
-            'data_hora_fim' => '2026-06-12 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $this->mockAgregarParaTela($colaborador, [

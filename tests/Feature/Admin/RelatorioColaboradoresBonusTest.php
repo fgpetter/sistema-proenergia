@@ -48,8 +48,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 140,
             'postes_projetados' => 250,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 10:00:00',
+            'duracao_minutos' => 120,
         ]);
 
         Atividade::factory()->create([
@@ -58,8 +57,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 140,
             'postes_projetados' => 250,
-            'data_hora_inicio' => '2026-06-21 08:00:00',
-            'data_hora_fim' => '2026-06-21 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -106,8 +104,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 280,
             'postes_projetados' => 500,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         Atividade::factory()->create([
@@ -116,8 +113,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Proj,
             'postes_desenhados' => 280,
             'postes_projetados' => 300,
-            'data_hora_inicio' => '2026-07-06 08:00:00',
-            'data_hora_fim' => '2026-07-06 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -156,8 +152,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 100,
             'postes_projetados' => 500,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         Atividade::factory()->create([
@@ -166,8 +161,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Proj,
             'postes_desenhados' => 50,
             'postes_projetados' => 300,
-            'data_hora_inicio' => '2026-06-12 08:00:00',
-            'data_hora_fim' => '2026-06-12 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -214,8 +208,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 280,
             'postes_projetados' => 500,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         Atividade::factory()->create([
@@ -224,8 +217,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Proj,
             'postes_desenhados' => 280,
             'postes_projetados' => 300,
-            'data_hora_inicio' => '2026-06-16 08:00:00',
-            'data_hora_fim' => '2026-06-16 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -266,8 +258,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 100,
             'postes_projetados' => 2000,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -305,8 +296,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 100,
             'postes_projetados' => 500,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -344,8 +334,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_desenhados' => 200,
             'postes_projetados' => 400,
-            'data_hora_inicio' => '2026-06-11 08:00:00',
-            'data_hora_fim' => '2026-06-11 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         Atividade::factory()->create([
@@ -354,8 +343,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Proj,
             'postes_desenhados' => 50,
             'postes_projetados' => 230,
-            'data_hora_inicio' => '2026-06-12 08:00:00',
-            'data_hora_fim' => '2026-06-12 09:00:00',
+            'duracao_minutos' => 60,
         ]);
 
         $agregado = app(RelatorioColaboradoresProdutividade::class)
@@ -376,8 +364,37 @@ class RelatorioColaboradoresBonusTest extends TestCase
             ->assertSee('R$ 900,00');
     }
 
+    public function test_agregar_soma_duracao_em_segundos(): void
+    {
+        $coordenador = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->create();
+        $projeto = Projeto::factory()->create([
+            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => '2026-06-10 10:00:00',
+            'updated_at' => '2026-06-10 10:00:00',
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'duracao_minutos' => 90,
+        ]);
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'duracao_minutos' => 30,
+        ]);
+
+        $linhas = app(RelatorioColaboradoresProdutividade::class)->agregar(
+            colaboradorId: $colaborador->id,
+            mesAno: '2026-06',
+        );
+
+        $this->assertSame(7200, (int) $linhas->first()->total_segundos);
+    }
+
     /**
-     * Mocka a query de agregação (TIMESTAMPDIFF no MySQL) para manter testes estáveis no SQLite.
+     * Mocka a query de agregação para isolar o cálculo de bônus na tela.
      *
      * @param  array{
      *     total_projetos?: int,

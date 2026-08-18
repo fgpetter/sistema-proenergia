@@ -14,8 +14,8 @@ use App\Models\User;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -37,16 +37,6 @@ class ProjetoEditDrawer extends Component
 
     public array $atividades = [];
 
-    /**
-     * @var array<int, string>
-     */
-    public array $atividadesDataHoraInicio = [];
-
-    /**
-     * @var array<int, string>
-     */
-    public array $atividadesDataHoraFim = [];
-
     protected function rules(): array
     {
         return [
@@ -67,8 +57,8 @@ class ProjetoEditDrawer extends Component
             'atividades.*.postes_desenhados' => ['required', 'integer', 'min:0'],
             'atividades.*.postes_projetados' => ['required', 'integer', 'min:0'],
             'atividades.*.tipo_projeto' => ['required', Rule::enum(TipoProjetoAtividade::class)],
-            'atividades.*.data_hora_inicio' => ['nullable', 'string', 'max:32'],
-            'atividades.*.data_hora_fim' => ['nullable', 'string', 'max:32'],
+            'atividades.*.duracao_horas' => ['nullable', 'integer', 'min:0'],
+            'atividades.*.duracao_minutos' => ['nullable', 'integer', 'min:0', 'max:59'],
             'atividades.*.observacoes' => ['nullable', 'string'],
         ];
     }
@@ -84,6 +74,11 @@ class ProjetoEditDrawer extends Component
             'atividades.*.postes_desenhados.required' => 'O número de postes desenhados é obrigatório.',
             'atividades.*.postes_projetados.required' => 'O número de postes projetados é obrigatório.',
             'atividades.*.tipo_projeto.required' => 'O tipo de projeto é obrigatório.',
+            'atividades.*.duracao_horas.integer' => 'As horas devem ser um número inteiro.',
+            'atividades.*.duracao_horas.min' => 'As horas não podem ser negativas.',
+            'atividades.*.duracao_minutos.integer' => 'Os minutos devem ser um número inteiro.',
+            'atividades.*.duracao_minutos.min' => 'Os minutos não podem ser negativos.',
+            'atividades.*.duracao_minutos.max' => 'Os minutos devem estar entre 0 e 59.',
         ];
     }
 
@@ -130,9 +125,47 @@ class ProjetoEditDrawer extends Component
             'postes_desenhados' => $atividadeData['postes_desenhados'],
             'postes_projetados' => $atividadeData['postes_projetados'],
             'tipo_projeto' => $atividadeData['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
-            'data_hora_inicio' => $atividadeData['data_hora_inicio'] ?? '',
-            'data_hora_fim' => $atividadeData['data_hora_fim'] ?? '',
+            'duracao_horas' => $atividadeData['duracao_horas'] ?? '',
+            'duracao_minutos' => $atividadeData['duracao_minutos'] ?? '',
             'observacoes' => $atividadeData['observacoes'] ?? '',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function formAtividadeFromModel(Atividade $atividade): array
+    {
+        return [
+            'id' => $atividade->id,
+            'nome' => $atividade->nome,
+            'colaborador_id' => $atividade->colaborador_id,
+            'extensao_desenho' => $atividade->extensao_desenho,
+            'extensao_projeto' => $atividade->extensao_projeto,
+            'postes_desenhados' => $atividade->postes_desenhados,
+            'postes_projetados' => $atividade->postes_projetados,
+            'tipo_projeto' => $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
+            ...$this->duracaoFieldsFromMinutos($atividade->duracao_minutos),
+            'observacoes' => $atividade->observacoes ?? '',
+            '_delete' => false,
+        ];
+    }
+
+    /**
+     * @return array{duracao_horas: int|string, duracao_minutos: int|string}
+     */
+    protected function duracaoFieldsFromMinutos(?int $minutos): array
+    {
+        if ($minutos === null) {
+            return [
+                'duracao_horas' => '',
+                'duracao_minutos' => '',
+            ];
+        }
+
+        return [
+            'duracao_horas' => intdiv($minutos, 60),
+            'duracao_minutos' => $minutos % 60,
         ];
     }
 
@@ -154,22 +187,7 @@ class ProjetoEditDrawer extends Component
         $this->nome = $projeto->nome;
         $this->colaboradorResponsavelId = $projeto->colaborador_responsavel_id;
 
-        $this->atividades = $projeto->atividades->map(fn (Atividade $atividade) => [
-            'id' => $atividade->id,
-            'nome' => $atividade->nome,
-            'colaborador_id' => $atividade->colaborador_id,
-            'extensao_desenho' => $atividade->extensao_desenho,
-            'extensao_projeto' => $atividade->extensao_projeto,
-            'postes_desenhados' => $atividade->postes_desenhados,
-            'postes_projetados' => $atividade->postes_projetados,
-            'tipo_projeto' => $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
-            'data_hora_inicio' => $atividade->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
-            'data_hora_fim' => $atividade->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
-            'observacoes' => $atividade->observacoes ?? '',
-            '_delete' => false,
-        ])->toArray();
-
-        $this->syncAtividadesDatetimesToParallel();
+        $this->atividades = $projeto->atividades->map(fn (Atividade $atividade) => $this->formAtividadeFromModel($atividade))->toArray();
 
         $this->atividadesLimite = 10;
         $this->showDrawer = true;
@@ -183,22 +201,7 @@ class ProjetoEditDrawer extends Component
 
         $projeto = Projeto::with('atividades')->findOrFail($this->editingProjetoId);
 
-        $this->atividades = $projeto->atividades->map(fn (Atividade $atividade) => [
-            'id' => $atividade->id,
-            'nome' => $atividade->nome,
-            'colaborador_id' => $atividade->colaborador_id,
-            'extensao_desenho' => $atividade->extensao_desenho,
-            'extensao_projeto' => $atividade->extensao_projeto,
-            'postes_desenhados' => $atividade->postes_desenhados,
-            'postes_projetados' => $atividade->postes_projetados,
-            'tipo_projeto' => $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
-            'data_hora_inicio' => $atividade->data_hora_inicio?->format('Y-m-d\TH:i') ?? '',
-            'data_hora_fim' => $atividade->data_hora_fim?->format('Y-m-d\TH:i') ?? '',
-            'observacoes' => $atividade->observacoes ?? '',
-            '_delete' => false,
-        ])->toArray();
-
-        $this->syncAtividadesDatetimesToParallel();
+        $this->atividades = $projeto->atividades->map(fn (Atividade $atividade) => $this->formAtividadeFromModel($atividade))->toArray();
     }
 
     #[Computed]
@@ -319,14 +322,11 @@ class ProjetoEditDrawer extends Component
             'postes_desenhados' => 0,
             'postes_projetados' => 0,
             'tipo_projeto' => TipoProjetoAtividade::Cad->value,
-            'data_hora_inicio' => '',
-            'data_hora_fim' => '',
+            'duracao_horas' => '',
+            'duracao_minutos' => '',
             'observacoes' => '',
             '_delete' => false,
         ];
-
-        $this->atividadesDataHoraInicio[] = '';
-        $this->atividadesDataHoraFim[] = '';
     }
 
     public function saveAtividade(int $index, CreateOrUpdateAtividade $atividadeAction): void
@@ -334,8 +334,6 @@ class ProjetoEditDrawer extends Component
         if (! isset($this->atividades[$index])) {
             return;
         }
-
-        $this->syncAtividadesDatetimesFromParallel();
 
         if (! $this->editingProjetoId) {
             $this->swalToastWarning([
@@ -361,8 +359,8 @@ class ProjetoEditDrawer extends Component
             "atividades.{$index}.postes_desenhados" => ['required', 'integer', 'min:0'],
             "atividades.{$index}.postes_projetados" => ['required', 'integer', 'min:0'],
             "atividades.{$index}.tipo_projeto" => ['required', Rule::enum(TipoProjetoAtividade::class)],
-            "atividades.{$index}.data_hora_inicio" => ['nullable', 'string', 'max:32'],
-            "atividades.{$index}.data_hora_fim" => ['nullable', 'string', 'max:32'],
+            "atividades.{$index}.duracao_horas" => ['nullable', 'integer', 'min:0'],
+            "atividades.{$index}.duracao_minutos" => ['nullable', 'integer', 'min:0', 'max:59'],
             "atividades.{$index}.observacoes" => ['nullable', 'string'],
         ]);
 
@@ -371,7 +369,7 @@ class ProjetoEditDrawer extends Component
         if (isset($atividadeData['id'])) {
             $atividade = Atividade::findOrFail($atividadeData['id']);
             $this->authorize('update', $atividade);
-            $this->validateAtividadeDatetimeFields($index, $atividade);
+            $this->validateAtividadeDuracao($index, $atividade);
         } else {
             $this->authorize('create', Atividade::class);
         }
@@ -381,18 +379,13 @@ class ProjetoEditDrawer extends Component
         DB::transaction(function () use ($atividadeData, $atividadeAction, $index, $user) {
             if (isset($atividadeData['id'])) {
                 $atividade = Atividade::findOrFail($atividadeData['id']);
-                $atividadeAtualizada = $atividadeAction->update(
+                $atividadeAction->update(
                     $atividade,
                     $atividadeData['nome'],
                     $atividadeData['colaborador_id'],
                     $this->buildAtividadePayload($atividadeData),
                     $user
                 );
-
-                $this->atividades[$index]['data_hora_inicio'] = $atividadeAtualizada->data_hora_inicio?->format('Y-m-d\TH:i') ?? '';
-                $this->atividades[$index]['data_hora_fim'] = $atividadeAtualizada->data_hora_fim?->format('Y-m-d\TH:i') ?? '';
-                $this->atividadesDataHoraInicio[$index] = $this->atividades[$index]['data_hora_inicio'];
-                $this->atividadesDataHoraFim[$index] = $this->atividades[$index]['data_hora_fim'];
             } else {
                 $novaAtividade = $atividadeAction->create(
                     $this->editingProjetoId,
@@ -403,8 +396,6 @@ class ProjetoEditDrawer extends Component
                 );
 
                 $this->atividades[$index]['id'] = $novaAtividade->id;
-                $this->atividadesDataHoraInicio[$index] = '';
-                $this->atividadesDataHoraFim[$index] = '';
             }
         });
 
@@ -458,7 +449,6 @@ class ProjetoEditDrawer extends Component
 
             unset($this->atividades[$index]);
             $this->atividades = array_values($this->atividades);
-            $this->syncAtividadesDatetimesToParallel();
         }
 
         $this->removingAtividadeIndex = null;
@@ -480,15 +470,12 @@ class ProjetoEditDrawer extends Component
             } else {
                 unset($this->atividades[$index]);
                 $this->atividades = array_values($this->atividades);
-                $this->syncAtividadesDatetimesToParallel();
             }
         }
     }
 
     public function save(CreateOrUpdateProjeto $projetoAction, CreateOrUpdateAtividade $atividadeAction): void
     {
-        $this->syncAtividadesDatetimesFromParallel();
-
         $this->validate();
 
         if ($this->editingProjetoId) {
@@ -503,7 +490,7 @@ class ProjetoEditDrawer extends Component
                 continue;
             }
             if (isset($atividadeData['id'])) {
-                $this->validateAtividadeDatetimeFields($index, Atividade::findOrFail($atividadeData['id']));
+                $this->validateAtividadeDuracao($index, Atividade::findOrFail($atividadeData['id']));
             }
         }
 
@@ -576,32 +563,12 @@ class ProjetoEditDrawer extends Component
         $this->nome = '';
         $this->colaboradorResponsavelId = null;
         $this->atividades = [];
-        $this->atividadesDataHoraInicio = [];
-        $this->atividadesDataHoraFim = [];
         $this->editingProjetoId = null;
         $this->atividadesLimite = 10;
         $this->resetValidation();
     }
 
-    protected function syncAtividadesDatetimesFromParallel(): void
-    {
-        foreach ($this->atividades as $i => $atividadeRow) {
-            $this->atividades[$i]['data_hora_inicio'] = $this->atividadesDataHoraInicio[$i] ?? ($atividadeRow['data_hora_inicio'] ?? '');
-            $this->atividades[$i]['data_hora_fim'] = $this->atividadesDataHoraFim[$i] ?? ($atividadeRow['data_hora_fim'] ?? '');
-        }
-    }
-
-    protected function syncAtividadesDatetimesToParallel(): void
-    {
-        $this->atividadesDataHoraInicio = [];
-        $this->atividadesDataHoraFim = [];
-        foreach ($this->atividades as $i => $atividadeRow) {
-            $this->atividadesDataHoraInicio[$i] = $atividadeRow['data_hora_inicio'] ?? '';
-            $this->atividadesDataHoraFim[$i] = $atividadeRow['data_hora_fim'] ?? '';
-        }
-    }
-
-    protected function validateAtividadeDatetimeFields(int $index, Atividade $dbAtividade): void
+    protected function validateAtividadeDuracao(int $index, Atividade $dbAtividade): void
     {
         $user = auth()->user();
         if (! $user instanceof User) {
@@ -610,83 +577,25 @@ class ProjetoEditDrawer extends Component
 
         $user->loadMissing('colaborador');
 
-        $atividadeRow = $this->atividades[$index] ?? [];
-        $inicio = $this->normalizeDatetimeInput($atividadeRow['data_hora_inicio'] ?? null);
-        $fim = $this->normalizeDatetimeInput($atividadeRow['data_hora_fim'] ?? null);
-
-        $inicioDb = $dbAtividade->data_hora_inicio !== null;
-        $fimDb = $dbAtividade->data_hora_fim !== null;
-        $hasBothStored = $inicioDb && $fimDb;
-        $hasNeitherStored = ! $inicioDb && ! $fimDb;
-
         $isAdminOrCoord = $user->isAdminOrSuperAdmin() || $user->isCoordenador();
         $isAssignedCollaborator = $dbAtividade->colaborador_id === $user->colaborador?->id;
 
-        $keyInicio = "atividades.{$index}.data_hora_inicio";
-        $keyFim = "atividades.{$index}.data_hora_fim";
-        $validationData = [
-            'atividades' => [
-                $index => [
-                    'data_hora_inicio' => $inicio,
-                    'data_hora_fim' => $fim,
-                ],
-            ],
-        ];
-
-        if ($hasNeitherStored) {
-            if ($isAdminOrCoord) {
-                return;
-            }
-
-            if ($isAssignedCollaborator) {
-                Validator::make(
-                    $validationData,
-                    [
-                        $keyInicio => ['required', 'date'],
-                        $keyFim => ['required', 'date', 'after:'.$keyInicio],
-                    ],
-                    [
-                        $keyInicio.'.required' => 'Informe a data e hora de início.',
-                        $keyFim.'.required' => 'Informe a data e hora de fim.',
-                        $keyFim.'.after' => 'A data e hora de fim deve ser posterior à de início.',
-                    ]
-                )->validate();
-            }
-
+        if (! $isAssignedCollaborator || $isAdminOrCoord) {
             return;
         }
 
-        if ($hasBothStored && $isAssignedCollaborator && ! $isAdminOrCoord) {
-            return;
-        }
+        $atividadeRow = $this->atividades[$index] ?? [];
+        $horas = $atividadeRow['duracao_horas'] ?? null;
+        $minutos = $atividadeRow['duracao_minutos'] ?? null;
+        $keyHoras = "atividades.{$index}.duracao_horas";
 
-        if ($isAssignedCollaborator && ! $isAdminOrCoord) {
-            return;
-        }
+        $totalMinutos = ((int) $horas * 60) + (int) $minutos;
 
-        if ($isAdminOrCoord) {
-            Validator::make(
-                $validationData,
-                [
-                    $keyInicio => ['required_with:'.$keyFim, 'nullable', 'date'],
-                    $keyFim => ['required_with:'.$keyInicio, 'nullable', 'date', 'after:'.$keyInicio],
-                ],
-                [
-                    $keyInicio.'.required_with' => 'Ao informar uma data, preencha também a outra.',
-                    $keyFim.'.required_with' => 'Ao informar uma data, preencha também a outra.',
-                    $keyFim.'.after' => 'A data e hora de fim deve ser posterior à de início.',
-                ]
-            )->validate();
+        if ($totalMinutos <= 0) {
+            throw ValidationException::withMessages([
+                $keyHoras => 'Informe a duração maior que zero.',
+            ]);
         }
-    }
-
-    protected function normalizeDatetimeInput(mixed $value): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return (string) $value;
     }
 
     public function render(): View

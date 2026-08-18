@@ -112,10 +112,6 @@
                                     @forelse ($atividades as $index => $atividade)
                                         @php
                                             $atividadeModel = isset($atividade['id']) ? \App\Models\Atividade::find($atividade['id']) : null;
-                                            $datasPreenchidas = $atividadeModel && $atividadeModel->data_hora_inicio && $atividadeModel->data_hora_fim;
-                                            $ehColaboradorAtribuido = auth()->user()->colaborador && (int) ($atividade['colaborador_id'] ?? 0) === auth()->user()->colaborador->id;
-                                            $podeEditarDatasAdmin = auth()->user()->isAdminOrSuperAdmin() || auth()->user()->isCoordenador();
-                                            $camposDataEditaveis = ($ehColaboradorAtribuido && ! $datasPreenchidas) || ($datasPreenchidas && $podeEditarDatasAdmin);
                                         @endphp
                                         @if (!($atividade['_delete'] ?? false))
                                             <div class="border border-default-200 rounded-md overflow-hidden" wire:key="atividade-{{ $index }}">
@@ -253,43 +249,33 @@
                                                         @enderror
                                                     </div>
 
-                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                        <div>
-                                                            <label class="block text-sm font-medium text-default-700 mb-1">Data e hora início</label>
-                                                            @if ($camposDataEditaveis)
+                                                    <div class="w-1/2">
+                                                        <div class="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <label class="block text-sm font-medium text-default-700 mb-1">H</label>
                                                                 <input
-                                                                    wire:model="atividadesDataHoraInicio.{{ $index }}"
-                                                                    type="datetime-local"
-                                                                    class="form-input w-full text-sm @error('atividades.'.$index.'.data_hora_inicio') border-danger @enderror"
+                                                                    wire:model="atividades.{{ $index }}.duracao_horas"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    class="form-input w-full text-sm @error('atividades.'.$index.'.duracao_horas') border-danger @enderror"
                                                                 >
-                                                                @error('atividades.'.$index.'.data_hora_inicio')
+                                                                @error('atividades.'.$index.'.duracao_horas')
                                                                     <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                                 @enderror
-                                                            @else
-                                                                <p class="text-sm text-default-800 py-2 px-3 bg-default-100 rounded border border-default-200">
-                                                                    {{ $atividadeModel?->data_hora_inicio?->format('d/m/Y H:i') ?? '—' }}
-                                                                </p>
-                                                                @if (! $datasPreenchidas && $podeEditarDatasAdmin)
-                                                                    <p class="mt-1 text-xs text-default-500">Preenchimento inicial pelo colaborador atribuído.</p>
-                                                                @endif
-                                                            @endif
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-sm font-medium text-default-700 mb-1">Data e hora fim</label>
-                                                            @if ($camposDataEditaveis)
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-sm font-medium text-default-700 mb-1">M</label>
                                                                 <input
-                                                                    wire:model="atividadesDataHoraFim.{{ $index }}"
-                                                                    type="datetime-local"
-                                                                    class="form-input w-full text-sm @error('atividades.'.$index.'.data_hora_fim') border-danger @enderror"
+                                                                    wire:model="atividades.{{ $index }}.duracao_minutos"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    max="59"
+                                                                    class="form-input w-full text-sm @error('atividades.'.$index.'.duracao_minutos') border-danger @enderror"
                                                                 >
-                                                                @error('atividades.'.$index.'.data_hora_fim')
+                                                                @error('atividades.'.$index.'.duracao_minutos')
                                                                     <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                                 @enderror
-                                                            @else
-                                                                <p class="text-sm text-default-800 py-2 px-3 bg-default-100 rounded border border-default-200">
-                                                                    {{ $atividadeModel?->data_hora_fim?->format('d/m/Y H:i') ?? '—' }}
-                                                                </p>
-                                                            @endif
+                                                            </div>
                                                         </div>
                                                     </div>
 

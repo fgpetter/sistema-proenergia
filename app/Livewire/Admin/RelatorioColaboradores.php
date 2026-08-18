@@ -174,11 +174,7 @@ class RelatorioColaboradores extends Component
 
     protected function formatarHoras(Atividade $atividade): string
     {
-        $segundos = 0;
-
-        if ($atividade->data_hora_inicio !== null && $atividade->data_hora_fim !== null) {
-            $segundos = (int) $atividade->data_hora_inicio->diffInSeconds($atividade->data_hora_fim);
-        }
+        $segundos = ((int) ($atividade->duracao_minutos ?? 0)) * 60;
 
         $interval = CarbonInterval::seconds($segundos)->cascade();
 

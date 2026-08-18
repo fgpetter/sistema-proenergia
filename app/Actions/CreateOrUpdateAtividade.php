@@ -8,8 +8,8 @@ use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\LogAtividade;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CreateOrUpdateAtividade
 {
@@ -20,8 +20,7 @@ class CreateOrUpdateAtividade
                 $this->validateColaboradorCanBeAssigned($colaboradorId);
             }
 
-            // Apenas o colaborador atribuído pode preencher o primeiro par de datas; criação de atividade é feita por admin/coordenador.
-            unset($dados['data_hora_inicio'], $dados['data_hora_fim']);
+            unset($dados['duracao_horas'], $dados['duracao_minutos']);
 
             $atividade = Atividade::create([
                 'projeto_id' => $projetoId,
@@ -54,7 +53,8 @@ class CreateOrUpdateAtividade
                 $this->validateColaboradorCanBeAssigned($colaboradorId);
             }
 
-            $datetimes = $this->resolveDatetimesForUpdate($atividade, $dados, $user);
+            $postesDesenhadosAntes = $atividade->postes_desenhados;
+            $postesProjetadosAntes = $atividade->postes_projetados;
 
             $payload = [
                 'nome' => $nome,
@@ -65,14 +65,8 @@ class CreateOrUpdateAtividade
                 'postes_projetados' => $dados['postes_projetados'] ?? 0,
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
                 'observacoes' => $dados['observacoes'] ?? null,
+                'duracao_minutos' => $this->resolveDuracaoMinutos($atividade, $dados, $user),
             ];
-
-            if ($datetimes !== null) {
-                $payload = array_merge($payload, $datetimes);
-            }
-
-            $postesDesenhadosAntes = $atividade->postes_desenhados;
-            $postesProjetadosAntes = $atividade->postes_projetados;
 
             $atividade->update($payload);
 
@@ -101,75 +95,40 @@ class CreateOrUpdateAtividade
     }
 
     /**
-     * @return array<string, Carbon|null>|null null = não alterar colunas de data/hora
+     * @param  array<string, mixed>  $dados
      */
-    private function resolveDatetimesForUpdate(Atividade $atividade, array $dados, User $user): ?array
+    private function resolveDuracaoMinutos(Atividade $atividade, array $dados, User $user): ?int
     {
-        $inicioInput = $this->normalizeDatetimeInput($dados['data_hora_inicio'] ?? null);
-        $fimInput = $this->normalizeDatetimeInput($dados['data_hora_fim'] ?? null);
-
-        $hasBothStored = $atividade->data_hora_inicio !== null && $atividade->data_hora_fim !== null;
-        $hasNeitherStored = $atividade->data_hora_inicio === null && $atividade->data_hora_fim === null;
+        $minutos = $this->parseDuracaoMinutos($dados);
 
         $isAdminOrCoord = $user->isAdminOrSuperAdmin() || $user->isCoordenador();
         $isAssignedCollaborator = $atividade->colaborador_id === $user->colaborador?->id;
 
-        if ($hasNeitherStored) {
-            if ($isAdminOrCoord) {
-                return null;
-            }
-
-            if ($isAssignedCollaborator) {
-                return [
-                    'data_hora_inicio' => $this->parseDatetimeInput($inicioInput),
-                    'data_hora_fim' => $this->parseDatetimeInput($fimInput),
-                ];
-            }
-
-            return null;
+        if ($isAssignedCollaborator && ! $isAdminOrCoord && ($minutos === null || $minutos <= 0)) {
+            throw ValidationException::withMessages([
+                'duracao_horas' => 'Informe a duração maior que zero.',
+            ]);
         }
 
-        if ($hasBothStored) {
-            if ($isAssignedCollaborator && ! $isAdminOrCoord) {
-                return null;
-            }
-
-            if ($isAdminOrCoord) {
-                return [
-                    'data_hora_inicio' => $this->parseDatetimeInput($inicioInput),
-                    'data_hora_fim' => $this->parseDatetimeInput($fimInput),
-                ];
-            }
-
-            return null;
-        }
-
-        if ($isAdminOrCoord) {
-            return [
-                'data_hora_inicio' => $this->parseDatetimeInput($inicioInput),
-                'data_hora_fim' => $this->parseDatetimeInput($fimInput),
-            ];
-        }
-
-        return null;
+        return $minutos;
     }
 
-    private function normalizeDatetimeInput(mixed $value): ?string
+    /**
+     * @param  array<string, mixed>  $dados
+     */
+    private function parseDuracaoMinutos(array $dados): ?int
     {
-        if ($value === null || $value === '') {
+        $horas = $dados['duracao_horas'] ?? null;
+        $minutos = $dados['duracao_minutos'] ?? null;
+
+        $horasVazio = $horas === null || $horas === '';
+        $minutosVazio = $minutos === null || $minutos === '';
+
+        if ($horasVazio && $minutosVazio) {
             return null;
         }
 
-        return (string) $value;
-    }
-
-    private function parseDatetimeInput(?string $value): ?Carbon
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        return Carbon::parse($value);
+        return ((int) $horas * 60) + (int) $minutos;
     }
 
     private function validateColaboradorCanBeAssigned(int $colaboradorId): void
