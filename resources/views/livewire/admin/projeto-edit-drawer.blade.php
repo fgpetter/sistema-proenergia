@@ -298,13 +298,13 @@
                                                             <div>
                                                                 <p class="text-xs text-default-600">Total Extensão</p>
                                                                 <p class="text-sm font-semibold text-primary">
-                                                                    {{ ($atividade['extensao_desenho'] ?? 0) + ($atividade['extensao_projeto'] ?? 0) }} m
+                                                                    {{ (int) ($atividade['extensao_desenho'] ?? 0) + (int) ($atividade['extensao_projeto'] ?? 0) }} m
                                                                 </p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-xs text-default-600">Total Postes</p>
                                                                 <p class="text-sm font-semibold text-primary">
-                                                                    {{ ($atividade['postes_desenhados'] ?? 0) + ($atividade['postes_projetados'] ?? 0) }}
+                                                                    {{ (int) ($atividade['postes_desenhados'] ?? 0) + (int) ($atividade['postes_projetados'] ?? 0) }}
                                                                 </p>
                                                             </div>
                                                         </div>

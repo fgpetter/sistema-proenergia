@@ -26,20 +26,23 @@ class CreateOrUpdateAtividade
                 'projeto_id' => $projetoId,
                 'nome' => $nome,
                 'colaborador_id' => $colaboradorId,
-                'extensao_desenho' => $dados['extensao_desenho'] ?? 0,
-                'extensao_projeto' => $dados['extensao_projeto'] ?? 0,
-                'postes_desenhados' => $dados['postes_desenhados'] ?? 0,
-                'postes_projetados' => $dados['postes_projetados'] ?? 0,
+                'extensao_desenho' => $this->inteiroOuZero($dados['extensao_desenho'] ?? null),
+                'extensao_projeto' => $this->inteiroOuZero($dados['extensao_projeto'] ?? null),
+                'postes_desenhados' => $this->inteiroOuZero($dados['postes_desenhados'] ?? null),
+                'postes_projetados' => $this->inteiroOuZero($dados['postes_projetados'] ?? null),
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
                 'observacoes' => $dados['observacoes'] ?? null,
             ]);
 
-            if (($dados['postes_desenhados'] ?? 0) > 0) {
-                $this->registrarLogAtividade($projetoId, $user->id, $atividade->id, 'adicionou', 'postes_desenhados', (int) ($dados['postes_desenhados'] ?? 0));
+            $postesDesenhados = $this->inteiroOuZero($dados['postes_desenhados'] ?? null);
+            $postesProjetados = $this->inteiroOuZero($dados['postes_projetados'] ?? null);
+
+            if ($postesDesenhados > 0) {
+                $this->registrarLogAtividade($projetoId, $user->id, $atividade->id, 'adicionou', 'postes_desenhados', $postesDesenhados);
             }
 
-            if (($dados['postes_projetados'] ?? 0) > 0) {
-                $this->registrarLogAtividade($projetoId, $user->id, $atividade->id, 'adicionou', 'postes_projetados', (int) ($dados['postes_projetados'] ?? 0));
+            if ($postesProjetados > 0) {
+                $this->registrarLogAtividade($projetoId, $user->id, $atividade->id, 'adicionou', 'postes_projetados', $postesProjetados);
             }
 
             return $atividade;
@@ -59,10 +62,10 @@ class CreateOrUpdateAtividade
             $payload = [
                 'nome' => $nome,
                 'colaborador_id' => $colaboradorId,
-                'extensao_desenho' => $dados['extensao_desenho'] ?? 0,
-                'extensao_projeto' => $dados['extensao_projeto'] ?? 0,
-                'postes_desenhados' => $dados['postes_desenhados'] ?? 0,
-                'postes_projetados' => $dados['postes_projetados'] ?? 0,
+                'extensao_desenho' => $this->inteiroOuZero($dados['extensao_desenho'] ?? null),
+                'extensao_projeto' => $this->inteiroOuZero($dados['extensao_projeto'] ?? null),
+                'postes_desenhados' => $this->inteiroOuZero($dados['postes_desenhados'] ?? null),
+                'postes_projetados' => $this->inteiroOuZero($dados['postes_projetados'] ?? null),
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
                 'observacoes' => $dados['observacoes'] ?? null,
                 'duracao_minutos' => $this->resolveDuracaoMinutos($atividade, $dados, $user),
@@ -129,6 +132,15 @@ class CreateOrUpdateAtividade
         }
 
         return ((int) $horas * 60) + (int) $minutos;
+    }
+
+    private function inteiroOuZero(mixed $valor): int
+    {
+        if ($valor === null || $valor === '') {
+            return 0;
+        }
+
+        return (int) $valor;
     }
 
     private function validateColaboradorCanBeAssigned(int $colaboradorId): void

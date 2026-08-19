@@ -120,15 +120,31 @@ class ProjetoEditDrawer extends Component
     protected function buildAtividadePayload(array $atividadeData): array
     {
         return [
-            'extensao_desenho' => $atividadeData['extensao_desenho'],
-            'extensao_projeto' => $atividadeData['extensao_projeto'],
-            'postes_desenhados' => $atividadeData['postes_desenhados'],
-            'postes_projetados' => $atividadeData['postes_projetados'],
+            'extensao_desenho' => $this->inteiroOuZero($atividadeData['extensao_desenho'] ?? null),
+            'extensao_projeto' => $this->inteiroOuZero($atividadeData['extensao_projeto'] ?? null),
+            'postes_desenhados' => $this->inteiroOuZero($atividadeData['postes_desenhados'] ?? null),
+            'postes_projetados' => $this->inteiroOuZero($atividadeData['postes_projetados'] ?? null),
             'tipo_projeto' => $atividadeData['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
             'duracao_horas' => $atividadeData['duracao_horas'] ?? '',
             'duracao_minutos' => $atividadeData['duracao_minutos'] ?? '',
             'observacoes' => $atividadeData['observacoes'] ?? '',
         ];
+    }
+
+    protected function inteiroOuZero(mixed $valor): int
+    {
+        if ($valor === null || $valor === '') {
+            return 0;
+        }
+
+        return (int) $valor;
+    }
+
+    protected function normalizeAtividadeCamposNumericos(int $index): void
+    {
+        foreach (['extensao_desenho', 'extensao_projeto', 'postes_desenhados', 'postes_projetados'] as $campo) {
+            $this->atividades[$index][$campo] = $this->inteiroOuZero($this->atividades[$index][$campo] ?? null);
+        }
     }
 
     /**
@@ -347,6 +363,8 @@ class ProjetoEditDrawer extends Component
             return;
         }
 
+        $this->normalizeAtividadeCamposNumericos($index);
+
         $this->validate([
             "atividades.{$index}.nome" => ['required', 'string', 'max:255'],
             "atividades.{$index}.colaborador_id" => [
@@ -476,6 +494,14 @@ class ProjetoEditDrawer extends Component
 
     public function save(CreateOrUpdateProjeto $projetoAction, CreateOrUpdateAtividade $atividadeAction): void
     {
+        foreach (array_keys($this->atividades) as $index) {
+            if ($this->atividades[$index]['_delete'] ?? false) {
+                continue;
+            }
+
+            $this->normalizeAtividadeCamposNumericos($index);
+        }
+
         $this->validate();
 
         if ($this->editingProjetoId) {
