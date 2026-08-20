@@ -13,8 +13,16 @@ use Illuminate\Validation\ValidationException;
 
 class CreateOrUpdateAtividade
 {
-    public function create(int $projetoId, string $nome, ?int $colaboradorId, array $dados, User $user): Atividade
+    public const MENSAGEM_REMOCAO_ATRIBUICAO = 'Não é permitido remover a atribuição do colaborador.';
+
+    /**
+     * @param  int|string|null  $colaboradorId
+     * @param  array<string, mixed>  $dados
+     */
+    public function create(int $projetoId, string $nome, mixed $colaboradorId, array $dados, User $user): Atividade
     {
+        $colaboradorId = $this->normalizeColaboradorId($colaboradorId);
+
         return DB::transaction(function () use ($projetoId, $nome, $colaboradorId, $dados, $user) {
             if ($colaboradorId) {
                 $this->validateColaboradorCanBeAssigned($colaboradorId);
@@ -49,11 +57,23 @@ class CreateOrUpdateAtividade
         });
     }
 
-    public function update(Atividade $atividade, string $nome, ?int $colaboradorId, array $dados, User $user): Atividade
+    /**
+     * @param  int|string|null  $colaboradorId
+     * @param  array<string, mixed>  $dados
+     */
+    public function update(Atividade $atividade, string $nome, mixed $colaboradorId, array $dados, User $user): Atividade
     {
+        $colaboradorId = $this->normalizeColaboradorId($colaboradorId);
+
+        if ($atividade->colaborador_id !== null && $colaboradorId === null) {
+            throw ValidationException::withMessages([
+                'colaborador_id' => self::MENSAGEM_REMOCAO_ATRIBUICAO,
+            ]);
+        }
+
         return DB::transaction(function () use ($atividade, $nome, $colaboradorId, $dados, $user) {
             if ($colaboradorId) {
-                $this->validateColaboradorCanBeAssigned($colaboradorId);
+                $this->validateColaboradorCanBeAssigned($colaboradorId, $atividade->colaborador_id);
             }
 
             $postesDesenhadosAntes = $atividade->postes_desenhados;
@@ -143,9 +163,30 @@ class CreateOrUpdateAtividade
         return (int) $valor;
     }
 
-    private function validateColaboradorCanBeAssigned(int $colaboradorId): void
+    private function normalizeColaboradorId(mixed $value): ?int
     {
-        $colaborador = Colaborador::with('user')->findOrFail($colaboradorId);
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    private function validateColaboradorCanBeAssigned(int $colaboradorId, ?int $atribuicaoAtualId = null): void
+    {
+        $colaborador = Colaborador::withTrashed()
+            ->with(['user' => fn ($query) => $query->withTrashed()])
+            ->findOrFail($colaboradorId);
+
+        if ($colaborador->trashed()) {
+            if ($atribuicaoAtualId === null || (int) $atribuicaoAtualId !== $colaboradorId) {
+                throw new \InvalidArgumentException(
+                    'O colaborador selecionado não está disponível.'
+                );
+            }
+
+            return;
+        }
 
         $allowedRoles = [
             UserRole::Levantadores,

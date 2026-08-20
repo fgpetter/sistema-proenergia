@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Enums\UserRole;
+use App\Models\Colaborador;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProjetoRequest extends FormRequest
 {
@@ -18,9 +20,9 @@ class StoreProjetoRequest extends FormRequest
             'nome' => ['required', 'string', 'max:255'],
             'colaborador_responsavel_id' => [
                 'required',
-                'exists:colaboradores,id',
+                Rule::exists('colaboradores', 'id')->whereNull('deleted_at'),
                 function ($attribute, $value, $fail) {
-                    $colaborador = \App\Models\Colaborador::with('user')->find($value);
+                    $colaborador = Colaborador::with('user')->find($value);
                     if ($colaborador && $colaborador->user?->role !== UserRole::Coordenadores) {
                         $fail('O colaborador responsável deve ter perfil Coordenador.');
                     }

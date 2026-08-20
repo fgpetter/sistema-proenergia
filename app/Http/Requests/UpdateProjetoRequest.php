@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\UserRole;
+use App\Models\Colaborador;
+use App\Models\Projeto;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProjetoRequest extends FormRequest
@@ -18,10 +20,31 @@ class UpdateProjetoRequest extends FormRequest
             'nome' => ['required', 'string', 'max:255'],
             'colaborador_responsavel_id' => [
                 'required',
-                'exists:colaboradores,id',
                 function ($attribute, $value, $fail) {
-                    $colaborador = \App\Models\Colaborador::with('user')->find($value);
-                    if ($colaborador && $colaborador->user?->role !== UserRole::Coordenadores) {
+                    $colaborador = Colaborador::withTrashed()
+                        ->with(['user' => fn ($query) => $query->withTrashed()])
+                        ->find($value);
+
+                    if (! $colaborador) {
+                        $fail('O colaborador selecionado não existe.');
+
+                        return;
+                    }
+
+                    if ($colaborador->trashed()) {
+                        $projeto = $this->route('projeto');
+                        $atribuicaoAtualId = $projeto instanceof Projeto
+                            ? $projeto->colaborador_responsavel_id
+                            : null;
+
+                        if ($atribuicaoAtualId === null || (int) $atribuicaoAtualId !== (int) $value) {
+                            $fail('O colaborador selecionado não está disponível.');
+                        }
+
+                        return;
+                    }
+
+                    if ($colaborador->user?->role !== UserRole::Coordenadores) {
                         $fail('O colaborador responsável deve ter perfil Coordenador.');
                     }
                 },

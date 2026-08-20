@@ -43,13 +43,11 @@ class ProjetoEditDrawer extends Component
             'nome' => ['required', 'string', 'max:255'],
             'colaboradorResponsavelId' => [
                 'required',
-                'exists:colaboradores,id',
                 $this->coordenadorValidationRule(),
             ],
             'atividades.*.nome' => ['required', 'string', 'max:255'],
             'atividades.*.colaborador_id' => [
                 'nullable',
-                'exists:colaboradores,id',
                 $this->atividadeColaboradorValidationRule(),
             ],
             'atividades.*.extensao_desenho' => ['required', 'integer', 'min:0'],
@@ -85,8 +83,29 @@ class ProjetoEditDrawer extends Component
     protected function coordenadorValidationRule(): Closure
     {
         return function (string $attribute, mixed $value, callable $fail): void {
-            $colaborador = Colaborador::with('user')->find($value);
-            if ($colaborador && $colaborador->user?->role !== UserRole::Coordenadores) {
+            $colaborador = Colaborador::withTrashed()
+                ->with(['user' => fn ($query) => $query->withTrashed()])
+                ->find($value);
+
+            if (! $colaborador) {
+                $fail('O colaborador selecionado não existe.');
+
+                return;
+            }
+
+            if ($colaborador->trashed()) {
+                $atribuicaoAtualId = $this->editingProjetoId
+                    ? Projeto::query()->whereKey($this->editingProjetoId)->value('colaborador_responsavel_id')
+                    : null;
+
+                if ($atribuicaoAtualId === null || (int) $atribuicaoAtualId !== (int) $value) {
+                    $fail('O colaborador selecionado não está disponível.');
+                }
+
+                return;
+            }
+
+            if ($colaborador->user?->role !== UserRole::Coordenadores) {
                 $fail('O colaborador responsável deve ter perfil Coordenador.');
             }
         };
@@ -99,8 +118,32 @@ class ProjetoEditDrawer extends Component
                 return;
             }
 
-            $colaborador = Colaborador::with('user')->find($value);
-            if ($colaborador && $colaborador->user) {
+            $colaborador = Colaborador::withTrashed()
+                ->with(['user' => fn ($query) => $query->withTrashed()])
+                ->find($value);
+
+            if (! $colaborador) {
+                $fail('O colaborador selecionado não existe.');
+
+                return;
+            }
+
+            if ($colaborador->trashed()) {
+                $parts = explode('.', $attribute);
+                $index = isset($parts[1]) ? (int) $parts[1] : null;
+                $atividadeId = $index !== null ? ($this->atividades[$index]['id'] ?? null) : null;
+                $atribuicaoAtualId = $atividadeId
+                    ? Atividade::query()->whereKey($atividadeId)->value('colaborador_id')
+                    : null;
+
+                if ($atribuicaoAtualId === null || (int) $atribuicaoAtualId !== (int) $value) {
+                    $fail('O colaborador selecionado não está disponível.');
+                }
+
+                return;
+            }
+
+            if ($colaborador->user) {
                 $allowedRoles = [
                     UserRole::Levantadores,
                     UserRole::Orcamentistas,
@@ -265,20 +308,31 @@ class ProjetoEditDrawer extends Component
     #[Computed]
     public function coordenadoresDisponiveis(): array
     {
-        return Colaborador::whereHas('user', fn ($q) => $q->role(UserRole::Coordenadores))
+        $ativos = Colaborador::whereHas('user', fn ($q) => $q->role(UserRole::Coordenadores))
             ->with('user')
             ->orderBy('nome')
             ->get()
             ->mapWithKeys(fn (Colaborador $col) => [
                 $col->id => $col->nome.' ('.$col->user?->email.')',
-            ])
-            ->toArray();
+            ]);
+
+        if ($this->colaboradorResponsavelId) {
+            $atribuido = Colaborador::onlyTrashed()
+                ->with(['user' => fn ($query) => $query->withTrashed()])
+                ->find($this->colaboradorResponsavelId);
+
+            if ($atribuido) {
+                $ativos[$atribuido->id] = $atribuido->nome.' ('.$atribuido->user?->email.')';
+            }
+        }
+
+        return $ativos->toArray();
     }
 
     #[Computed]
     public function colaboradoresParaAtividades(): array
     {
-        return Colaborador::whereHas('user', fn ($q) => $q->whereIn('role', [
+        $ativos = Colaborador::whereHas('user', fn ($q) => $q->whereIn('role', [
             UserRole::Levantadores,
             UserRole::Orcamentistas,
             UserRole::Projetistas,
@@ -288,8 +342,26 @@ class ProjetoEditDrawer extends Component
             ->get()
             ->mapWithKeys(fn (Colaborador $col) => [
                 $col->id => $col->nome.' ('.$col->user?->role->label().')',
-            ])
-            ->toArray();
+            ]);
+
+        $idsAtribuidos = collect($this->atividades)
+            ->pluck('colaborador_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($idsAtribuidos->isNotEmpty()) {
+            Colaborador::onlyTrashed()
+                ->whereIn('id', $idsAtribuidos)
+                ->with(['user' => fn ($query) => $query->withTrashed()])
+                ->orderBy('nome')
+                ->get()
+                ->each(function (Colaborador $col) use ($ativos): void {
+                    $ativos[$col->id] = $col->nome.' ('.$col->user?->role?->label().')';
+                });
+        }
+
+        return $ativos->toArray();
     }
 
     /**
@@ -310,7 +382,6 @@ class ProjetoEditDrawer extends Component
                 'nome' => ['required', 'string', 'max:255'],
                 'colaboradorResponsavelId' => [
                     'required',
-                    'exists:colaboradores,id',
                     $this->coordenadorValidationRule(),
                 ],
             ]);
@@ -365,57 +436,64 @@ class ProjetoEditDrawer extends Component
 
         $this->normalizeAtividadeCamposNumericos($index);
 
-        $this->validate([
-            "atividades.{$index}.nome" => ['required', 'string', 'max:255'],
-            "atividades.{$index}.colaborador_id" => [
-                'nullable',
-                'exists:colaboradores,id',
-                $this->atividadeColaboradorValidationRule(),
-            ],
-            "atividades.{$index}.extensao_desenho" => ['required', 'integer', 'min:0'],
-            "atividades.{$index}.extensao_projeto" => ['required', 'integer', 'min:0'],
-            "atividades.{$index}.postes_desenhados" => ['required', 'integer', 'min:0'],
-            "atividades.{$index}.postes_projetados" => ['required', 'integer', 'min:0'],
-            "atividades.{$index}.tipo_projeto" => ['required', Rule::enum(TipoProjetoAtividade::class)],
-            "atividades.{$index}.duracao_horas" => ['nullable', 'integer', 'min:0'],
-            "atividades.{$index}.duracao_minutos" => ['nullable', 'integer', 'min:0', 'max:59'],
-            "atividades.{$index}.observacoes" => ['nullable', 'string'],
-        ]);
+        $this->validateRemocaoAtribuicao($index);
 
-        $atividadeData = $this->atividades[$index];
+        try {
+            $this->validate([
+                "atividades.{$index}.nome" => ['required', 'string', 'max:255'],
+                "atividades.{$index}.colaborador_id" => [
+                    'nullable',
+                    $this->atividadeColaboradorValidationRule(),
+                ],
+                "atividades.{$index}.extensao_desenho" => ['required', 'integer', 'min:0'],
+                "atividades.{$index}.extensao_projeto" => ['required', 'integer', 'min:0'],
+                "atividades.{$index}.postes_desenhados" => ['required', 'integer', 'min:0'],
+                "atividades.{$index}.postes_projetados" => ['required', 'integer', 'min:0'],
+                "atividades.{$index}.tipo_projeto" => ['required', Rule::enum(TipoProjetoAtividade::class)],
+                "atividades.{$index}.duracao_horas" => ['nullable', 'integer', 'min:0'],
+                "atividades.{$index}.duracao_minutos" => ['nullable', 'integer', 'min:0', 'max:59'],
+                "atividades.{$index}.observacoes" => ['nullable', 'string'],
+            ]);
 
-        if (isset($atividadeData['id'])) {
-            $atividade = Atividade::findOrFail($atividadeData['id']);
-            $this->authorize('update', $atividade);
-            $this->validateAtividadeDuracao($index, $atividade);
-        } else {
-            $this->authorize('create', Atividade::class);
-        }
+            $atividadeData = $this->atividades[$index];
 
-        $user = auth()->user();
-
-        DB::transaction(function () use ($atividadeData, $atividadeAction, $index, $user) {
             if (isset($atividadeData['id'])) {
                 $atividade = Atividade::findOrFail($atividadeData['id']);
-                $atividadeAction->update(
-                    $atividade,
-                    $atividadeData['nome'],
-                    $atividadeData['colaborador_id'],
-                    $this->buildAtividadePayload($atividadeData),
-                    $user
-                );
+                $this->authorize('update', $atividade);
+                $this->validateAtividadeDuracao($index, $atividade);
             } else {
-                $novaAtividade = $atividadeAction->create(
-                    $this->editingProjetoId,
-                    $atividadeData['nome'],
-                    $atividadeData['colaborador_id'],
-                    $this->buildAtividadePayload($atividadeData),
-                    $user
-                );
-
-                $this->atividades[$index]['id'] = $novaAtividade->id;
+                $this->authorize('create', Atividade::class);
             }
-        });
+
+            $user = auth()->user();
+
+            DB::transaction(function () use ($atividadeData, $atividadeAction, $index, $user) {
+                if (isset($atividadeData['id'])) {
+                    $atividade = Atividade::findOrFail($atividadeData['id']);
+                    $atividadeAction->update(
+                        $atividade,
+                        $atividadeData['nome'],
+                        $atividadeData['colaborador_id'],
+                        $this->buildAtividadePayload($atividadeData),
+                        $user
+                    );
+                } else {
+                    $novaAtividade = $atividadeAction->create(
+                        $this->editingProjetoId,
+                        $atividadeData['nome'],
+                        $atividadeData['colaborador_id'],
+                        $this->buildAtividadePayload($atividadeData),
+                        $user
+                    );
+
+                    $this->atividades[$index]['id'] = $novaAtividade->id;
+                }
+            });
+        } catch (ValidationException $exception) {
+            $this->toastErroRemocaoAtribuicao($exception);
+
+            throw $exception;
+        }
 
         $this->refreshAtividadesFromProjeto();
 
@@ -502,6 +580,8 @@ class ProjetoEditDrawer extends Component
             $this->normalizeAtividadeCamposNumericos($index);
         }
 
+        $this->validateRemocaoAtribuicao();
+
         $this->validate();
 
         if ($this->editingProjetoId) {
@@ -522,50 +602,56 @@ class ProjetoEditDrawer extends Component
 
         $user = auth()->user();
 
-        DB::transaction(function () use ($projetoAction, $atividadeAction, $user) {
-            if ($this->editingProjetoId) {
-                $projeto = Projeto::findOrFail($this->editingProjetoId);
-                $projeto = $projetoAction->update(
-                    $projeto,
-                    $this->nome,
-                    $this->colaboradorResponsavelId
-                );
-            } else {
-                $projeto = $projetoAction->create(
-                    $this->nome,
-                    $this->colaboradorResponsavelId
-                );
-            }
-
-            foreach ($this->atividades as $atividadeData) {
-                if ($atividadeData['_delete'] ?? false) {
-                    if (isset($atividadeData['id'])) {
-                        $atividade = Atividade::findOrFail($atividadeData['id']);
-                        $this->authorize('delete', $atividade);
-                        $atividade->delete();
-                    }
-                } elseif (isset($atividadeData['id'])) {
-                    $atividade = Atividade::findOrFail($atividadeData['id']);
-                    $this->authorize('update', $atividade);
-                    $atividadeAction->update(
-                        $atividade,
-                        $atividadeData['nome'],
-                        $atividadeData['colaborador_id'],
-                        $this->buildAtividadePayload($atividadeData),
-                        $user
+        try {
+            DB::transaction(function () use ($projetoAction, $atividadeAction, $user) {
+                if ($this->editingProjetoId) {
+                    $projeto = Projeto::findOrFail($this->editingProjetoId);
+                    $projeto = $projetoAction->update(
+                        $projeto,
+                        $this->nome,
+                        $this->colaboradorResponsavelId
                     );
                 } else {
-                    $this->authorize('create', Atividade::class);
-                    $atividadeAction->create(
-                        $projeto->id,
-                        $atividadeData['nome'],
-                        $atividadeData['colaborador_id'],
-                        $this->buildAtividadePayload($atividadeData),
-                        $user
+                    $projeto = $projetoAction->create(
+                        $this->nome,
+                        $this->colaboradorResponsavelId
                     );
                 }
-            }
-        });
+
+                foreach ($this->atividades as $atividadeData) {
+                    if ($atividadeData['_delete'] ?? false) {
+                        if (isset($atividadeData['id'])) {
+                            $atividade = Atividade::findOrFail($atividadeData['id']);
+                            $this->authorize('delete', $atividade);
+                            $atividade->delete();
+                        }
+                    } elseif (isset($atividadeData['id'])) {
+                        $atividade = Atividade::findOrFail($atividadeData['id']);
+                        $this->authorize('update', $atividade);
+                        $atividadeAction->update(
+                            $atividade,
+                            $atividadeData['nome'],
+                            $atividadeData['colaborador_id'],
+                            $this->buildAtividadePayload($atividadeData),
+                            $user
+                        );
+                    } else {
+                        $this->authorize('create', Atividade::class);
+                        $atividadeAction->create(
+                            $projeto->id,
+                            $atividadeData['nome'],
+                            $atividadeData['colaborador_id'],
+                            $this->buildAtividadePayload($atividadeData),
+                            $user
+                        );
+                    }
+                }
+            });
+        } catch (ValidationException $exception) {
+            $this->toastErroRemocaoAtribuicao($exception);
+
+            throw $exception;
+        }
 
         $this->swalToastSuccess([
             'title' => 'Salvo com sucesso!',
@@ -592,6 +678,64 @@ class ProjetoEditDrawer extends Component
         $this->editingProjetoId = null;
         $this->atividadesLimite = 10;
         $this->resetValidation();
+    }
+
+    protected function validateRemocaoAtribuicao(?int $index = null): void
+    {
+        $indices = $index === null
+            ? array_keys($this->atividades)
+            : [$index];
+
+        $errors = [];
+
+        foreach ($indices as $i) {
+            $atividadeData = $this->atividades[$i] ?? null;
+
+            if (! is_array($atividadeData) || ($atividadeData['_delete'] ?? false)) {
+                continue;
+            }
+
+            if (! isset($atividadeData['id'])) {
+                continue;
+            }
+
+            $novoId = $atividadeData['colaborador_id'] ?? null;
+
+            if ($novoId !== null && $novoId !== '') {
+                continue;
+            }
+
+            $atualId = Atividade::query()->whereKey($atividadeData['id'])->value('colaborador_id');
+
+            if ($atualId !== null) {
+                $errors["atividades.{$i}.colaborador_id"] = CreateOrUpdateAtividade::MENSAGEM_REMOCAO_ATRIBUICAO;
+            }
+        }
+
+        if ($errors === []) {
+            return;
+        }
+
+        $exception = ValidationException::withMessages($errors);
+        $this->toastErroRemocaoAtribuicao($exception);
+
+        throw $exception;
+    }
+
+    protected function toastErroRemocaoAtribuicao(ValidationException $exception): void
+    {
+        $mensagens = collect($exception->errors())->flatten();
+
+        if (! $mensagens->contains(CreateOrUpdateAtividade::MENSAGEM_REMOCAO_ATRIBUICAO)) {
+            return;
+        }
+
+        $this->swalToastError([
+            'title' => CreateOrUpdateAtividade::MENSAGEM_REMOCAO_ATRIBUICAO,
+            'showConfirmButton' => false,
+            'position' => 'top-end',
+            'timer' => 3000,
+        ]);
     }
 
     protected function validateAtividadeDuracao(int $index, Atividade $dbAtividade): void

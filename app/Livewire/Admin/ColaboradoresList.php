@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
@@ -116,8 +117,14 @@ class ColaboradoresList extends Component
         }
 
         $colaborador = Colaborador::findOrFail($this->deletingId);
-        $colaborador->user->delete();
+        $user = $colaborador->user;
         $colaborador->delete();
+
+        if ($user) {
+            $user->delete();
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+        }
+
         $this->deletingId = null;
 
         $this->swalToastWarning([

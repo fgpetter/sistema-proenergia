@@ -19,9 +19,11 @@ class RelatorioColaboradoresProdutividade
         ?string $mesAno = null,
         ?int $coordenadorId = null,
     ): Collection {
-        return Colaborador::query()
+        return Colaborador::withTrashed()
             ->join('atividades', 'atividades.colaborador_id', '=', 'colaboradores.id')
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
+            ->whereNull('atividades.deleted_at')
+            ->whereNull('projetos.deleted_at')
             ->tap(fn (Builder $query) => $this->aplicarFiltros(
                 $query,
                 colaboradorId: $colaboradorId,
@@ -61,6 +63,7 @@ class RelatorioColaboradoresProdutividade
         return Atividade::query()
             ->select('atividades.*')
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
+            ->whereNull('projetos.deleted_at')
             ->with('projeto')
             ->tap(fn (Builder $query) => $this->aplicarFiltros(
                 $query,

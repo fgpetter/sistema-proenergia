@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\TipoProjetoAtividade;
 use App\Enums\UserRole;
+use App\Models\Colaborador;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,13 +19,13 @@ class StoreAtividadeRequest extends FormRequest
     {
         return [
             'nome' => ['required', 'string', 'max:255'],
-            'projeto_id' => ['required', 'exists:projetos,id'],
+            'projeto_id' => ['required', Rule::exists('projetos', 'id')->whereNull('deleted_at')],
             'colaborador_id' => [
                 'nullable',
-                'exists:colaboradores,id',
+                Rule::exists('colaboradores', 'id')->whereNull('deleted_at'),
                 function ($attribute, $value, $fail) {
                     if ($value) {
-                        $colaborador = \App\Models\Colaborador::with('user')->find($value);
+                        $colaborador = Colaborador::with('user')->find($value);
                         if ($colaborador && $colaborador->user) {
                             $allowedRoles = [
                                 UserRole::Levantadores,

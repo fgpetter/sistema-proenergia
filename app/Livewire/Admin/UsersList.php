@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\User;
 use App\Notifications\SendPasswordResetNotification;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -217,7 +218,9 @@ class UsersList extends Component
             return;
         }
 
+        $user->colaborador?->delete();
         $user->delete();
+        DB::table('sessions')->where('user_id', $user->id)->delete();
         $this->deletingUserId = null;
         session()->flash('success', 'Usuário excluído com sucesso.');
     }

@@ -7,11 +7,14 @@ use Database\Factories\AtividadeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Atividade extends Model
 {
     /** @use HasFactory<AtividadeFactory> */
     use HasFactory;
+
+    use SoftDeletes;
 
     protected $fillable = [
         'projeto_id',
@@ -45,7 +48,7 @@ class Atividade extends Model
 
     public function colaborador(): BelongsTo
     {
-        return $this->belongsTo(Colaborador::class);
+        return $this->belongsTo(Colaborador::class)->withTrashed();
     }
 
     public function getExtensaoTotalAttribute(): int

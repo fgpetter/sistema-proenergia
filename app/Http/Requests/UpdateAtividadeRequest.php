@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\TipoProjetoAtividade;
 use App\Enums\UserRole;
+use App\Models\Atividade;
+use App\Models\Colaborador;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,19 +22,42 @@ class UpdateAtividadeRequest extends FormRequest
             'nome' => ['required', 'string', 'max:255'],
             'colaborador_id' => [
                 'nullable',
-                'exists:colaboradores,id',
                 function ($attribute, $value, $fail) {
-                    if ($value) {
-                        $colaborador = \App\Models\Colaborador::with('user')->find($value);
-                        if ($colaborador && $colaborador->user) {
-                            $allowedRoles = [
-                                UserRole::Levantadores,
-                                UserRole::Orcamentistas,
-                                UserRole::Projetistas,
-                            ];
-                            if (! in_array($colaborador->user->role, $allowedRoles, true)) {
-                                $fail('O colaborador deve ter perfil Levantador, Orçamentista ou Projetista.');
-                            }
+                    if (! $value) {
+                        return;
+                    }
+
+                    $colaborador = Colaborador::withTrashed()
+                        ->with(['user' => fn ($query) => $query->withTrashed()])
+                        ->find($value);
+
+                    if (! $colaborador) {
+                        $fail('O colaborador selecionado não existe.');
+
+                        return;
+                    }
+
+                    if ($colaborador->trashed()) {
+                        $atividade = $this->route('atividade');
+                        $atribuicaoAtualId = $atividade instanceof Atividade
+                            ? $atividade->colaborador_id
+                            : null;
+
+                        if ($atribuicaoAtualId === null || (int) $atribuicaoAtualId !== (int) $value) {
+                            $fail('O colaborador selecionado não está disponível.');
+                        }
+
+                        return;
+                    }
+
+                    if ($colaborador->user) {
+                        $allowedRoles = [
+                            UserRole::Levantadores,
+                            UserRole::Orcamentistas,
+                            UserRole::Projetistas,
+                        ];
+                        if (! in_array($colaborador->user->role, $allowedRoles, true)) {
+                            $fail('O colaborador deve ter perfil Levantador, Orçamentista ou Projetista.');
                         }
                     }
                 },

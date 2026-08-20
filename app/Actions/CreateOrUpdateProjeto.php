@@ -24,7 +24,10 @@ class CreateOrUpdateProjeto
     public function update(Projeto $projeto, string $nome, int $colaboradorResponsavelId): Projeto
     {
         return DB::transaction(function () use ($projeto, $nome, $colaboradorResponsavelId) {
-            $this->validateColaboradorIsCoordenador($colaboradorResponsavelId);
+            $this->validateColaboradorIsCoordenador(
+                $colaboradorResponsavelId,
+                $projeto->colaborador_responsavel_id,
+            );
 
             $projeto->update([
                 'nome' => $nome,
@@ -35,9 +38,21 @@ class CreateOrUpdateProjeto
         });
     }
 
-    private function validateColaboradorIsCoordenador(int $colaboradorId): void
+    private function validateColaboradorIsCoordenador(int $colaboradorId, ?int $atribuicaoAtualId = null): void
     {
-        $colaborador = Colaborador::with('user')->findOrFail($colaboradorId);
+        $colaborador = Colaborador::withTrashed()
+            ->with(['user' => fn ($query) => $query->withTrashed()])
+            ->findOrFail($colaboradorId);
+
+        if ($colaborador->trashed()) {
+            if ($atribuicaoAtualId === null || (int) $atribuicaoAtualId !== $colaboradorId) {
+                throw new \InvalidArgumentException(
+                    'O colaborador selecionado não está disponível.'
+                );
+            }
+
+            return;
+        }
 
         if ($colaborador->user?->role !== UserRole::Coordenadores) {
             throw new \InvalidArgumentException(

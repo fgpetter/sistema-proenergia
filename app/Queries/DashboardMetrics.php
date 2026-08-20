@@ -29,6 +29,7 @@ class DashboardMetrics
     {
         $atividades = Atividade::query()
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
+            ->whereNull('projetos.deleted_at')
             ->where('atividades.tipo_projeto', TipoProjetoAtividade::Cad->value)
             ->tap(fn (Builder $query) => $this->aplicarCompetencia($query, $mesAno))
             ->selectRaw('COALESCE(SUM(atividades.extensao_projeto), 0) as total_extensao_projeto')
@@ -63,7 +64,10 @@ class DashboardMetrics
     public function estatisticasPorProjeto(?string $mesAno = null): Builder
     {
         return Projeto::query()
-            ->leftJoin('atividades', 'atividades.projeto_id', '=', 'projetos.id')
+            ->leftJoin('atividades', function ($join): void {
+                $join->on('atividades.projeto_id', '=', 'projetos.id')
+                    ->whereNull('atividades.deleted_at');
+            })
             ->leftJoin('colaboradores', 'colaboradores.id', '=', 'projetos.colaborador_responsavel_id')
             ->tap(fn (Builder $query) => $this->aplicarCompetencia($query, $mesAno))
             ->groupBy(
@@ -96,9 +100,11 @@ class DashboardMetrics
         $aplicaCorMeta = $mesAno !== null;
         $limiteMeta = BonusColaboradorCalculator::LIMITE_POSTES_PROJETO_CAD;
 
-        return Colaborador::query()
+        return Colaborador::withTrashed()
             ->join('atividades', 'atividades.colaborador_id', '=', 'colaboradores.id')
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
+            ->whereNull('atividades.deleted_at')
+            ->whereNull('projetos.deleted_at')
             ->where('atividades.tipo_projeto', TipoProjetoAtividade::Cad->value)
             ->tap(fn (Builder $query) => $this->aplicarCompetencia($query, $mesAno))
             ->groupBy('colaboradores.id', 'colaboradores.nome')
