@@ -21,5 +21,6 @@ class DatabaseSeeder extends Seeder
             'role' => UserRole::SuperAdmin,
         ]);
 
+        $this->call(DashboardConferenciaSeeder::class);
     }
 }

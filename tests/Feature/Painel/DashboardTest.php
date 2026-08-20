@@ -5,6 +5,7 @@ namespace Tests\Feature\Painel;
 use App\Enums\UserRole;
 use App\Livewire\Painel\Dashboard;
 use App\Livewire\Painel\PerformanceColaboradores;
+use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
@@ -71,7 +72,14 @@ class DashboardTest extends TestCase
         $response->assertOk();
         $response->assertSeeLivewire(Dashboard::class);
         $response->assertSeeLivewire(PerformanceColaboradores::class);
-        $response->assertSee('3', false);
+        $response->assertSee('Total de projetos', false);
+        $response->assertSee('Extensão total', false);
+        $response->assertSee('Total de horas', false);
+        $response->assertSee('Extensão por projeto', false);
+        $response->assertSee('Postes por projeto', false);
+        $response->assertSee('Horas por projeto', false);
+        $response->assertSee('Vão médio projetado', false);
+        $response->assertSee('Dashboard', false);
         $response->assertSee($colaborador->nome);
         $response->assertSee('Projeto Recente', false);
         $response->assertSee('Projeto Antigo', false);
@@ -235,6 +243,56 @@ class DashboardTest extends TestCase
             ->set('mesAno', 'todas')
             ->assertSee('Projeto-16')
             ->assertDontSee('Projeto-01');
+    }
+
+    public function test_dashboard_exibe_secao_analise_grafica(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $this->mockProdutividadeAgregada();
+
+        $colaborador = Colaborador::factory()->create(['nome' => 'Ana Ranking']);
+        $projeto = Projeto::factory()->create([
+            'created_at' => '2026-08-10 10:00:00',
+            'updated_at' => '2026-08-10 10:00:00',
+        ]);
+        $atividade = Atividade::factory()->cad()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'postes_projetados' => 120,
+        ]);
+        $atividade->forceFill(['created_at' => '2026-08-04 10:00:00', 'updated_at' => '2026-08-04 10:00:00'])->save();
+
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->assertSee('Produção por colaborador (postes)')
+            ->assertSee('Evolução semanal de postes')
+            ->assertSee('Ranking da competência, destacando quem já ultrapassou a Meta Projeto CAD')
+            ->assertSee('Projeto CAD acumulado em Agosto - 2026, do dia 1 até o fim de cada semana')
+            ->assertSee('Ana Ranking')
+            ->assertDontSee('Análise gráfica')
+            ->assertDontSee('Evolução: mês atual');
+    }
+
+    public function test_dashboard_exibe_coordenador_nas_estatisticas_de_projetos(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $this->mockProdutividadeAgregada();
+
+        $coordenador = Colaborador::factory()->coordenador()->create([
+            'nome' => 'Coordenador Dashboard',
+        ]);
+        Projeto::factory()->create([
+            'nome' => 'Projeto Com Coord',
+            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => '2026-08-10 10:00:00',
+            'updated_at' => '2026-08-10 10:00:00',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->assertSee('Coordenador')
+            ->assertSee('Coordenador Dashboard')
+            ->assertSee('Projeto Com Coord');
     }
 
     public function test_coordenador_acessa_dashboard(): void

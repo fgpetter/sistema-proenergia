@@ -10,7 +10,7 @@ class BonusColaboradorCalculator
 {
     private const LIMITE_POSTES_DESENHO_CAD = 400;
 
-    private const LIMITE_POSTES_PROJETO_CAD = 300;
+    public const LIMITE_POSTES_PROJETO_CAD = 300;
 
     private const LIMITE_POSTES_PROJ = 230;
 

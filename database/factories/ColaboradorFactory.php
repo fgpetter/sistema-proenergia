@@ -7,59 +7,50 @@ use App\Enums\UserRole;
 use App\Models\Colaborador;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Colaborador>
+ * @extends Factory<Colaborador>
  */
 class ColaboradorFactory extends Factory
 {
     protected $model = Colaborador::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
-        $name = $this->faker->name();
-        $email = $this->faker->unique()->safeEmail();
-        $role = $this->faker->randomElement([UserRole::Levantadores, UserRole::Projetistas, UserRole::Orcamentistas]);
+        $role = $this->faker->randomElement([
+            UserRole::Levantadores,
+            UserRole::Projetistas,
+            UserRole::Orcamentistas,
+        ]);
 
         return [
-            'nome' => $name,
+            'nome' => $this->faker->name(),
             'contrato' => TipoContrato::CLT,
-            'user_id' => User::create([
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make('password'),
-                'role' => $role,
-            ])->id,
+            'user_id' => User::factory()->role($role),
         ];
     }
 
-    // create a coordenador user
-    public function coordenador(): self
+    public function projetista(): static
     {
-        return $this->state(function (array $attributes) {
-            return [
-                'user_id' => User::create([
-                    'name' => $this->faker->name(),
-                    'email' => $this->faker->unique()->safeEmail(),
-                    'password' => Hash::make('password'),
-                    'role' => UserRole::Coordenadores,
-                ])->id,
-            ];
-        });
+        return $this->state(fn (array $attributes): array => [
+            'user_id' => User::factory()->role(UserRole::Projetistas),
+        ]);
     }
 
-    public function administrativo(): self
+    public function coordenador(): static
     {
-        return $this->state(function (array $attributes) {
-            return [
-                'user_id' => User::create([
-                    'name' => $this->faker->name(),
-                    'email' => $this->faker->unique()->safeEmail(),
-                    'password' => Hash::make('password'),
-                    'role' => UserRole::Administrativos,
-                ])->id,
-            ];
-        });
+        return $this->state(fn (array $attributes): array => [
+            'user_id' => User::factory()->role(UserRole::Coordenadores),
+        ]);
+    }
+
+    public function administrativo(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'user_id' => User::factory()->role(UserRole::Administrativos),
+        ]);
     }
 }

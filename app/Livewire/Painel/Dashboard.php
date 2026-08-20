@@ -35,6 +35,13 @@ class Dashboard extends Component
     public function updatedMesAno(): void
     {
         $this->resetPage();
+        unset($this->producaoPorColaborador, $this->graficoProducaoPayload);
+
+        $this->dispatch(
+            'graficos-dashboard-atualizados',
+            producao: $this->graficoProducaoPayload,
+            evolucao: $this->graficoEvolucaoPayload,
+        );
     }
 
     #[Computed]
@@ -72,6 +79,75 @@ class Dashboard extends Component
     public function totais(): object
     {
         return $this->metrics->totaisGlobais($this->mesAnoFiltro);
+    }
+
+    /**
+     * @return Collection<int, object{nome: string, total: int, acimaDaMeta: bool|null}>
+     */
+    #[Computed]
+    public function producaoPorColaborador(): Collection
+    {
+        return $this->metrics->producaoPorColaborador($this->mesAnoFiltro);
+    }
+
+    /**
+     * @return Collection<int, object{semana: int, rotulo: string, total: int}>
+     */
+    #[Computed]
+    public function evolucaoSemanalPostes(): Collection
+    {
+        return $this->metrics->evolucaoSemanalPostes();
+    }
+
+    #[Computed]
+    public function rotuloMesAtual(): string
+    {
+        return $this->formatarCompetencia(now()->format('Y-m'));
+    }
+
+    /**
+     * Payload JSON para o gráfico de barras (ranking).
+     *
+     * @return array{categories: list<string>, totals: list<int>, colors: list<string>, aplicarMeta: bool}
+     */
+    #[Computed]
+    public function graficoProducaoPayload(): array
+    {
+        $itens = $this->producaoPorColaborador;
+        $aplicarMeta = $this->mesAnoFiltro !== null;
+        $corNeutra = '#0d9488';
+        $corAcima = '#0f766e';
+        $corAbaixo = '#ea580c';
+
+        return [
+            'categories' => $itens->pluck('nome')->values()->all(),
+            'totals' => $itens->pluck('total')->values()->all(),
+            'colors' => $itens->map(function (object $item) use ($aplicarMeta, $corNeutra, $corAcima, $corAbaixo): string {
+                if (! $aplicarMeta) {
+                    return $corNeutra;
+                }
+
+                return $item->acimaDaMeta ? $corAcima : $corAbaixo;
+            })->values()->all(),
+            'aplicarMeta' => $aplicarMeta,
+        ];
+    }
+
+    /**
+     * Payload JSON para o gráfico de área (evolução semanal).
+     *
+     * @return array{categories: list<string>, totals: list<int>, mes: string}
+     */
+    #[Computed]
+    public function graficoEvolucaoPayload(): array
+    {
+        $itens = $this->evolucaoSemanalPostes;
+
+        return [
+            'categories' => $itens->pluck('rotulo')->values()->all(),
+            'totals' => $itens->pluck('total')->values()->all(),
+            'mes' => $this->rotuloMesAtual,
+        ];
     }
 
     #[Computed]

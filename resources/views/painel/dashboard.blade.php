@@ -7,11 +7,9 @@ data-sidenav-color="dark"
 @endsection
 
 @section('content')
-    @include('layouts.partials/page-title', ['title' => 'Dashboard'] )
-
     <livewire:painel.dashboard />
 @endsection
 
 @section('scripts')
-
+    @vite(['resources/js/pages/painel-dashboard-charts.js'])
 @endsection
