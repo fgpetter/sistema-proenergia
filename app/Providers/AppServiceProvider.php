@@ -52,5 +52,9 @@ class AppServiceProvider extends ServiceProvider
             return $user->isPrestador() && $user->colaborador !== null;
         });
 
+        Gate::define('download-planilha-contabilidade', function (User $user) {
+            return $user->isAdmin();
+        });
+
     }
 }

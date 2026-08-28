@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Enums\TipoProjetoAtividade;
 use App\Exports\ExportacaoProdutividadeExport;
+use App\Exports\PlanilhaContabilidadeExport;
 use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
@@ -13,6 +14,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -71,15 +73,23 @@ class RelatorioColaboradores extends Component
     public function produtividadeColaboradores(): Collection
     {
         $calculator = app(BonusColaboradorCalculator::class);
+        $periodo = $this->periodoApuracao();
 
         return app(RelatorioColaboradoresProdutividade::class)
             ->agregar(
                 colaboradorId: $this->colaboradorIdEscopo(),
                 projetoId: $this->projetoId,
-                mesAno: $this->mesAno,
+                mesAno: $periodo['mesAno'],
                 coordenadorId: $this->coordenadorId,
+                limitarAoHoje: $periodo['limitarAoHoje'],
             )
             ->map(fn (Colaborador $colaborador): Colaborador => $calculator->enriquecerColaborador($colaborador));
+    }
+
+    #[Computed]
+    public function podeExportarPlanilhaContabilidade(): bool
+    {
+        return Gate::allows('download-planilha-contabilidade');
     }
 
     #[Computed]
@@ -154,6 +164,52 @@ class RelatorioColaboradores extends Component
             ),
             'exportacao-produtividade-'.$this->mesAno.'.xlsx',
         );
+    }
+
+    public function exportarPlanilhaContabilidade(): BinaryFileResponse
+    {
+        abort_unless($this->podeExportarPlanilhaContabilidade, 403);
+
+        $periodo = $this->periodoApuracao();
+        $calculator = app(BonusColaboradorCalculator::class);
+
+        $colaboradores = app(RelatorioColaboradoresProdutividade::class)
+            ->agregar(
+                colaboradorId: $this->colaboradorIdEscopo(),
+                mesAno: $periodo['mesAno'],
+                limitarAoHoje: $periodo['limitarAoHoje'],
+            )
+            ->map(fn (Colaborador $colaborador): Colaborador => $calculator->enriquecerColaborador($colaborador));
+
+        $linhas = $colaboradores->map(fn (Colaborador $colaborador): array => [
+            'nome' => $colaborador->nome,
+            'premio' => (float) $colaborador->total_bonus,
+        ])->values()->all();
+
+        return Excel::download(
+            new PlanilhaContabilidadeExport($linhas),
+            'planilha-contabilidade-'.$periodo['mesAno'].'.xlsx',
+        );
+    }
+
+    /**
+     * @return array{mesAno: string, limitarAoHoje: bool}
+     */
+    protected function periodoApuracao(): array
+    {
+        $mesCorrente = now()->format('Y-m');
+
+        if ($this->mesAno === null || $this->mesAno === '' || $this->mesAno === $mesCorrente) {
+            return [
+                'mesAno' => $mesCorrente,
+                'limitarAoHoje' => true,
+            ];
+        }
+
+        return [
+            'mesAno' => $this->mesAno,
+            'limitarAoHoje' => false,
+        ];
     }
 
     protected function colaboradorIdEscopo(): ?int

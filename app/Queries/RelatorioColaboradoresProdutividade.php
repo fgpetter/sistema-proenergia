@@ -18,6 +18,7 @@ class RelatorioColaboradoresProdutividade
         ?int $projetoId = null,
         ?string $mesAno = null,
         ?int $coordenadorId = null,
+        bool $limitarAoHoje = false,
     ): Collection {
         return Colaborador::withTrashed()
             ->join('atividades', 'atividades.colaborador_id', '=', 'colaboradores.id')
@@ -31,6 +32,7 @@ class RelatorioColaboradoresProdutividade
                 mesAno: $mesAno,
                 coordenadorId: $coordenadorId,
                 colaboradorColumn: 'colaboradores.id',
+                limitarAoHoje: $limitarAoHoje,
             ))
             ->groupBy('colaboradores.id', 'colaboradores.nome', 'colaboradores.remuneracao')
             ->orderBy('colaboradores.nome')
@@ -59,6 +61,7 @@ class RelatorioColaboradoresProdutividade
         ?int $projetoId = null,
         ?string $mesAno = null,
         ?int $coordenadorId = null,
+        bool $limitarAoHoje = false,
     ): Collection {
         return Atividade::query()
             ->select('atividades.*')
@@ -72,6 +75,7 @@ class RelatorioColaboradoresProdutividade
                 mesAno: $mesAno,
                 coordenadorId: $coordenadorId,
                 colaboradorColumn: 'atividades.colaborador_id',
+                limitarAoHoje: $limitarAoHoje,
             ))
             ->orderBy('projetos.created_at')
             ->orderBy('atividades.nome')
@@ -90,6 +94,7 @@ class RelatorioColaboradoresProdutividade
         ?string $mesAno,
         ?int $coordenadorId,
         string $colaboradorColumn,
+        bool $limitarAoHoje = false,
     ): void {
         $query
             ->when($colaboradorId !== null, function (Builder $query) use ($colaboradorId, $colaboradorColumn): void {
@@ -98,9 +103,11 @@ class RelatorioColaboradoresProdutividade
             ->when($projetoId, function (Builder $query) use ($projetoId): void {
                 $query->where('atividades.projeto_id', $projetoId);
             })
-            ->when($mesAno, function (Builder $query) use ($mesAno): void {
+            ->when($mesAno, function (Builder $query) use ($mesAno, $limitarAoHoje): void {
                 $inicio = Carbon::createFromFormat('Y-m', $mesAno)->startOfMonth();
-                $fim = $inicio->copy()->endOfMonth();
+                $fim = $limitarAoHoje
+                    ? now()->endOfDay()
+                    : $inicio->copy()->endOfMonth();
 
                 $query->whereBetween('projetos.created_at', [$inicio, $fim]);
             })

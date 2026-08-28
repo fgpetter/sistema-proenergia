@@ -2,16 +2,27 @@
     <div class="card">
         <div class="card-header flex flex-wrap items-center justify-between gap-3">
             <h6 class="card-title mb-0">Relatório de Produtividade de Colaboradores</h6>
-            @if ($this->podeExportarProdutividade)
-                <button
-                    type="button"
-                    wire:click="exportarProdutividade"
-                    @disabled(blank($mesAno))
-                    class="btn btn-sm bg-primary text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    Baixar XLSX
-                </button>
-            @endif
+            <div class="flex flex-wrap items-center gap-2">
+                @if ($this->podeExportarPlanilhaContabilidade)
+                    <button
+                        type="button"
+                        wire:click="exportarPlanilhaContabilidade"
+                        class="btn btn-sm bg-primary text-white"
+                    >
+                        Baixar planilha de contabilidade
+                    </button>
+                @endif
+                @if ($this->podeExportarProdutividade)
+                    <button
+                        type="button"
+                        wire:click="exportarProdutividade"
+                        @disabled(blank($mesAno))
+                        class="btn btn-sm bg-primary text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        Baixar XLSX
+                    </button>
+                @endif
+            </div>
         </div>
         <div class="card-header">
             <div class="grid w-full grid-cols-9 gap-3 py-5">
@@ -101,7 +112,7 @@
                 <div class="col-span-3">
                     <label class="mb-1 block text-sm font-medium text-default-700">Mês/Ano</label>
                     <select wire:model.live="mesAno" class="form-input form-input-sm w-full">
-                        <option value="">Todas as competências</option>
+                        <option value="">Mês atual até hoje</option>
                         @foreach ($this->competenciasDisponiveis as $valor => $rotulo)
                             <option value="{{ $valor }}">{{ $rotulo }}</option>
                         @endforeach
