@@ -42,7 +42,7 @@
             x-data="projetoChecklist({
                 projetoId: {{ $projeto->id }},
                 aba: '{{ $aba }}',
-                itemNumeros: {{ json_encode(collect($this->items)->pluck('numero')->values()) }},
+                itemNumeros: {{ json_encode(range(1, $aba === 'urbano' ? 64 : 72)) }},
             })"
             x-ref="checklistRoot"
             x-init="init()"
@@ -85,59 +85,11 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-default-200">
-                        @foreach ($this->items as $item)
-                            <tr wire:key="item-{{ $aba }}-{{ $item['numero'] }}" class="text-default-800 font-normal text-sm">
-                                <td class="px-3.5 py-3 whitespace-nowrap">{{ $item['numero'] }}</td>
-                                <td class="px-3.5 py-3 min-w-48">{{ $item['categoria'] }}</td>
-                                <td class="px-3.5 py-3 min-w-64">{{ $item['item'] }}</td>
-                                <td class="px-3.5 py-3 whitespace-nowrap">{{ $item['normas'] }}</td>
-                                <td class="px-3.5 py-3 whitespace-nowrap">{{ $item['tipo'] }}</td>
-                                <td class="px-3.5 py-3 text-center">
-                                    <input
-                                        type="radio"
-                                        class="form-radio size-4 {{ $aba === 'rural' ? 'text-success' : 'text-primary' }}"
-                                        name="conformidade-{{ $aba }}-{{ $item['numero'] }}"
-                                        value="Sim"
-                                        data-numero="{{ $item['numero'] }}"
-                                        data-tipo="conformidade"
-                                        @change="setConformidade({{ $item['numero'] }}, 'Sim')"
-                                    />
-                                </td>
-                                <td class="px-3.5 py-3 text-center">
-                                    <input
-                                        type="radio"
-                                        class="form-radio size-4 {{ $aba === 'rural' ? 'text-success' : 'text-primary' }}"
-                                        name="conformidade-{{ $aba }}-{{ $item['numero'] }}"
-                                        value="Não"
-                                        data-numero="{{ $item['numero'] }}"
-                                        data-tipo="conformidade"
-                                        @change="setConformidade({{ $item['numero'] }}, 'Não')"
-                                    />
-                                </td>
-                                <td class="px-3.5 py-3 text-center">
-                                    <input
-                                        type="radio"
-                                        class="form-radio size-4 {{ $aba === 'rural' ? 'text-success' : 'text-primary' }}"
-                                        name="conformidade-{{ $aba }}-{{ $item['numero'] }}"
-                                        value="N.A."
-                                        checked
-                                        data-numero="{{ $item['numero'] }}"
-                                        data-tipo="conformidade"
-                                        @change="setConformidade({{ $item['numero'] }}, 'N.A.')"
-                                    />
-                                </td>
-                                <td class="px-3.5 py-3">
-                                    <input
-                                        type="text"
-                                        class="form-input form-input-sm w-full min-w-48"
-                                        placeholder="Observações"
-                                        data-numero="{{ $item['numero'] }}"
-                                        data-tipo="observacao"
-                                        @input.debounce.300ms="setObservacao({{ $item['numero'] }}, $event.target.value)"
-                                    />
-                                </td>
-                            </tr>
-                        @endforeach
+                        @if ($aba === 'urbano')
+                            @include('livewire.admin.partials.projeto-checklist-rows-urbano')
+                        @else
+                            @include('livewire.admin.partials.projeto-checklist-rows-rural')
+                        @endif
                     </tbody>
                 </table>
             </div>

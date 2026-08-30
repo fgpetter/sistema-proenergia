@@ -3,16 +3,18 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Projeto;
-use App\Support\ChecklistCatalog;
 use Illuminate\Contracts\View\View;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class ProjetoChecklist extends Component
 {
+    public const string ABA_URBANO = 'urbano';
+
+    public const string ABA_RURAL = 'rural';
+
     public Projeto $projeto;
 
-    public string $aba = ChecklistCatalog::ABA_URBANO;
+    public string $aba = self::ABA_URBANO;
 
     public function mount(Projeto $projeto): void
     {
@@ -22,17 +24,11 @@ class ProjetoChecklist extends Component
 
     public function setAba(string $aba): void
     {
-        if (! in_array($aba, [ChecklistCatalog::ABA_URBANO, ChecklistCatalog::ABA_RURAL], true)) {
+        if (! in_array($aba, [self::ABA_URBANO, self::ABA_RURAL], true)) {
             return;
         }
 
         $this->aba = $aba;
-    }
-
-    #[Computed]
-    public function items(): array
-    {
-        return app(ChecklistCatalog::class)->items($this->aba);
     }
 
     public function render(): View

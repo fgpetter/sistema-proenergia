@@ -10,7 +10,6 @@ use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
-use App\Support\ChecklistCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
@@ -121,14 +120,12 @@ class ProjetoChecklistTest extends TestCase
     public function test_aba_rural_exibe_titulo_e_item_especifico(): void
     {
         $data = $this->projetoComAtribuicao();
-        $catalog = new ChecklistCatalog;
-        $item13Rural = collect($catalog->items(ChecklistCatalog::ABA_RURAL))->firstWhere('numero', 13);
 
         Livewire::actingAs($data['admin'])
             ->test(ProjetoChecklist::class, ['projeto' => $data['projeto']])
-            ->call('setAba', ChecklistCatalog::ABA_RURAL)
+            ->call('setAba', ProjetoChecklist::ABA_RURAL)
             ->assertSee('CHECKLIST DE ANÁLISE DE PROJETOS — REDES RURAIS')
-            ->assertSee($item13Rural['item']);
+            ->assertSee('Redes rurais monofásicas (MRT) ou bifásicas: trecho de conexão com a concessionária em rede nua, demais trechos trifásicos em RDC?');
     }
 
     public function test_aba_urbana_tem_64_linhas_na_tabela(): void
@@ -148,7 +145,7 @@ class ProjetoChecklistTest extends TestCase
 
         $html = Livewire::actingAs($data['admin'])
             ->test(ProjetoChecklist::class, ['projeto' => $data['projeto']])
-            ->call('setAba', ChecklistCatalog::ABA_RURAL)
+            ->call('setAba', ProjetoChecklist::ABA_RURAL)
             ->html();
 
         $this->assertSame(72, substr_count($html, 'data-tipo="conformidade"') / 3);
