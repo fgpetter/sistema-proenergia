@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Painel\DashboardController;
 use App\Http\Controllers\RoutingController;
+use App\Models\Projeto;
 use App\Support\PainelHome;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,9 @@ Route::group(['prefix' => '/painel', 'middleware' => 'auth'], function () {
         Route::view('/usuarios', 'admin.usuarios')->name('admin.usuarios')->can('admin');
         Route::view('/colaboradores', 'admin.colaboradores')->name('admin.colaboradores')->can('admin-or-coordenador');
         Route::view('/projetos', 'admin.projetos')->name('admin.projetos');
+        Route::get('/projetos/{projeto}/checklist', function (Projeto $projeto) {
+            return view('admin.projeto-checklist', ['projeto' => $projeto]);
+        })->name('admin.projetos.checklist')->can('view', 'projeto');
         Route::view('/relatorio-colaboradores', 'admin.relatorio-colaboradores')
             ->name('admin.relatorio-colaboradores')
             ->can('view-relatorio-colaboradores');

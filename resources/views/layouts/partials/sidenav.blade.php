@@ -53,7 +53,7 @@
                         </li>
                     @endcan
                     <li class="menu-item">
-                        <a class="menu-link {{ request()->routeIs('admin.projetos') ? 'active' : '' }}" href="{{ route('admin.projetos') }}">
+                        <a class="menu-link {{ request()->routeIs('admin.projetos*') ? 'active' : '' }}" href="{{ route('admin.projetos') }}">
                             <span class="menu-icon"><i data-lucide="briefcase"></i></span>
                             <div class="menu-text">Projetos</div>
                         </a>
