@@ -22,6 +22,24 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-default-500"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     </div>
                 </div>
+
+                <div class="relative md:w-56">
+                    <select wire:model.live="responsavelId" class="form-input form-input-sm">
+                        <option value="">Todos os responsáveis</option>
+                        @foreach ($this->responsaveis as $responsavel)
+                            <option value="{{ $responsavel->id }}">{{ $responsavel->nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="relative md:w-56">
+                    <select wire:model.live="colaboradorId" class="form-input form-input-sm">
+                        <option value="">Todos os colaboradores</option>
+                        @foreach ($this->colaboradores as $colaborador)
+                            <option value="{{ $colaborador->id }}">{{ $colaborador->nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
         <div class="flex flex-col">
@@ -113,44 +131,7 @@
                     </div>
                 </div>
             </div>
-            @if ($this->projetos->hasPages())
-                <div class="card-footer">
-                    <p class="text-default-500 text-sm">
-                        Exibindo <b>{{ $this->projetos->firstItem() ?? 0 }}</b> a <b>{{ $this->projetos->lastItem() ?? 0 }}</b> de <b>{{ $this->projetos->total() }}</b> resultados
-                    </p>
-                    <nav aria-label="Pagination" class="flex items-center gap-2">
-                        @if ($this->projetos->onFirstPage())
-                            <button disabled class="btn btn-sm border bg-transparent border-default-200 text-default-400 cursor-not-allowed" type="button">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="15 18 9 12 15 6"/></svg> Anterior
-                            </button>
-                        @else
-                            <button wire:click="previousPage" class="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary hover:border-primary/10" type="button">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="15 18 9 12 15 6"/></svg> Anterior
-                            </button>
-                        @endif
-
-                        @foreach ($this->projetos->getUrlRange(1, $this->projetos->lastPage()) as $page => $url)
-                            @if ($page == $this->projetos->currentPage())
-                                <button class="btn size-7.5 bg-primary text-white" type="button">{{ $page }}</button>
-                            @else
-                                <button wire:click="gotoPage({{ $page }})" class="btn size-7.5 bg-transparent border border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary hover:border-primary/10" type="button">
-                                    {{ $page }}
-                                </button>
-                            @endif
-                        @endforeach
-
-                        @if ($this->projetos->hasMorePages())
-                            <button wire:click="nextPage" class="btn btn-sm border bg-transparent border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary hover:border-primary/10" type="button">
-                                Próximo <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-1"><polyline points="9 18 15 12 9 6"/></svg>
-                            </button>
-                        @else
-                            <button disabled class="btn btn-sm border bg-transparent border-default-200 text-default-400 cursor-not-allowed" type="button">
-                                Próximo <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-1"><polyline points="9 18 15 12 9 6"/></svg>
-                            </button>
-                        @endif
-                    </nav>
-                </div>
-            @endif
+            <x-pagination :paginator="$this->projetos" />
         </div>
     </div>
 

@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Admin;
 
+use App\Enums\UserRole;
+use App\Models\Colaborador;
 use App\Models\Projeto;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
@@ -19,7 +22,23 @@ class ProjetosList extends Component
     #[Url(as: 'busca')]
     public string $search = '';
 
+    #[Url(as: 'responsavel')]
+    public ?int $responsavelId = null;
+
+    #[Url(as: 'colaborador')]
+    public ?int $colaboradorId = null;
+
     public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedResponsavelId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedColaboradorId(): void
     {
         $this->resetPage();
     }
@@ -31,6 +50,28 @@ class ProjetosList extends Component
     }
 
     #[Computed]
+    public function responsaveis(): Collection
+    {
+        return Colaborador::query()
+            ->whereHas('user', fn ($query) => $query->role(UserRole::Coordenadores))
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
+    }
+
+    #[Computed]
+    public function colaboradores(): Collection
+    {
+        return Colaborador::query()
+            ->whereHas('user', fn ($query) => $query->whereIn('role', [
+                UserRole::Levantadores,
+                UserRole::Orcamentistas,
+                UserRole::Projetistas,
+            ]))
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
+    }
+
+    #[Computed]
     public function projetos()
     {
         $query = Projeto::query()
@@ -38,6 +79,17 @@ class ProjetosList extends Component
 
         if ($this->search) {
             $query->where('nome', 'like', "%{$this->search}%");
+        }
+
+        if ($this->responsavelId) {
+            $query->where('colaborador_responsavel_id', $this->responsavelId);
+        }
+
+        if ($this->colaboradorId) {
+            $query->whereHas(
+                'atividades',
+                fn ($q) => $q->where('colaborador_id', $this->colaboradorId)
+            );
         }
 
         $user = auth()->user();

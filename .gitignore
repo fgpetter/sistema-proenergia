@@ -5,7 +5,10 @@
 .env.production
 .phpactor.json
 .phpunit.result.cache
+/.ai
 /.cursor
+/.claude
+/.agents
 /.vscode
 /.fleet
 /.idea
@@ -28,3 +31,8 @@ Homestead.yaml
 Thumbs.db
 GEMINI.md
 boost.json
+.mcp.json
+AGENTS.md
+boost.json
+CLAUDE.md
+opencode.json
