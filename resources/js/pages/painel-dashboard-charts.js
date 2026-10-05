@@ -27,7 +27,7 @@ function optionsProducao(payload) {
             parentHeightOffset: 0,
         },
         series: [{
-            name: 'Projeto CAD',
+            name: 'Projeto CAD + PROJ',
             data: payload.totals || [],
         }],
         plotOptions: {
@@ -74,7 +74,7 @@ function optionsEvolucao(payload) {
             zoom: { enabled: false },
         },
         series: [{
-            name: 'Projeto CAD',
+            name: 'Projeto CAD + PROJ',
             data: payload.totals || [],
         }],
         colors: [COR_AREA],

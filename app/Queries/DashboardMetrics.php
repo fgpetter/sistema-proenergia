@@ -91,21 +91,24 @@ class DashboardMetrics
     }
 
     /**
-     * Ranking de Projeto CAD por colaborador na Competência.
+     * Ranking de postes CAD e PROJ por colaborador na Competência.
      *
      * @return Collection<int, object{nome: string, total: int, acimaDaMeta: bool|null}>
      */
     public function producaoPorColaborador(?string $mesAno = null): Collection
     {
         $aplicaCorMeta = $mesAno !== null;
-        $limiteMeta = BonusColaboradorCalculator::LIMITE_POSTES_PROJETO_CAD;
+        $calculadoraBonus = app(BonusColaboradorCalculator::class);
 
         return Colaborador::withTrashed()
             ->join('atividades', 'atividades.colaborador_id', '=', 'colaboradores.id')
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
             ->whereNull('atividades.deleted_at')
             ->whereNull('projetos.deleted_at')
-            ->where('atividades.tipo_projeto', TipoProjetoAtividade::Cad->value)
+            ->whereIn('atividades.tipo_projeto', [
+                TipoProjetoAtividade::Cad->value,
+                TipoProjetoAtividade::Proj->value,
+            ])
             ->tap(fn (Builder $query) => $this->aplicarCompetencia($query, $mesAno))
             ->groupBy('colaboradores.id', 'colaboradores.nome')
             ->havingRaw('COALESCE(SUM(atividades.postes_projetados), 0) > 0')
@@ -115,21 +118,31 @@ class DashboardMetrics
                 'colaboradores.nome',
             ])
             ->selectRaw('COALESCE(SUM(atividades.postes_projetados), 0) as total')
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN atividades.tipo_projeto = ? THEN atividades.postes_projetados ELSE 0 END), 0) as total_cad',
+                [TipoProjetoAtividade::Cad->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN atividades.tipo_projeto = ? THEN atividades.postes_projetados ELSE 0 END), 0) as total_proj',
+                [TipoProjetoAtividade::Proj->value],
+            )
             ->get()
-            ->map(function (Colaborador $colaborador) use ($aplicaCorMeta, $limiteMeta): object {
+            ->map(function (Colaborador $colaborador) use ($aplicaCorMeta, $calculadoraBonus): object {
                 $total = (int) $colaborador->total;
 
                 return (object) [
                     'nome' => $colaborador->nome,
                     'total' => $total,
-                    'acimaDaMeta' => $aplicaCorMeta ? $total >= $limiteMeta : null,
+                    'acimaDaMeta' => $aplicaCorMeta
+                        ? $calculadoraBonus->metaAtingida(0, (int) $colaborador->total_cad, (int) $colaborador->total_proj)
+                        : null,
                 ];
             })
             ->values();
     }
 
     /**
-     * Projeto CAD do mês calendário atual, acumulado por semana de atividades.created_at.
+     * Postes CAD e PROJ do mês calendário atual, acumulados por semana de atividades.created_at.
      * Semana N = soma do dia 1 até o fim do bloco N (1–7, 1–14, 1–21, …).
      *
      * @return Collection<int, object{semana: int, rotulo: string, total: int}>
@@ -144,7 +157,10 @@ class DashboardMetrics
         $totaisPorBloco = array_fill(1, $totalSemanas, 0);
 
         $linhas = Atividade::query()
-            ->where('atividades.tipo_projeto', TipoProjetoAtividade::Cad->value)
+            ->whereIn('atividades.tipo_projeto', [
+                TipoProjetoAtividade::Cad->value,
+                TipoProjetoAtividade::Proj->value,
+            ])
             ->whereBetween('atividades.created_at', [$inicio, $fim])
             ->toBase()
             ->get(['atividades.created_at', 'atividades.postes_projetados']);

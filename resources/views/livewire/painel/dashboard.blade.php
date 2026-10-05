@@ -90,14 +90,14 @@
                         'text-sm text-default-500 text-center py-16',
                         'hidden' => $this->producaoPorColaborador->isNotEmpty(),
                     ])>
-                        Nenhum Projeto CAD encontrado para o filtro selecionado.
+                        Nenhuma atividade CAD ou PROJ encontrada para o filtro selecionado.
                     </p>
                     <div id="chart-producao-colaborador" @class(['hidden' => $this->producaoPorColaborador->isEmpty()]) wire:ignore></div>
                 </div>
                 <div class="card-footer">
                     <p class="text-sm text-default-500">
                         @if ($this->mesAnoFiltro)
-                            Ranking da competência, destacando quem já ultrapassou a Meta Projeto CAD
+                            Ranking da competência, destacando quem atingiu a meta de Projeto CAD ou PROJ
                         @else
                             Ranking agregado de todas as competências (sem destaque de meta)
                         @endif
@@ -114,7 +114,7 @@
                 </div>
                 <div class="card-footer">
                     <p class="text-sm text-default-500">
-                        Projeto CAD acumulado em {{ $this->rotuloMesAtual }}, do dia 1 até o fim de cada semana
+                        Projeto CAD + PROJ acumulado em {{ $this->rotuloMesAtual }}, do dia 1 até o fim de cada semana
                     </p>
                 </div>
             </div>

@@ -272,7 +272,7 @@ class DashboardMetricsTest extends TestCase
         $this->assertSame(800, $totais->totalExtensaoProjeto);
     }
 
-    public function test_producao_por_colaborador_ranking_cad_com_meta(): void
+    public function test_producao_por_colaborador_soma_cad_e_proj_e_aplica_metas_independentes(): void
     {
         $bruno = Colaborador::factory()->create(['nome' => 'Bruno']);
         $ana = Colaborador::factory()->create(['nome' => 'Ana']);
@@ -322,9 +322,9 @@ class DashboardMetricsTest extends TestCase
 
         $ranking = app(DashboardMetrics::class)->producaoPorColaborador('2026-06');
 
-        $this->assertSame(['Bruno', 'Ana', 'Carla'], $ranking->pluck('nome')->all());
-        $this->assertSame([320, 300, 299], $ranking->pluck('total')->all());
-        $this->assertSame([true, true, false], $ranking->pluck('acimaDaMeta')->all());
+        $this->assertSame(['Diego', 'Bruno', 'Ana', 'Carla'], $ranking->pluck('nome')->all());
+        $this->assertSame([500, 320, 300, 299], $ranking->pluck('total')->all());
+        $this->assertSame([true, true, true, false], $ranking->pluck('acimaDaMeta')->all());
     }
 
     public function test_producao_por_colaborador_sem_cor_meta_em_todas_competencias(): void
@@ -347,7 +347,7 @@ class DashboardMetricsTest extends TestCase
         $this->assertNull($ranking->first()->acimaDaMeta);
     }
 
-    public function test_evolucao_semanal_agrupa_por_created_at_da_atividade_no_mes_atual(): void
+    public function test_evolucao_semanal_soma_cad_e_proj_por_created_at_no_mes_atual(): void
     {
         Carbon::setTestNow('2026-08-20 12:00:00');
 
@@ -371,17 +371,17 @@ class DashboardMetricsTest extends TestCase
         ]);
         $semana2->forceFill(['created_at' => '2026-08-10 10:00:00', 'updated_at' => '2026-08-10 10:00:00'])->save();
 
-        $projIgnorado = Atividade::factory()->proj()->create([
+        $atividadeProj = Atividade::factory()->proj()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'postes_projetados' => 200,
         ]);
-        $projIgnorado->forceFill(['created_at' => '2026-08-05 10:00:00', 'updated_at' => '2026-08-05 10:00:00'])->save();
+        $atividadeProj->forceFill(['created_at' => '2026-08-05 10:00:00', 'updated_at' => '2026-08-05 10:00:00'])->save();
 
         $evolucao = app(DashboardMetrics::class)->evolucaoSemanalPostes();
 
         $this->assertSame(['1', '2', '3', '4', '5'], $evolucao->pluck('rotulo')->all());
-        $this->assertSame([80, 130, 130, 130, 130], $evolucao->pluck('total')->all());
+        $this->assertSame([280, 330, 330, 330, 330], $evolucao->pluck('total')->all());
 
         Carbon::setTestNow();
     }
