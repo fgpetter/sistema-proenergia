@@ -2,8 +2,9 @@
 
 namespace App\Livewire\Painel;
 
+use App\Models\Atividade;
+use App\Models\Colaborador;
 use App\Models\Projeto;
-use App\Queries\DashboardMetrics;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
@@ -20,9 +21,11 @@ class Dashboard extends Component
     #[Url(as: 'mes')]
     public string $mesAno = '';
 
-    public function boot(DashboardMetrics $metrics): void
+    public function boot(Projeto $projeto, Colaborador $colaborador, Atividade $atividade): void
     {
-        $this->metrics = $metrics;
+        $this->projeto = $projeto;
+        $this->colaborador = $colaborador;
+        $this->atividade = $atividade;
     }
 
     public function mount(): void
@@ -78,7 +81,7 @@ class Dashboard extends Component
     #[Computed]
     public function totais(): object
     {
-        return $this->metrics->totaisGlobais($this->mesAnoFiltro);
+        return $this->projeto->totaisGlobaisDashboard($this->mesAnoFiltro);
     }
 
     /**
@@ -87,7 +90,7 @@ class Dashboard extends Component
     #[Computed]
     public function producaoPorColaborador(): Collection
     {
-        return $this->metrics->producaoPorColaborador($this->mesAnoFiltro);
+        return $this->colaborador->producaoDashboard($this->mesAnoFiltro);
     }
 
     /**
@@ -96,7 +99,7 @@ class Dashboard extends Component
     #[Computed]
     public function evolucaoSemanalPostes(): Collection
     {
-        return $this->metrics->evolucaoSemanalPostes();
+        return $this->atividade->evolucaoSemanalPostes();
     }
 
     #[Computed]
@@ -153,7 +156,7 @@ class Dashboard extends Component
     #[Computed]
     public function estatisticasProjetos(): LengthAwarePaginator
     {
-        return $this->metrics->estatisticasPorProjeto($this->mesAnoFiltro)->paginate(15);
+        return $this->projeto->estatisticasDashboard($this->mesAnoFiltro)->paginate(15);
     }
 
     public function render(): View
@@ -168,5 +171,9 @@ class Dashboard extends Component
         return ucfirst($data->translatedFormat('F')).' - '.$data->format('Y');
     }
 
-    private DashboardMetrics $metrics;
+    private Projeto $projeto;
+
+    private Colaborador $colaborador;
+
+    private Atividade $atividade;
 }

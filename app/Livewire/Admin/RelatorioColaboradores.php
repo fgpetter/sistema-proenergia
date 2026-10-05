@@ -8,7 +8,6 @@ use App\Exports\PlanilhaContabilidadeExport;
 use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
-use App\Queries\RelatorioColaboradoresProdutividade;
 use App\Support\BonusColaboradorCalculator;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -75,8 +74,8 @@ class RelatorioColaboradores extends Component
         $calculator = app(BonusColaboradorCalculator::class);
         $periodo = $this->periodoApuracao();
 
-        return app(RelatorioColaboradoresProdutividade::class)
-            ->agregar(
+        return app(Colaborador::class)
+            ->agregarProdutividade(
                 colaboradorId: $this->colaboradorIdEscopo(),
                 projetoId: $this->projetoId,
                 mesAno: $periodo['mesAno'],
@@ -115,7 +114,7 @@ class RelatorioColaboradores extends Component
 
         $calculator = app(BonusColaboradorCalculator::class);
 
-        $atividades = app(RelatorioColaboradoresProdutividade::class)->listarAtividades(
+        $atividades = app(Atividade::class)->listarAtividadesRelatorio(
             colaboradorId: $this->colaboradorIdEscopo(),
             projetoId: $this->projetoId,
             mesAno: $this->mesAno,
@@ -173,8 +172,8 @@ class RelatorioColaboradores extends Component
         $periodo = $this->periodoApuracao();
         $calculator = app(BonusColaboradorCalculator::class);
 
-        $colaboradores = app(RelatorioColaboradoresProdutividade::class)
-            ->agregar(
+        $colaboradores = app(Colaborador::class)
+            ->agregarProdutividade(
                 colaboradorId: $this->colaboradorIdEscopo(),
                 mesAno: $periodo['mesAno'],
                 limitarAoHoje: $periodo['limitarAoHoje'],

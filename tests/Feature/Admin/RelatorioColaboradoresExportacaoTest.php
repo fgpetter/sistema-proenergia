@@ -10,7 +10,6 @@ use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
-use App\Queries\RelatorioColaboradoresProdutividade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Maatwebsite\Excel\Facades\Excel;
@@ -165,7 +164,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             ->call('exportarProdutividade')
             ->assertFileDownloaded('exportacao-produtividade-2026-06.xlsx');
 
-        $atividades = app(RelatorioColaboradoresProdutividade::class)->listarAtividades(
+        $atividades = app(Atividade::class)->listarAtividadesRelatorio(
             colaboradorId: $colaborador->id,
             mesAno: '2026-06',
         );
@@ -304,15 +303,15 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             ? collect()
             : collect([$linha]);
 
-        $this->partialMock(RelatorioColaboradoresProdutividade::class, function (MockInterface $mock) use ($resultado): void {
-            $mock->shouldReceive('agregar')->andReturn($resultado);
+        $this->partialMock(Colaborador::class, function (MockInterface $mock) use ($resultado): void {
+            $mock->shouldReceive('agregarProdutividade')->andReturn($resultado);
         });
     }
 
     private function mockAgregarVazio(): void
     {
-        $this->partialMock(RelatorioColaboradoresProdutividade::class, function (MockInterface $mock): void {
-            $mock->shouldReceive('agregar')->andReturn(collect());
+        $this->partialMock(Colaborador::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('agregarProdutividade')->andReturn(collect());
         });
     }
 }

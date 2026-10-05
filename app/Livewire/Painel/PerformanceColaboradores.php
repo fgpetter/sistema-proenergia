@@ -3,7 +3,6 @@
 namespace App\Livewire\Painel;
 
 use App\Models\Colaborador;
-use App\Queries\RelatorioColaboradoresProdutividade;
 use App\Support\BonusColaboradorCalculator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -21,8 +20,8 @@ class PerformanceColaboradores extends Component
     {
         $calculator = app(BonusColaboradorCalculator::class);
 
-        return app(RelatorioColaboradoresProdutividade::class)
-            ->agregar(mesAno: $this->mesAno)
+        return app(Colaborador::class)
+            ->agregarProdutividade(mesAno: $this->mesAno)
             ->map(fn (Colaborador $colaborador): Colaborador => $calculator->enriquecerColaborador($colaborador));
     }
 

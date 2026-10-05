@@ -11,7 +11,6 @@ use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
-use App\Queries\RelatorioColaboradoresProdutividade;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -137,7 +136,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'updated_at' => '2026-09-01 10:00:00',
         ]);
 
-        $linhas = app(RelatorioColaboradoresProdutividade::class)->agregar(
+        $linhas = app(Colaborador::class)->agregarProdutividade(
             mesAno: '2026-06',
         );
 
@@ -163,7 +162,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'postes_projetados' => 50,
         ]);
 
-        $linhas = app(RelatorioColaboradoresProdutividade::class)->agregar(
+        $linhas = app(Colaborador::class)->agregarProdutividade(
             mesAno: '2026-08',
             limitarAoHoje: true,
         );
@@ -363,7 +362,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'postes_projetados' => 10,
         ]);
 
-        $linhas = app(RelatorioColaboradoresProdutividade::class)->agregar();
+        $linhas = app(Colaborador::class)->agregarProdutividade();
 
         $this->assertCount(2, $linhas);
 

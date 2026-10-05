@@ -9,7 +9,6 @@ use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
-use App\Queries\RelatorioColaboradoresProdutividade;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -266,8 +265,8 @@ class DashboardTest extends TestCase
             ->test(Dashboard::class)
             ->assertSee('Produção por colaborador (postes)')
             ->assertSee('Evolução semanal de postes')
-            ->assertSee('Ranking da competência, destacando quem já ultrapassou a Meta Projeto CAD')
-            ->assertSee('Projeto CAD acumulado em Agosto - 2026, do dia 1 até o fim de cada semana')
+            ->assertSee('Ranking da competência, destacando quem atingiu a meta de Projeto CAD ou PROJ')
+            ->assertSee('Projeto CAD + PROJ acumulado em Agosto - 2026, do dia 1 até o fim de cada semana')
             ->assertSee('Ana Ranking')
             ->assertDontSee('Análise gráfica')
             ->assertDontSee('Evolução: mês atual');
@@ -389,8 +388,8 @@ class DashboardTest extends TestCase
     {
         $linhas = $colaborador !== null ? collect([$colaborador]) : collect();
 
-        $this->mock(RelatorioColaboradoresProdutividade::class, function (MockInterface $mock) use ($linhas): void {
-            $mock->shouldReceive('agregar')->andReturn($linhas);
+        $this->partialMock(Colaborador::class, function (MockInterface $mock) use ($linhas): void {
+            $mock->shouldReceive('agregarProdutividade')->andReturn($linhas);
         });
     }
 

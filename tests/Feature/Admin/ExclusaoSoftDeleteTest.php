@@ -11,8 +11,6 @@ use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
-use App\Queries\DashboardMetrics;
-use App\Queries\RelatorioColaboradoresProdutividade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -53,7 +51,7 @@ class ExclusaoSoftDeleteTest extends TestCase
         $this->assertNull(Projeto::find($projeto->id));
         $this->assertNull(Atividade::find($atividade->id));
 
-        $totais = app(DashboardMetrics::class)->totaisGlobais();
+        $totais = app(Projeto::class)->totaisGlobaisDashboard();
         $this->assertSame(0, $totais->totalProjetos);
         $this->assertSame(0, $totais->totalPostesProjetados);
     }
@@ -84,7 +82,7 @@ class ExclusaoSoftDeleteTest extends TestCase
         $this->assertSoftDeleted('atividades', ['id' => $atividade->id]);
         $this->assertNotSoftDeleted('projetos', ['id' => $projeto->id]);
 
-        $totais = app(DashboardMetrics::class)->totaisGlobais();
+        $totais = app(Projeto::class)->totaisGlobaisDashboard();
         $this->assertSame(0, $totais->totalProjetos);
         $this->assertSame(0, $totais->totalPostesProjetados);
     }
@@ -127,10 +125,10 @@ class ExclusaoSoftDeleteTest extends TestCase
 
         $this->assertFalse(Auth::attempt(['email' => $email, 'password' => $password]));
 
-        $producao = app(DashboardMetrics::class)->producaoPorColaborador();
+        $producao = app(Colaborador::class)->producaoDashboard();
         $this->assertTrue($producao->contains(fn (object $linha): bool => $linha->nome === 'Joao Projetista' && $linha->total === 200));
 
-        $relatorio = app(RelatorioColaboradoresProdutividade::class)->agregar();
+        $relatorio = app(Colaborador::class)->agregarProdutividade();
         $this->assertTrue($relatorio->contains(fn (Colaborador $linha): bool => $linha->nome === 'Joao Projetista'));
 
         Livewire::actingAs($admin)

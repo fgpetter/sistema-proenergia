@@ -6,12 +6,11 @@ use App\Enums\TipoProjetoAtividade;
 use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
-use App\Queries\DashboardMetrics;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class DashboardMetricsTest extends TestCase
+class DashboardModelTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -32,9 +31,7 @@ class DashboardMetricsTest extends TestCase
             duracaoMinutos: 60,
         );
 
-        $metrics = app(DashboardMetrics::class);
-
-        $totaisJunho = $metrics->totaisGlobais('2026-06');
+        $totaisJunho = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
         $this->assertSame(1, $totaisJunho->totalProjetos);
         $this->assertSame(80, $totaisJunho->totalExtensaoProjeto);
         $this->assertSame(15, $totaisJunho->totalPostesProjetados);
@@ -42,14 +39,14 @@ class DashboardMetricsTest extends TestCase
         $this->assertSame(80.0, $totaisJunho->mediaExtensaoPorProjeto);
         $this->assertSame(15.0, $totaisJunho->mediaPostesPorProjeto);
         $this->assertEqualsWithDelta(80 / 15, $totaisJunho->vaoMedioProjetado, 0.001);
-        $this->assertSame(['Projeto Junho'], $metrics->estatisticasPorProjeto('2026-06')->pluck('nome')->all());
+        $this->assertSame(['Projeto Junho'], app(Projeto::class)->estatisticasDashboard('2026-06')->pluck('nome')->all());
 
-        $totaisJulho = $metrics->totaisGlobais('2026-07');
+        $totaisJulho = app(Projeto::class)->totaisGlobaisDashboard('2026-07');
         $this->assertSame(1, $totaisJulho->totalProjetos);
         $this->assertSame(50, $totaisJulho->totalExtensaoProjeto);
         $this->assertSame(5, $totaisJulho->totalPostesProjetados);
         $this->assertSame(3600, $totaisJulho->totalSegundos);
-        $this->assertSame(['Projeto Julho'], $metrics->estatisticasPorProjeto('2026-07')->pluck('nome')->all());
+        $this->assertSame(['Projeto Julho'], app(Projeto::class)->estatisticasDashboard('2026-07')->pluck('nome')->all());
     }
 
     public function test_totais_sem_competencia_somam_todos_os_meses(): void
@@ -69,8 +66,7 @@ class DashboardMetricsTest extends TestCase
             duracaoMinutos: 60,
         );
 
-        $metrics = app(DashboardMetrics::class);
-        $totais = $metrics->totaisGlobais(null);
+        $totais = app(Projeto::class)->totaisGlobaisDashboard(null);
 
         $this->assertSame(2, $totais->totalProjetos);
         $this->assertSame(130, $totais->totalExtensaoProjeto);
@@ -78,7 +74,7 @@ class DashboardMetricsTest extends TestCase
         $this->assertSame(10800, $totais->totalSegundos);
         $this->assertEqualsCanonicalizing(
             ['Projeto Junho', 'Projeto Julho'],
-            $metrics->estatisticasPorProjeto(null)->pluck('nome')->all(),
+            app(Projeto::class)->estatisticasDashboard(null)->pluck('nome')->all(),
         );
     }
 
@@ -92,8 +88,7 @@ class DashboardMetricsTest extends TestCase
             duracaoMinutos: 120,
         );
 
-        $metrics = app(DashboardMetrics::class);
-        $totais = $metrics->totaisGlobais('2026-08');
+        $totais = app(Projeto::class)->totaisGlobaisDashboard('2026-08');
 
         $this->assertSame(0, $totais->totalProjetos);
         $this->assertSame(0, $totais->totalExtensaoProjeto);
@@ -103,7 +98,7 @@ class DashboardMetricsTest extends TestCase
         $this->assertSame(0.0, $totais->mediaPostesPorProjeto);
         $this->assertSame(0.0, $totais->mediaSegundosPorProjeto);
         $this->assertSame(0.0, $totais->vaoMedioProjetado);
-        $this->assertSame([], $metrics->estatisticasPorProjeto('2026-08')->pluck('nome')->all());
+        $this->assertSame([], app(Projeto::class)->estatisticasDashboard('2026-08')->pluck('nome')->all());
     }
 
     public function test_estatisticas_por_projeto_incluem_nome_do_coordenador(): void
@@ -124,7 +119,7 @@ class DashboardMetricsTest extends TestCase
             'postes_projetados' => 10,
         ]);
 
-        $linha = app(DashboardMetrics::class)->estatisticasPorProjeto('2026-06')->first();
+        $linha = app(Projeto::class)->estatisticasDashboard('2026-06')->first();
 
         $this->assertSame('Projeto Com Coordenador', $linha->nome);
         $this->assertSame('Coordenador Alfa', $linha->coordenador);
@@ -147,7 +142,7 @@ class DashboardMetricsTest extends TestCase
             'duracao_minutos' => 300,
         ]);
 
-        $totais = app(DashboardMetrics::class)->totaisGlobais('2026-06');
+        $totais = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
 
         $this->assertSame(0, $totais->totalProjetos);
         $this->assertSame(0, $totais->totalExtensaoProjeto);
@@ -180,7 +175,7 @@ class DashboardMetricsTest extends TestCase
             'duracao_minutos' => 300,
         ]);
 
-        $totais = app(DashboardMetrics::class)->totaisGlobais('2026-06');
+        $totais = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
 
         $this->assertSame(1, $totais->totalProjetos);
         $this->assertSame(800, $totais->totalExtensaoProjeto);
@@ -238,7 +233,7 @@ class DashboardMetricsTest extends TestCase
             'duracao_minutos' => 300,
         ]);
 
-        $totais = app(DashboardMetrics::class)->totaisGlobais('2026-06');
+        $totais = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
 
         $this->assertSame(2, $totais->totalProjetos);
         $this->assertSame(1200, $totais->totalExtensaoProjeto);
@@ -267,7 +262,7 @@ class DashboardMetricsTest extends TestCase
             'duracao_minutos' => 600,
         ]);
 
-        $totais = app(DashboardMetrics::class)->totaisGlobais('2026-06');
+        $totais = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
 
         $this->assertSame(800, $totais->totalExtensaoProjeto);
     }
@@ -320,7 +315,7 @@ class DashboardMetricsTest extends TestCase
             'postes_projetados' => 100,
         ]);
 
-        $ranking = app(DashboardMetrics::class)->producaoPorColaborador('2026-06');
+        $ranking = app(Colaborador::class)->producaoDashboard('2026-06');
 
         $this->assertSame(['Diego', 'Bruno', 'Ana', 'Carla'], $ranking->pluck('nome')->all());
         $this->assertSame([500, 320, 300, 299], $ranking->pluck('total')->all());
@@ -340,7 +335,7 @@ class DashboardMetricsTest extends TestCase
             'postes_projetados' => 320,
         ]);
 
-        $ranking = app(DashboardMetrics::class)->producaoPorColaborador(null);
+        $ranking = app(Colaborador::class)->producaoDashboard(null);
 
         $this->assertCount(1, $ranking);
         $this->assertSame(320, $ranking->first()->total);
@@ -378,7 +373,7 @@ class DashboardMetricsTest extends TestCase
         ]);
         $atividadeProj->forceFill(['created_at' => '2026-08-05 10:00:00', 'updated_at' => '2026-08-05 10:00:00'])->save();
 
-        $evolucao = app(DashboardMetrics::class)->evolucaoSemanalPostes();
+        $evolucao = app(Atividade::class)->evolucaoSemanalPostes();
 
         $this->assertSame(['1', '2', '3', '4', '5'], $evolucao->pluck('rotulo')->all());
         $this->assertSame([280, 330, 330, 330, 330], $evolucao->pluck('total')->all());
@@ -403,16 +398,14 @@ class DashboardMetricsTest extends TestCase
         ]);
         $atividade->forceFill(['created_at' => '2026-08-04 10:00:00', 'updated_at' => '2026-08-04 10:00:00'])->save();
 
-        $metrics = app(DashboardMetrics::class);
-
-        $rankingJulho = $metrics->producaoPorColaborador('2026-07');
+        $rankingJulho = app(Colaborador::class)->producaoDashboard('2026-07');
         $this->assertSame(['Ana'], $rankingJulho->pluck('nome')->all());
         $this->assertSame([90], $rankingJulho->pluck('total')->all());
 
-        $rankingAgosto = $metrics->producaoPorColaborador('2026-08');
+        $rankingAgosto = app(Colaborador::class)->producaoDashboard('2026-08');
         $this->assertTrue($rankingAgosto->isEmpty());
 
-        $evolucao = $metrics->evolucaoSemanalPostes();
+        $evolucao = app(Atividade::class)->evolucaoSemanalPostes();
         $this->assertSame([90, 90, 90, 90, 90], $evolucao->pluck('total')->all());
 
         Carbon::setTestNow();

@@ -4,7 +4,6 @@ namespace Tests\Feature\Painel;
 
 use App\Enums\UserRole;
 use App\Models\Colaborador;
-use App\Queries\DashboardMetrics;
 use App\Support\BonusColaboradorCalculator;
 use Carbon\Carbon;
 use Database\Seeders\DashboardConferenciaSeeder;
@@ -44,7 +43,7 @@ class DashboardConferenciaSeederTest extends TestCase
             $projetistas->pluck('nome')->all(),
         );
 
-        $ranking = app(DashboardMetrics::class)->producaoPorColaborador(now()->format('Y-m'));
+        $ranking = app(Colaborador::class)->producaoDashboard(now()->format('Y-m'));
         $limite = BonusColaboradorCalculator::LIMITE_POSTES_PROJETO_CAD;
 
         $this->assertSame(['Valentine N.', 'Gerson A.', 'João P.'], $ranking->pluck('nome')->all());

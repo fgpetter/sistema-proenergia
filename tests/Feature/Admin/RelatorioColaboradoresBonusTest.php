@@ -9,7 +9,6 @@ use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
 use App\Models\User;
-use App\Queries\RelatorioColaboradoresProdutividade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
@@ -349,8 +348,8 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'duracao_minutos' => 60,
         ]);
 
-        $agregado = app(RelatorioColaboradoresProdutividade::class)
-            ->agregar(mesAno: '2026-06')
+        $agregado = app(Colaborador::class)
+            ->agregarProdutividade(mesAno: '2026-06')
             ->first();
 
         $this->assertNotNull($agregado);
@@ -390,7 +389,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'duracao_minutos' => 30,
         ]);
 
-        $linhas = app(RelatorioColaboradoresProdutividade::class)->agregar(
+        $linhas = app(Colaborador::class)->agregarProdutividade(
             colaboradorId: $colaborador->id,
             mesAno: '2026-06',
         );
@@ -429,8 +428,8 @@ class RelatorioColaboradoresBonusTest extends TestCase
         $linha->total_postes_projetados_proj = $atributos['total_postes_projetados_proj'] ?? 0;
         $linha->total_segundos = $atributos['total_segundos'] ?? 0;
 
-        $this->mock(RelatorioColaboradoresProdutividade::class, function (MockInterface $mock) use ($linha): void {
-            $mock->shouldReceive('agregar')->andReturn(collect([$linha]));
+        $this->mock(Colaborador::class, function (MockInterface $mock) use ($linha): void {
+            $mock->shouldReceive('agregarProdutividade')->andReturn(collect([$linha]));
         });
     }
 
