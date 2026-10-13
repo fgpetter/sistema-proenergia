@@ -48,21 +48,23 @@ class DashboardTest extends TestCase
             'remuneracao' => 500000,
         ]);
 
-        Projeto::factory()->create([
+        $projetoRecente = Projeto::factory()->create([
             'nome' => 'Projeto Recente',
             'created_at' => '2026-08-17 10:00:00',
             'updated_at' => '2026-08-17 10:00:00',
         ]);
+        $this->createAtividadeConcluida($projetoRecente, '2026-08-17');
         Projeto::factory()->create([
             'nome' => 'Projeto Sem Atividades',
             'created_at' => '2026-08-16 10:00:00',
             'updated_at' => '2026-08-16 10:00:00',
         ]);
-        Projeto::factory()->create([
+        $projetoAntigo = Projeto::factory()->create([
             'nome' => 'Projeto Antigo',
             'created_at' => '2026-08-12 10:00:00',
             'updated_at' => '2026-08-12 10:00:00',
         ]);
+        $this->createAtividadeConcluida($projetoAntigo, '2026-08-12');
 
         $this->mockProdutividadeAgregada($colaborador);
 
@@ -82,7 +84,7 @@ class DashboardTest extends TestCase
         $response->assertSee($colaborador->nome);
         $response->assertSee('Projeto Recente', false);
         $response->assertSee('Projeto Antigo', false);
-        $response->assertSee('Projeto Sem Atividades', false);
+        $response->assertDontSee('Projeto Sem Atividades', false);
         $response->assertSee('Mês/Ano', false);
 
         $posRecente = strpos($response->getContent(), 'Projeto Recente');
@@ -157,11 +159,12 @@ class DashboardTest extends TestCase
         $admin = $this->createUser(UserRole::Administrativos);
         $this->mockProdutividadeAgregada();
 
-        Projeto::factory()->create([
+        $projeto = Projeto::factory()->create([
             'nome' => 'Projeto Junho',
             'created_at' => '2026-06-10 10:00:00',
             'updated_at' => '2026-06-10 10:00:00',
         ]);
+        $this->createAtividadeConcluida($projeto, '2026-06-10');
 
         Livewire::actingAs($admin)
             ->test(Dashboard::class)
@@ -176,11 +179,12 @@ class DashboardTest extends TestCase
         $admin = $this->createUser(UserRole::Administrativos);
         $this->mockProdutividadeAgregada();
 
-        Projeto::factory()->create([
+        $projetoJunho = Projeto::factory()->create([
             'nome' => 'Projeto Junho',
             'created_at' => '2026-06-10 10:00:00',
             'updated_at' => '2026-06-10 10:00:00',
         ]);
+        $this->createAtividadeConcluida($projetoJunho, '2026-06-10');
 
         Livewire::actingAs($admin)
             ->withQueryParams(['mes' => 'todas'])
@@ -200,16 +204,18 @@ class DashboardTest extends TestCase
         $admin = $this->createUser(UserRole::Administrativos);
         $this->mockProdutividadeAgregada();
 
-        Projeto::factory()->create([
+        $projetoJunho = Projeto::factory()->create([
             'nome' => 'Projeto Junho',
             'created_at' => '2026-06-10 10:00:00',
             'updated_at' => '2026-06-10 10:00:00',
         ]);
-        Projeto::factory()->create([
+        $this->createAtividadeConcluida($projetoJunho, '2026-06-10');
+        $projetoJulho = Projeto::factory()->create([
             'nome' => 'Projeto Julho',
             'created_at' => '2026-07-05 10:00:00',
             'updated_at' => '2026-07-05 10:00:00',
         ]);
+        $this->createAtividadeConcluida($projetoJulho, '2026-07-05');
 
         Livewire::actingAs($admin)
             ->test(Dashboard::class)
@@ -226,11 +232,12 @@ class DashboardTest extends TestCase
         $this->mockProdutividadeAgregada();
 
         foreach (range(1, 16) as $indice) {
-            Projeto::factory()->create([
+            $projeto = Projeto::factory()->create([
                 'nome' => sprintf('Projeto-%02d', $indice),
                 'created_at' => Carbon::parse('2026-08-01 00:00:00')->addHours($indice),
                 'updated_at' => Carbon::parse('2026-08-01 00:00:00')->addHours($indice),
             ]);
+            $this->createAtividadeConcluida($projeto, '2026-08-10');
         }
 
         Livewire::actingAs($admin)
@@ -258,6 +265,7 @@ class DashboardTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'postes_projetados' => 120,
+            'data_conclusao' => '2026-08-04',
         ]);
         $atividade->forceFill(['created_at' => '2026-08-04 10:00:00', 'updated_at' => '2026-08-04 10:00:00'])->save();
 
@@ -280,12 +288,13 @@ class DashboardTest extends TestCase
         $coordenador = Colaborador::factory()->coordenador()->create([
             'nome' => 'Coordenador Dashboard',
         ]);
-        Projeto::factory()->create([
+        $projeto = Projeto::factory()->create([
             'nome' => 'Projeto Com Coord',
             'colaborador_responsavel_id' => $coordenador->id,
             'created_at' => '2026-08-10 10:00:00',
             'updated_at' => '2026-08-10 10:00:00',
         ]);
+        $this->createAtividadeConcluida($projeto, '2026-08-10');
 
         Livewire::actingAs($admin)
             ->test(Dashboard::class)
@@ -391,6 +400,15 @@ class DashboardTest extends TestCase
         $this->partialMock(Colaborador::class, function (MockInterface $mock) use ($linhas): void {
             $mock->shouldReceive('agregarProdutividade')->andReturn($linhas);
         });
+    }
+
+    private function createAtividadeConcluida(Projeto $projeto, string $dataConclusao): void
+    {
+        Atividade::factory()->cad()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => Colaborador::factory()->projetista()->create()->id,
+            'data_conclusao' => $dataConclusao,
+        ]);
     }
 
     private function createUser(UserRole $role): User

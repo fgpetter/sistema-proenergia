@@ -39,6 +39,7 @@ class CreateOrUpdateAtividade
                 'postes_desenhados' => $this->inteiroOuZero($dados['postes_desenhados'] ?? null),
                 'postes_projetados' => $this->inteiroOuZero($dados['postes_projetados'] ?? null),
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
+                'data_conclusao' => ($dados['data_conclusao'] ?? '') !== '' ? $dados['data_conclusao'] : null,
                 'observacoes' => $dados['observacoes'] ?? null,
             ]);
 
@@ -87,6 +88,7 @@ class CreateOrUpdateAtividade
                 'postes_desenhados' => $this->inteiroOuZero($dados['postes_desenhados'] ?? null),
                 'postes_projetados' => $this->inteiroOuZero($dados['postes_projetados'] ?? null),
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
+                'data_conclusao' => ($dados['data_conclusao'] ?? '') !== '' ? $dados['data_conclusao'] : null,
                 'observacoes' => $dados['observacoes'] ?? null,
                 'duracao_minutos' => $this->resolveDuracaoMinutos($atividade, $dados, $user),
             ];

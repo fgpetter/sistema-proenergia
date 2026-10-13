@@ -57,6 +57,7 @@ class ProjetoEditDrawer extends Component
             'atividades.*.tipo_projeto' => ['required', Rule::enum(TipoProjetoAtividade::class)],
             'atividades.*.duracao_horas' => ['nullable', 'integer', 'min:0'],
             'atividades.*.duracao_minutos' => ['nullable', 'integer', 'min:0', 'max:59'],
+            'atividades.*.data_conclusao' => ['nullable', 'date_format:Y-m-d'],
             'atividades.*.observacoes' => ['nullable', 'string'],
         ];
     }
@@ -170,6 +171,9 @@ class ProjetoEditDrawer extends Component
             'tipo_projeto' => $atividadeData['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
             'duracao_horas' => $atividadeData['duracao_horas'] ?? '',
             'duracao_minutos' => $atividadeData['duracao_minutos'] ?? '',
+            'data_conclusao' => ($atividadeData['data_conclusao'] ?? '') !== ''
+                ? $atividadeData['data_conclusao']
+                : null,
             'observacoes' => $atividadeData['observacoes'] ?? '',
         ];
     }
@@ -205,6 +209,7 @@ class ProjetoEditDrawer extends Component
             'postes_projetados' => $atividade->postes_projetados,
             'tipo_projeto' => $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
             ...$this->duracaoFieldsFromMinutos($atividade->duracao_minutos),
+            'data_conclusao' => $atividade->data_conclusao?->format('Y-m-d') ?? '',
             'observacoes' => $atividade->observacoes ?? '',
             '_delete' => false,
         ];
@@ -411,6 +416,7 @@ class ProjetoEditDrawer extends Component
             'tipo_projeto' => TipoProjetoAtividade::Cad->value,
             'duracao_horas' => '',
             'duracao_minutos' => '',
+            'data_conclusao' => '',
             'observacoes' => '',
             '_delete' => false,
         ];
@@ -452,6 +458,7 @@ class ProjetoEditDrawer extends Component
                 "atividades.{$index}.tipo_projeto" => ['required', Rule::enum(TipoProjetoAtividade::class)],
                 "atividades.{$index}.duracao_horas" => ['nullable', 'integer', 'min:0'],
                 "atividades.{$index}.duracao_minutos" => ['nullable', 'integer', 'min:0', 'max:59'],
+                "atividades.{$index}.data_conclusao" => ['nullable', 'date_format:Y-m-d'],
                 "atividades.{$index}.observacoes" => ['nullable', 'string'],
             ]);
 

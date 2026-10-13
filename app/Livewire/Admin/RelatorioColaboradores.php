@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Enums\TipoProjetoAtividade;
+use App\Enums\UserRole;
 use App\Exports\ExportacaoProdutividadeExport;
 use App\Exports\PlanilhaContabilidadeExport;
 use App\Models\Atividade;
@@ -56,16 +57,41 @@ class RelatorioColaboradores extends Component
     #[Computed]
     public function competenciasDisponiveis(): Collection
     {
-        return Projeto::query()
-            ->whereNotNull('created_at')
-            ->orderByDesc('created_at')
-            ->get(['created_at'])
-            ->map(fn (Projeto $projeto): string => $projeto->created_at->format('Y-m'))
+        $competencias = Atividade::query()
+            ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
+            ->whereNull('projetos.deleted_at')
+            ->whereNotNull('atividades.data_conclusao')
+            ->orderByDesc('atividades.data_conclusao')
+            ->get(['atividades.data_conclusao'])
+            ->map(fn (Atividade $atividade): string => $atividade->data_conclusao->format('Y-m'))
             ->unique()
-            ->values()
+            ->values();
+
+        $mesAtual = now()->format('Y-m');
+
+        if (! $competencias->contains($mesAtual)) {
+            $competencias->prepend($mesAtual);
+        }
+
+        return $competencias
             ->mapWithKeys(fn (string $competencia): array => [
                 $competencia => $this->formatarCompetencia($competencia),
             ]);
+    }
+
+    #[Computed]
+    public function atividadesNaoConcluidasCount(): int
+    {
+        $user = auth()->user();
+
+        if ($user === null || $user->role !== UserRole::Projetistas || $user->colaborador === null) {
+            return 0;
+        }
+
+        return Atividade::query()
+            ->where('colaborador_id', $user->colaborador->id)
+            ->whereNull('data_conclusao')
+            ->count();
     }
 
     #[Computed]
@@ -112,13 +138,16 @@ class RelatorioColaboradores extends Component
             'mesAno.date_format' => 'A competência selecionada é inválida.',
         ]);
 
+        $periodo = $this->periodoApuracao();
+
         $calculator = app(BonusColaboradorCalculator::class);
 
         $atividades = app(Atividade::class)->listarAtividadesRelatorio(
             colaboradorId: $this->colaboradorIdEscopo(),
             projetoId: $this->projetoId,
-            mesAno: $this->mesAno,
+            mesAno: $periodo['mesAno'],
             coordenadorId: $this->coordenadorId,
+            limitarAoHoje: $periodo['limitarAoHoje'],
         );
 
         $atividadesCad = $atividades

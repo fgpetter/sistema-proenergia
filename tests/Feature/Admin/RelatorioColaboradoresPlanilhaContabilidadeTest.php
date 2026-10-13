@@ -61,6 +61,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaboradorAtual->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 10,
+            'data_conclusao' => '2026-08-10',
         ]);
 
         Atividade::factory()->create([
@@ -68,6 +69,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaboradorAntigo->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 10,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Livewire::actingAs($admin)
@@ -100,6 +102,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaboradorAgosto->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 10,
+            'data_conclusao' => '2026-08-05',
         ]);
 
         Atividade::factory()->create([
@@ -107,6 +110,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaboradorSetembro->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 10,
+            'data_conclusao' => '2026-09-01',
         ]);
 
         Livewire::actingAs($admin)
@@ -132,6 +136,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 320,
+            'data_conclusao' => '2026-06-30',
             'created_at' => '2026-09-01 10:00:00',
             'updated_at' => '2026-09-01 10:00:00',
         ]);
@@ -160,6 +165,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 50,
+            'data_conclusao' => '2026-08-18',
         ]);
 
         $linhas = app(Colaborador::class)->agregarProdutividade(
@@ -237,6 +243,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaboradorA->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 320,
+            'data_conclusao' => '2026-08-05',
         ]);
 
         Atividade::factory()->create([
@@ -244,6 +251,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaboradorB->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 320,
+            'data_conclusao' => '2026-08-10',
         ]);
 
         Excel::fake();
@@ -284,6 +292,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaborador->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 320,
+            'data_conclusao' => '2026-08-05',
         ]);
 
         $colaborador->delete();
@@ -330,6 +339,76 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
         }
     }
 
+    public function test_competencia_usa_data_conclusao_e_ignora_atividade_sem_conclusao(): void
+    {
+        $coordenador = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->create();
+        $projeto = Projeto::factory()->create([
+            'colaborador_responsavel_id' => $coordenador->id,
+            'created_at' => '2026-05-10 10:00:00',
+            'updated_at' => '2026-05-10 10:00:00',
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'postes_projetados' => 320,
+            'data_conclusao' => '2026-06-30',
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'postes_projetados' => 100,
+            'data_conclusao' => null,
+        ]);
+
+        $junho = app(Colaborador::class)->agregarProdutividade(mesAno: '2026-06');
+        $maio = app(Colaborador::class)->agregarProdutividade(mesAno: '2026-05');
+
+        $this->assertCount(1, $junho);
+        $this->assertSame(320, (int) $junho->first()->total_postes_projeto_cad);
+        $this->assertCount(0, $maio);
+        $this->assertCount(1, app(Colaborador::class)->agregarProdutividade());
+    }
+
+    public function test_alerta_de_pendencias_so_aparece_para_projetista_com_atividade_sem_conclusao(): void
+    {
+        $projetista = Colaborador::factory()->projetista()->create();
+        $projeto = Projeto::factory()->create();
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $projetista->id,
+            'data_conclusao' => null,
+        ]);
+
+        Livewire::actingAs($projetista->user)
+            ->test(RelatorioColaboradores::class)
+            ->set('mesAno', '2026-06')
+            ->assertSee('Você tem 1 atividades não concluidas');
+
+        Atividade::query()->where('colaborador_id', $projetista->id)->update([
+            'data_conclusao' => '2026-06-10',
+        ]);
+
+        Livewire::actingAs($projetista->user)
+            ->test(RelatorioColaboradores::class)
+            ->assertDontSee('Você tem');
+
+        $admin = $this->createUser(UserRole::Administrativos);
+        Atividade::factory()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $projetista->id,
+            'data_conclusao' => null,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(RelatorioColaboradores::class)
+            ->assertDontSee('Você tem');
+    }
+
     public function test_dashboard_performance_colaboradores_sem_mes_mantem_todas_competencias(): void
     {
         $coordenador = Colaborador::factory()->coordenador()->create();
@@ -353,6 +432,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaboradorJunho->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 10,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->create([
@@ -360,6 +440,7 @@ class RelatorioColaboradoresPlanilhaContabilidadeTest extends TestCase
             'colaborador_id' => $colaboradorAgosto->id,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 10,
+            'data_conclusao' => '2026-08-10',
         ]);
 
         $linhas = app(Colaborador::class)->agregarProdutividade();

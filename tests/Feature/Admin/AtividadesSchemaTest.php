@@ -29,6 +29,7 @@ class AtividadesSchemaTest extends TestCase
     public function test_atividades_tem_duracao_minutos_e_nao_tem_intervalo_de_relogio(): void
     {
         $this->assertTrue(Schema::hasColumn('atividades', 'duracao_minutos'));
+        $this->assertTrue(Schema::hasColumn('atividades', 'data_conclusao'));
         $this->assertFalse(Schema::hasColumn('atividades', 'data_hora_inicio'));
         $this->assertFalse(Schema::hasColumn('atividades', 'data_hora_fim'));
     }

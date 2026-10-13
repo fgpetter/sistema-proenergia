@@ -249,8 +249,7 @@
                                                         @enderror
                                                     </div>
 
-                                                    <div class="w-1/2">
-                                                        <div class="grid grid-cols-2 gap-2">
+                                                    <div class="grid grid-cols-3 gap-2">
                                                             <div>
                                                                 <label class="block text-sm font-medium text-default-700 mb-1">H</label>
                                                                 <input
@@ -276,7 +275,17 @@
                                                                     <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                                                                 @enderror
                                                             </div>
-                                                        </div>
+                                                            <div>
+                                                                <label class="block text-sm font-medium text-default-700 mb-1">Data Conclusão</label>
+                                                                <input
+                                                                    wire:model="atividades.{{ $index }}.data_conclusao"
+                                                                    type="date"
+                                                                    class="form-input w-full text-sm @error('atividades.'.$index.'.data_conclusao') border-danger @enderror"
+                                                                >
+                                                                @error('atividades.'.$index.'.data_conclusao')
+                                                                    <p class="mt-1 text-xs text-danger">{{ $message }}</p>
+                                                                @enderror
+                                                            </div>
                                                     </div>
 
                                                     <div>

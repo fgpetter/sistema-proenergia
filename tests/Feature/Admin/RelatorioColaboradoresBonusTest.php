@@ -48,6 +48,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 140,
             'postes_projetados' => 250,
             'duracao_minutos' => 120,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->create([
@@ -57,6 +58,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 140,
             'postes_projetados' => 250,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -104,6 +106,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 280,
             'postes_projetados' => 500,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->create([
@@ -113,6 +116,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 280,
             'postes_projetados' => 300,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-07-05',
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -152,6 +156,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 100,
             'postes_projetados' => 500,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->create([
@@ -161,6 +166,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 50,
             'postes_projetados' => 300,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -211,6 +217,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 280,
             'postes_projetados' => 500,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->create([
@@ -220,6 +227,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 280,
             'postes_projetados' => 300,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -261,6 +269,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 100,
             'postes_projetados' => 2000,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -299,6 +308,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 100,
             'postes_projetados' => 500,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $this->mockProdutividadeAgregada($colaborador, [
@@ -337,6 +347,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 200,
             'postes_projetados' => 400,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->create([
@@ -346,6 +357,7 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'postes_desenhados' => 50,
             'postes_projetados' => 230,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $agregado = app(Colaborador::class)
@@ -382,11 +394,13 @@ class RelatorioColaboradoresBonusTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'duracao_minutos' => 90,
+            'data_conclusao' => '2026-06-10',
         ]);
         Atividade::factory()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'duracao_minutos' => 30,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $linhas = app(Colaborador::class)->agregarProdutividade(

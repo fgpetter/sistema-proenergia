@@ -106,6 +106,7 @@ class Colaborador extends Model
             ->whereNull('atividades.deleted_at')
             ->whereNull('projetos.deleted_at')
             ->whereIn('atividades.tipo_projeto', [TipoProjetoAtividade::Cad->value, TipoProjetoAtividade::Proj->value])
+            ->whereNotNull('atividades.data_conclusao')
             ->tap(fn (Builder $query) => $this->aplicarCompetenciaDashboard($query, $mesAno))
             ->groupBy('colaboradores.id', 'colaboradores.nome')
             ->havingRaw('COALESCE(SUM(atividades.postes_projetados), 0) > 0')
@@ -133,7 +134,9 @@ class Colaborador extends Model
         $query->when($mesAno, function (Builder $query) use ($mesAno): void {
             $inicio = Carbon::createFromFormat('Y-m', $mesAno)->startOfMonth();
 
-            $query->whereBetween('projetos.created_at', [$inicio, $inicio->copy()->endOfMonth()]);
+            $query
+                ->where('atividades.data_conclusao', '>=', $inicio->toDateString())
+                ->where('atividades.data_conclusao', '<', $inicio->copy()->addMonth()->startOfMonth()->toDateString());
         });
     }
 }

@@ -1,5 +1,10 @@
 <div>
     <div class="card">
+        @if ($this->atividadesNaoConcluidasCount > 0)
+            <div class="mx-4 mt-4 rounded bg-warning/10 px-4 py-3 text-sm text-warning" role="alert">
+                Você tem {{ $this->atividadesNaoConcluidasCount }} atividades não concluidas
+            </div>
+        @endif
         <div class="card-header flex flex-wrap items-center justify-between gap-3">
             <h6 class="card-title mb-0">Relatório de Produtividade de Colaboradores</h6>
             <div class="flex flex-wrap items-center gap-2">

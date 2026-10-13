@@ -41,6 +41,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 320,
             'duracao_minutos' => 150,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $this->mockAgregarParaTela($colaborador, [
@@ -131,6 +132,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 50,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->create([
@@ -140,6 +142,17 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 999,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $projetoJulho->id,
+            'colaborador_id' => $colaborador->id,
+            'nome' => 'Atividade Concluida em Junho',
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'postes_projetados' => 30,
+            'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-30',
         ]);
 
         Atividade::factory()->create([
@@ -149,13 +162,14 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 80,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-07-05',
         ]);
 
         $this->mockAgregarParaTela($colaborador, [
-            'total_projetos' => 1,
-            'total_postes_projeto_cad' => 50,
+            'total_projetos' => 2,
+            'total_postes_projeto_cad' => 80,
             'total_postes_projetados_proj' => 0,
-            'total_segundos' => 3600,
+            'total_segundos' => 7200,
         ]);
 
         Livewire::actingAs($user)
@@ -169,8 +183,10 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             mesAno: '2026-06',
         );
 
-        $this->assertCount(1, $atividades);
+        $this->assertCount(2, $atividades);
         $this->assertSame('Atividade Propria', $atividades->first()->nome);
+        $this->assertTrue($atividades->contains('nome', 'Atividade Concluida em Junho'));
+        $this->assertFalse($atividades->contains('nome', 'Atividade Outra Competencia'));
     }
 
     public function test_exportacao_inclui_desenhados_no_detalhe_e_separa_metas(): void
@@ -195,6 +211,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'postes_desenhados' => 200,
             'postes_projetados' => 400,
             'duracao_minutos' => 120,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->create([
@@ -205,6 +222,7 @@ class RelatorioColaboradoresExportacaoTest extends TestCase
             'postes_desenhados' => 50,
             'postes_projetados' => 230,
             'duracao_minutos' => 60,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $this->mockAgregarParaTela($colaborador, [

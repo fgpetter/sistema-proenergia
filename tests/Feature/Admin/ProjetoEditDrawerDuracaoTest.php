@@ -71,6 +71,77 @@ class ProjetoEditDrawerDuracaoTest extends TestCase
         $this->assertSame(90, $atividade->fresh()->duracao_minutos);
     }
 
+    public function test_data_conclusao_e_salva_e_carregada_ao_abrir_a_tarefa(): void
+    {
+        [, $projeto, $colaborador] = $this->criarCenario();
+        $atividade = $this->criarAtividade($projeto, $colaborador, duracaoMinutos: 30);
+
+        Livewire::actingAs($colaborador->user)
+            ->test(ProjetoEditDrawer::class)
+            ->call('open', $projeto->id)
+            ->assertSee('Data Conclusão')
+            ->assertSet('atividades.0.data_conclusao', '')
+            ->set('atividades.0.data_conclusao', '2026-08-15')
+            ->call('saveAtividade', 0)
+            ->assertHasNoErrors();
+
+        $this->assertSame('2026-08-15', $atividade->fresh()->data_conclusao->format('Y-m-d'));
+
+        Livewire::actingAs($colaborador->user)
+            ->test(ProjetoEditDrawer::class)
+            ->call('open', $projeto->id)
+            ->assertSet('atividades.0.data_conclusao', '2026-08-15');
+    }
+
+    public function test_data_conclusao_e_validada_ao_salvar_a_tarefa(): void
+    {
+        [, $projeto, $colaborador] = $this->criarCenario();
+        $atividade = $this->criarAtividade($projeto, $colaborador);
+
+        Livewire::actingAs($colaborador->user)
+            ->test(ProjetoEditDrawer::class)
+            ->call('open', $projeto->id)
+            ->set('atividades.0.data_conclusao', '15/08/2026')
+            ->call('saveAtividade', 0)
+            ->assertHasErrors(['atividades.0.data_conclusao']);
+
+        $this->assertNull($atividade->fresh()->data_conclusao);
+    }
+
+    public function test_admin_salva_data_conclusao_de_atividade_nova(): void
+    {
+        [$admin, $projeto, $colaborador] = $this->criarCenario();
+
+        Livewire::actingAs($admin)
+            ->test(ProjetoEditDrawer::class)
+            ->call('open', $projeto->id)
+            ->call('addAtividade')
+            ->set('atividades.0.nome', 'Atividade concluída')
+            ->set('atividades.0.colaborador_id', $colaborador->id)
+            ->set('atividades.0.data_conclusao', '2026-08-16')
+            ->call('saveAtividade', 0)
+            ->assertHasNoErrors();
+
+        $atividade = Atividade::query()->where('projeto_id', $projeto->id)->firstOrFail();
+
+        $this->assertSame('2026-08-16', $atividade->data_conclusao->format('Y-m-d'));
+    }
+
+    public function test_salvamento_geral_do_projeto_persiste_data_conclusao(): void
+    {
+        [$admin, $projeto, $colaborador] = $this->criarCenario();
+        $atividade = $this->criarAtividade($projeto, $colaborador);
+
+        Livewire::actingAs($admin)
+            ->test(ProjetoEditDrawer::class)
+            ->call('open', $projeto->id)
+            ->set('atividades.0.data_conclusao', '2026-08-17')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('2026-08-17', $atividade->fresh()->data_conclusao->format('Y-m-d'));
+    }
+
     public function test_colaborador_pode_alterar_duracao_depois_do_primeiro_lancamento(): void
     {
         [, $projeto, $colaborador] = $this->criarCenario();

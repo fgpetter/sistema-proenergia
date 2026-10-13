@@ -61,11 +61,13 @@ class Dashboard extends Component
     {
         $atual = now()->format('Y-m');
 
-        $competencias = Projeto::query()
-            ->whereNotNull('created_at')
-            ->orderByDesc('created_at')
-            ->get(['created_at'])
-            ->map(fn (Projeto $projeto): string => $projeto->created_at->format('Y-m'))
+        $competencias = Atividade::query()
+            ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
+            ->whereNull('projetos.deleted_at')
+            ->whereNotNull('atividades.data_conclusao')
+            ->orderByDesc('atividades.data_conclusao')
+            ->get(['atividades.data_conclusao'])
+            ->map(fn (Atividade $atividade): string => $atividade->data_conclusao->format('Y-m'))
             ->unique()
             ->values();
 

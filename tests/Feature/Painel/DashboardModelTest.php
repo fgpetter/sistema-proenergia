@@ -78,6 +78,40 @@ class DashboardModelTest extends TestCase
         );
     }
 
+    public function test_dashboard_competencia_usa_data_conclusao_e_exclui_pendentes(): void
+    {
+        $colaborador = Colaborador::factory()->create(['nome' => 'Ana Conclusão']);
+        $projeto = Projeto::factory()->create([
+            'nome' => 'Projeto Criado em Maio',
+            'created_at' => '2026-05-10 10:00:00',
+            'updated_at' => '2026-05-10 10:00:00',
+        ]);
+
+        Atividade::factory()->cad()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'extensao_projeto' => 75,
+            'postes_projetados' => 320,
+            'data_conclusao' => '2026-06-30',
+        ]);
+
+        Atividade::factory()->cad()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'extensao_projeto' => 100,
+            'postes_projetados' => 100,
+            'data_conclusao' => null,
+        ]);
+
+        $totaisJunho = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
+
+        $this->assertSame(1, $totaisJunho->totalProjetos);
+        $this->assertSame(75, $totaisJunho->totalExtensaoProjeto);
+        $this->assertSame(['Projeto Criado em Maio'], app(Projeto::class)->estatisticasDashboard('2026-06')->pluck('nome')->all());
+        $this->assertSame(['Ana Conclusão'], app(Colaborador::class)->producaoDashboard('2026-06')->pluck('nome')->all());
+        $this->assertSame(0, app(Projeto::class)->totaisGlobaisDashboard('2026-05')->totalProjetos);
+    }
+
     public function test_mes_sem_projeto_retorna_totais_zerados_e_builder_vazio(): void
     {
         $this->criarProjetoComAtividadeCad(
@@ -117,6 +151,7 @@ class DashboardModelTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $projetista->id,
             'postes_projetados' => 10,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $linha = app(Projeto::class)->estatisticasDashboard('2026-06')->first();
@@ -165,6 +200,7 @@ class DashboardModelTest extends TestCase
             'extensao_projeto' => 800,
             'postes_projetados' => 80,
             'duracao_minutos' => 600,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         Atividade::factory()->proj()->create([
@@ -173,6 +209,7 @@ class DashboardModelTest extends TestCase
             'extensao_projeto' => 400,
             'postes_projetados' => 40,
             'duracao_minutos' => 300,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $totais = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
@@ -198,6 +235,7 @@ class DashboardModelTest extends TestCase
             'extensao_projeto' => 800,
             'postes_projetados' => 80,
             'duracao_minutos' => 600,
+            'data_conclusao' => '2026-06-10',
         ]);
         Atividade::factory()->proj()->create([
             'projeto_id' => $misto->id,
@@ -205,6 +243,7 @@ class DashboardModelTest extends TestCase
             'extensao_projeto' => 400,
             'postes_projetados' => 40,
             'duracao_minutos' => 300,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $soProj = Projeto::factory()->create([
@@ -218,6 +257,7 @@ class DashboardModelTest extends TestCase
             'extensao_projeto' => 400,
             'postes_projetados' => 40,
             'duracao_minutos' => 300,
+            'data_conclusao' => '2026-06-11',
         ]);
 
         $soCad = Projeto::factory()->create([
@@ -231,6 +271,7 @@ class DashboardModelTest extends TestCase
             'extensao_projeto' => 400,
             'postes_projetados' => 40,
             'duracao_minutos' => 300,
+            'data_conclusao' => '2026-06-12',
         ]);
 
         $totais = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
@@ -260,6 +301,7 @@ class DashboardModelTest extends TestCase
             'extensao_projeto' => 800,
             'postes_projetados' => 80,
             'duracao_minutos' => 600,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $totais = app(Projeto::class)->totaisGlobaisDashboard('2026-06');
@@ -283,26 +325,31 @@ class DashboardModelTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $bruno->id,
             'postes_projetados' => 320,
+            'data_conclusao' => '2026-06-10',
         ]);
         Atividade::factory()->cad()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $ana->id,
             'postes_projetados' => 300,
+            'data_conclusao' => '2026-06-10',
         ]);
         Atividade::factory()->cad()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $carla->id,
             'postes_projetados' => 299,
+            'data_conclusao' => '2026-06-10',
         ]);
         Atividade::factory()->proj()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $diego->id,
             'postes_projetados' => 500,
+            'data_conclusao' => '2026-06-10',
         ]);
         Atividade::factory()->cad()->create([
             'projeto_id' => $projeto->id,
             'colaborador_id' => $diego->id,
             'postes_projetados' => 0,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $projetoJulho = Projeto::factory()->create([
@@ -313,6 +360,7 @@ class DashboardModelTest extends TestCase
             'projeto_id' => $projetoJulho->id,
             'colaborador_id' => $bruno->id,
             'postes_projetados' => 100,
+            'data_conclusao' => '2026-07-05',
         ]);
 
         $ranking = app(Colaborador::class)->producaoDashboard('2026-06');
@@ -333,6 +381,7 @@ class DashboardModelTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'postes_projetados' => 320,
+            'data_conclusao' => '2026-06-10',
         ]);
 
         $ranking = app(Colaborador::class)->producaoDashboard(null);
@@ -356,6 +405,7 @@ class DashboardModelTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'postes_projetados' => 80,
+            'data_conclusao' => '2026-08-03',
         ]);
         $semana1->forceFill(['created_at' => '2026-08-03 10:00:00', 'updated_at' => '2026-08-03 10:00:00'])->save();
 
@@ -363,6 +413,7 @@ class DashboardModelTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'postes_projetados' => 50,
+            'data_conclusao' => '2026-08-10',
         ]);
         $semana2->forceFill(['created_at' => '2026-08-10 10:00:00', 'updated_at' => '2026-08-10 10:00:00'])->save();
 
@@ -370,6 +421,7 @@ class DashboardModelTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'postes_projetados' => 200,
+            'data_conclusao' => '2026-08-05',
         ]);
         $atividadeProj->forceFill(['created_at' => '2026-08-05 10:00:00', 'updated_at' => '2026-08-05 10:00:00'])->save();
 
@@ -381,7 +433,7 @@ class DashboardModelTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_ranking_e_evolucao_divergem_quando_datas_diferem(): void
+    public function test_ranking_e_evolucao_usam_data_de_conclusao(): void
     {
         Carbon::setTestNow('2026-08-20 12:00:00');
 
@@ -395,15 +447,16 @@ class DashboardModelTest extends TestCase
             'projeto_id' => $projeto->id,
             'colaborador_id' => $colaborador->id,
             'postes_projetados' => 90,
+            'data_conclusao' => '2026-08-04',
         ]);
         $atividade->forceFill(['created_at' => '2026-08-04 10:00:00', 'updated_at' => '2026-08-04 10:00:00'])->save();
 
         $rankingJulho = app(Colaborador::class)->producaoDashboard('2026-07');
-        $this->assertSame(['Ana'], $rankingJulho->pluck('nome')->all());
-        $this->assertSame([90], $rankingJulho->pluck('total')->all());
+        $this->assertTrue($rankingJulho->isEmpty());
 
         $rankingAgosto = app(Colaborador::class)->producaoDashboard('2026-08');
-        $this->assertTrue($rankingAgosto->isEmpty());
+        $this->assertSame(['Ana'], $rankingAgosto->pluck('nome')->all());
+        $this->assertSame([90], $rankingAgosto->pluck('total')->all());
 
         $evolucao = app(Atividade::class)->evolucaoSemanalPostes();
         $this->assertSame([90, 90, 90, 90, 90], $evolucao->pluck('total')->all());
@@ -434,6 +487,7 @@ class DashboardModelTest extends TestCase
             'postes_projetados' => $postesProjetados,
             'duracao_minutos' => $duracaoMinutos,
             'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'data_conclusao' => Carbon::parse($createdAt)->toDateString(),
         ]);
     }
 }

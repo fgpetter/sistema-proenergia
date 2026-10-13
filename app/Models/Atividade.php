@@ -29,6 +29,7 @@ class Atividade extends Model
         'postes_projetados',
         'tipo_projeto',
         'duracao_minutos',
+        'data_conclusao',
         'observacoes',
     ];
 
@@ -41,6 +42,7 @@ class Atividade extends Model
             'postes_projetados' => 'integer',
             'tipo_projeto' => TipoProjetoAtividade::class,
             'duracao_minutos' => 'integer',
+            'data_conclusao' => 'date',
         ];
     }
 
@@ -70,18 +72,20 @@ class Atividade extends Model
     public function evolucaoSemanalPostes(): Collection
     {
         $inicio = now()->copy()->startOfMonth();
-        $fim = now()->copy()->endOfMonth();
+        $fimExclusivo = $inicio->copy()->addMonth()->startOfMonth()->toDateString();
         $totalSemanas = (int) intdiv($inicio->daysInMonth - 1, 7) + 1;
         $totaisPorBloco = array_fill(1, $totalSemanas, 0);
 
         $linhas = Atividade::query()
             ->whereIn('atividades.tipo_projeto', [TipoProjetoAtividade::Cad->value, TipoProjetoAtividade::Proj->value])
-            ->whereBetween('atividades.created_at', [$inicio, $fim])
+            ->whereNotNull('atividades.data_conclusao')
+            ->where('atividades.data_conclusao', '>=', $inicio->toDateString())
+            ->where('atividades.data_conclusao', '<', $fimExclusivo)
             ->toBase()
-            ->get(['atividades.created_at', 'atividades.postes_projetados']);
+            ->get(['atividades.data_conclusao', 'atividades.postes_projetados']);
 
         foreach ($linhas as $linha) {
-            $bloco = (int) intdiv(Carbon::parse($linha->created_at)->day - 1, 7) + 1;
+            $bloco = (int) intdiv(Carbon::parse($linha->data_conclusao)->day - 1, 7) + 1;
             $totaisPorBloco[$bloco] += (int) $linha->postes_projetados;
         }
 
@@ -134,6 +138,7 @@ class Atividade extends Model
         bool $limitarAoHoje = false,
     ): void {
         $query
+            ->whereNotNull('atividades.data_conclusao')
             ->when($colaboradorId !== null, function (Builder $query) use ($colaboradorId, $colaboradorColumn): void {
                 $query->where($colaboradorColumn, $colaboradorId);
             })
@@ -142,9 +147,13 @@ class Atividade extends Model
             })
             ->when($mesAno, function (Builder $query) use ($mesAno, $limitarAoHoje): void {
                 $inicio = Carbon::createFromFormat('Y-m', $mesAno)->startOfMonth();
-                $fim = $limitarAoHoje ? now()->endOfDay() : $inicio->copy()->endOfMonth();
+                $fimExclusivo = $limitarAoHoje
+                    ? now()->copy()->addDay()->startOfDay()->toDateString()
+                    : $inicio->copy()->addMonth()->startOfMonth()->toDateString();
 
-                $query->whereBetween('projetos.created_at', [$inicio, $fim]);
+                $query
+                    ->where('atividades.data_conclusao', '>=', $inicio->toDateString())
+                    ->where('atividades.data_conclusao', '<', $fimExclusivo);
             })
             ->when($coordenadorId, function (Builder $query) use ($coordenadorId): void {
                 $query->where('projetos.colaborador_responsavel_id', $coordenadorId);

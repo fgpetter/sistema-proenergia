@@ -107,6 +107,7 @@ class ExclusaoSoftDeleteTest extends TestCase
             'nome' => 'Atividade Joao',
             'tipo_projeto' => TipoProjetoAtividade::Cad,
             'postes_projetados' => 200,
+            'data_conclusao' => now()->toDateString(),
         ]);
 
         Livewire::actingAs($admin)

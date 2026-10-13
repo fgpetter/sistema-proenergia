@@ -112,6 +112,7 @@ class DashboardConferenciaSeeder extends Seeder
                 'nome' => 'Atividade CAD '.$projetista->nome,
                 'extensao_projeto' => $postesProjetados * 10,
                 'duracao_minutos' => (int) round($postesProjetados * 1.5),
+                'data_conclusao' => $atividadeCreatedAt->toDateString(),
             ]);
 
         $atividade->forceFill([
