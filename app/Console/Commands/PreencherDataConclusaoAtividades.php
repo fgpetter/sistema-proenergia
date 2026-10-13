@@ -4,8 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Atividade;
 use Carbon\Carbon;
-use Illuminate\Console\Attributes\Description;
-use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,10 +11,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
-#[Signature('atividades:preencher-data-conclusao {data_corte=2026-10-05 : Data limite no formato AAAA-MM-DD; datas anteriores serão consideradas} {--dry-run : Exibe quantas atividades seriam atualizadas sem gravar alterações}')]
-#[Description('Preenche data_conclusao usando created_at e updated_at anteriores à data de corte')]
 class PreencherDataConclusaoAtividades extends Command
 {
+    /**
+     * @var string
+     */
+    protected $signature = 'atividades:preencher-data-conclusao {data_corte=2026-10-05 : Data limite no formato AAAA-MM-DD; datas anteriores serão consideradas} {--dry-run : Exibe quantas atividades seriam atualizadas sem gravar alterações}';
+
+    /**
+     * @var string
+     */
+    protected $description = 'Preenche data_conclusao usando created_at e updated_at anteriores à data de corte';
+
     public function handle(): int
     {
         $dataCorteTexto = (string) $this->argument('data_corte');
