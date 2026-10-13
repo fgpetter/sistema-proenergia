@@ -107,6 +107,7 @@ class Colaborador extends Model
             ->whereNull('projetos.deleted_at')
             ->whereIn('atividades.tipo_projeto', [TipoProjetoAtividade::Cad->value, TipoProjetoAtividade::Proj->value])
             ->whereNotNull('atividades.data_conclusao')
+            ->whereNull('atividades.em_revisao')
             ->tap(fn (Builder $query) => $this->aplicarCompetenciaDashboard($query, $mesAno))
             ->groupBy('colaboradores.id', 'colaboradores.nome')
             ->havingRaw('COALESCE(SUM(atividades.postes_projetados), 0) > 0')

@@ -30,6 +30,7 @@ class Atividade extends Model
         'tipo_projeto',
         'duracao_minutos',
         'data_conclusao',
+        'em_revisao',
         'observacoes',
     ];
 
@@ -43,6 +44,7 @@ class Atividade extends Model
             'tipo_projeto' => TipoProjetoAtividade::class,
             'duracao_minutos' => 'integer',
             'data_conclusao' => 'date',
+            'em_revisao' => 'datetime',
         ];
     }
 
@@ -79,6 +81,7 @@ class Atividade extends Model
         $linhas = Atividade::query()
             ->whereIn('atividades.tipo_projeto', [TipoProjetoAtividade::Cad->value, TipoProjetoAtividade::Proj->value])
             ->whereNotNull('atividades.data_conclusao')
+            ->whereNull('atividades.em_revisao')
             ->where('atividades.data_conclusao', '>=', $inicio->toDateString())
             ->where('atividades.data_conclusao', '<', $fimExclusivo)
             ->toBase()
@@ -139,6 +142,7 @@ class Atividade extends Model
     ): void {
         $query
             ->whereNotNull('atividades.data_conclusao')
+            ->whereNull('atividades.em_revisao')
             ->when($colaboradorId !== null, function (Builder $query) use ($colaboradorId, $colaboradorColumn): void {
                 $query->where($colaboradorColumn, $colaboradorId);
             })

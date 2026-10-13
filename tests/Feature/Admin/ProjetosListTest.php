@@ -212,6 +212,125 @@ class ProjetosListTest extends TestCase
             ->assertDontSee($projetoAlheio->nome);
     }
 
+    public function test_filtro_status_todos_mostra_todos_os_projetos(): void
+    {
+        [$admin, $pendente, $emRevisao] = $this->criarProjetosComStatus();
+
+        Livewire::actingAs($admin)
+            ->test(ProjetosList::class)
+            ->assertSet('status', 'todos')
+            ->assertSee($pendente->nome)
+            ->assertSee($emRevisao->nome);
+    }
+
+    public function test_filtro_status_nao_concluido_mostra_projetos_com_atividade_sem_data_conclusao(): void
+    {
+        [$admin, $pendente, $emRevisao] = $this->criarProjetosComStatus();
+
+        Livewire::actingAs($admin)
+            ->test(ProjetosList::class)
+            ->set('status', 'nao_concluido')
+            ->assertSee($pendente->nome)
+            ->assertDontSee($emRevisao->nome);
+    }
+
+    public function test_filtro_status_em_revisao_mostra_projetos_com_atividade_em_revisao(): void
+    {
+        [$admin, $pendente, $emRevisao] = $this->criarProjetosComStatus();
+
+        Livewire::actingAs($admin)
+            ->test(ProjetosList::class)
+            ->set('status', 'em_revisao')
+            ->assertSee($emRevisao->nome)
+            ->assertDontSee($pendente->nome);
+    }
+
+    public function test_filtro_status_ignora_atividade_excluida(): void
+    {
+        [$admin, $pendente, $emRevisao] = $this->criarProjetosComStatus();
+
+        Atividade::factory()->create([
+            'projeto_id' => $emRevisao->id,
+            'colaborador_id' => Colaborador::factory()->projetista()->create()->id,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'data_conclusao' => null,
+        ])->delete();
+
+        Livewire::actingAs($admin)
+            ->test(ProjetosList::class)
+            ->set('status', 'nao_concluido')
+            ->assertDontSee($emRevisao->nome);
+    }
+
+    public function test_filtro_status_combina_com_responsavel(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $coordenadorA = Colaborador::factory()->coordenador()->create();
+        $coordenadorB = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->projetista()->create();
+
+        $projetoA = Projeto::factory()->create([
+            'nome' => 'Projeto Revisao Coord A',
+            'colaborador_responsavel_id' => $coordenadorA->id,
+        ]);
+        $projetoB = Projeto::factory()->create([
+            'nome' => 'Projeto Revisao Coord B',
+            'colaborador_responsavel_id' => $coordenadorB->id,
+        ]);
+
+        foreach ([$projetoA, $projetoB] as $projeto) {
+            Atividade::factory()->create([
+                'projeto_id' => $projeto->id,
+                'colaborador_id' => $colaborador->id,
+                'tipo_projeto' => TipoProjetoAtividade::Cad,
+                'data_conclusao' => '2026-06-10',
+                'em_revisao' => now(),
+            ]);
+        }
+
+        Livewire::actingAs($admin)
+            ->test(ProjetosList::class)
+            ->set('status', 'em_revisao')
+            ->set('responsavelId', $coordenadorA->id)
+            ->assertSee($projetoA->nome)
+            ->assertDontSee($projetoB->nome);
+    }
+
+    /**
+     * @return array{0: User, 1: Projeto, 2: Projeto}
+     */
+    private function criarProjetosComStatus(): array
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $coordenador = Colaborador::factory()->coordenador()->create();
+        $colaborador = Colaborador::factory()->projetista()->create();
+
+        $pendente = Projeto::factory()->create([
+            'nome' => 'Projeto Pendente',
+            'colaborador_responsavel_id' => $coordenador->id,
+        ]);
+        $emRevisao = Projeto::factory()->create([
+            'nome' => 'Projeto Em Revisao',
+            'colaborador_responsavel_id' => $coordenador->id,
+        ]);
+
+        Atividade::factory()->create([
+            'projeto_id' => $pendente->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'data_conclusao' => null,
+        ]);
+        Atividade::factory()->create([
+            'projeto_id' => $emRevisao->id,
+            'colaborador_id' => $colaborador->id,
+            'tipo_projeto' => TipoProjetoAtividade::Cad,
+            'data_conclusao' => '2026-06-10',
+            'em_revisao' => now(),
+        ]);
+
+        return [$admin, $pendente, $emRevisao];
+    }
+
     private function createUser(UserRole $role): User
     {
         return User::create([

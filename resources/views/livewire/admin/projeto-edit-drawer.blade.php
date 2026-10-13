@@ -301,6 +301,24 @@
                                                         @enderror
                                                     </div>
 
+                                                    @if (auth()->user()?->can('revisar', App\Models\Atividade::class))
+                                                        <div class="flex items-start gap-2">
+                                                            <input
+                                                                id="em-revisao-{{ $index }}"
+                                                                wire:model="atividades.{{ $index }}.em_revisao"
+                                                                type="checkbox"
+                                                                class="form-checkbox mt-1"
+                                                            >
+                                                            <div>
+                                                                <label for="em-revisao-{{ $index }}" class="block text-sm font-medium text-default-700">Em revisão</label>
+                                                                <p class="text-xs text-default-600">Enquanto estiver em revisão, os dados desta atividade não entram nas métricas.</p>
+                                                                @if ($atividadeModel?->em_revisao)
+                                                                    <p class="text-xs text-warning">Em revisão desde {{ $atividadeModel->em_revisao->format('d/m/Y H:i') }}</p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
                                                     <!-- Totais (Read-only) -->
                                                     <div class="bg-primary/5 border border-primary/20 rounded p-2 mt-2">
                                                         <div class="grid grid-cols-2 gap-2">

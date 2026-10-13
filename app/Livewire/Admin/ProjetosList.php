@@ -28,6 +28,9 @@ class ProjetosList extends Component
     #[Url(as: 'colaborador')]
     public ?int $colaboradorId = null;
 
+    #[Url(as: 'status')]
+    public string $status = 'todos';
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -39,6 +42,11 @@ class ProjetosList extends Component
     }
 
     public function updatedColaboradorId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatus(): void
     {
         $this->resetPage();
     }
@@ -90,6 +98,14 @@ class ProjetosList extends Component
                 'atividades',
                 fn ($q) => $q->where('colaborador_id', $this->colaboradorId)
             );
+        }
+
+        if ($this->status === 'nao_concluido') {
+            $query->whereHas('atividades', fn ($q) => $q->whereNull('data_conclusao'));
+        }
+
+        if ($this->status === 'em_revisao') {
+            $query->whereHas('atividades', fn ($q) => $q->whereNotNull('em_revisao'));
         }
 
         $user = auth()->user();

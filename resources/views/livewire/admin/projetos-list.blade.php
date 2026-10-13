@@ -40,6 +40,14 @@
                         @endforeach
                     </select>
                 </div>
+
+                <div class="relative md:w-56">
+                    <select wire:model.live="status" class="form-input form-input-sm">
+                        <option value="todos">Status: todos</option>
+                        <option value="nao_concluido">Não concluído</option>
+                        <option value="em_revisao">Em revisão</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div class="flex flex-col">

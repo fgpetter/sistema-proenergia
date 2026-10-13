@@ -8,6 +8,7 @@ use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\LogAtividade;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -40,6 +41,7 @@ class CreateOrUpdateAtividade
                 'postes_projetados' => $this->inteiroOuZero($dados['postes_projetados'] ?? null),
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
                 'data_conclusao' => ($dados['data_conclusao'] ?? '') !== '' ? $dados['data_conclusao'] : null,
+                'em_revisao' => $this->resolveEmRevisao(null, $dados, $user),
                 'observacoes' => $dados['observacoes'] ?? null,
             ]);
 
@@ -89,6 +91,7 @@ class CreateOrUpdateAtividade
                 'postes_projetados' => $this->inteiroOuZero($dados['postes_projetados'] ?? null),
                 'tipo_projeto' => $dados['tipo_projeto'] ?? TipoProjetoAtividade::Cad->value,
                 'data_conclusao' => ($dados['data_conclusao'] ?? '') !== '' ? $dados['data_conclusao'] : null,
+                'em_revisao' => $this->resolveEmRevisao($atividade->em_revisao, $dados, $user),
                 'observacoes' => $dados['observacoes'] ?? null,
                 'duracao_minutos' => $this->resolveDuracaoMinutos($atividade, $dados, $user),
             ];
@@ -117,6 +120,24 @@ class CreateOrUpdateAtividade
             'item' => $item,
             'valor' => $valor,
         ]);
+    }
+
+    /**
+     * Somente Administrador ou Coordenador alteram a revisão; os demais preservam o valor atual.
+     *
+     * @param  array<string, mixed>  $dados
+     */
+    private function resolveEmRevisao(?CarbonInterface $emRevisaoAtual, array $dados, User $user): ?CarbonInterface
+    {
+        if (! $user->can('revisar', Atividade::class)) {
+            return $emRevisaoAtual;
+        }
+
+        if (! filter_var($dados['em_revisao'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            return null;
+        }
+
+        return $emRevisaoAtual ?? now();
     }
 
     /**

@@ -44,6 +44,11 @@ class AtividadePolicy
         return $atividade->colaborador_id === $user->colaborador?->id;
     }
 
+    public function revisar(User $user): bool
+    {
+        return $user->isAdminOrSuperAdmin() || $user->isCoordenador();
+    }
+
     public function restore(User $user, Atividade $atividade): bool
     {
         return false;

@@ -174,6 +174,7 @@ class ProjetoEditDrawer extends Component
             'data_conclusao' => ($atividadeData['data_conclusao'] ?? '') !== ''
                 ? $atividadeData['data_conclusao']
                 : null,
+            'em_revisao' => (bool) ($atividadeData['em_revisao'] ?? false),
             'observacoes' => $atividadeData['observacoes'] ?? '',
         ];
     }
@@ -210,6 +211,7 @@ class ProjetoEditDrawer extends Component
             'tipo_projeto' => $atividade->tipo_projeto?->value ?? TipoProjetoAtividade::Cad->value,
             ...$this->duracaoFieldsFromMinutos($atividade->duracao_minutos),
             'data_conclusao' => $atividade->data_conclusao?->format('Y-m-d') ?? '',
+            'em_revisao' => $atividade->em_revisao !== null,
             'observacoes' => $atividade->observacoes ?? '',
             '_delete' => false,
         ];
@@ -417,6 +419,7 @@ class ProjetoEditDrawer extends Component
             'duracao_horas' => '',
             'duracao_minutos' => '',
             'data_conclusao' => '',
+            'em_revisao' => false,
             'observacoes' => '',
             '_delete' => false,
         ];

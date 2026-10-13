@@ -65,6 +65,7 @@ class Projeto extends Model
             ->whereNull('projetos.deleted_at')
             ->where('atividades.tipo_projeto', TipoProjetoAtividade::Cad->value)
             ->whereNotNull('atividades.data_conclusao')
+            ->whereNull('atividades.em_revisao')
             ->tap(fn (Builder $query) => $this->aplicarCompetenciaDashboard($query, $mesAno))
             ->selectRaw('COALESCE(SUM(atividades.extensao_projeto), 0) as total_extensao_projeto')
             ->selectRaw('COALESCE(SUM(atividades.postes_projetados), 0) as total_postes_projetados')
@@ -76,6 +77,7 @@ class Projeto extends Model
                 $query
                     ->where('tipo_projeto', TipoProjetoAtividade::Cad->value)
                     ->whereNotNull('data_conclusao')
+                    ->whereNull('em_revisao')
                     ->when($mesAno, function (Builder $query) use ($mesAno): void {
                         $inicio = Carbon::createFromFormat('Y-m', $mesAno)->startOfMonth();
 
@@ -111,10 +113,12 @@ class Projeto extends Model
             ->leftJoin('atividades', function ($join): void {
                 $join->on('atividades.projeto_id', '=', 'projetos.id')
                     ->whereNull('atividades.deleted_at')
-                    ->whereNotNull('atividades.data_conclusao');
+                    ->whereNotNull('atividades.data_conclusao')
+                    ->whereNull('atividades.em_revisao');
             })
             ->leftJoin('colaboradores', 'colaboradores.id', '=', 'projetos.colaborador_responsavel_id')
             ->whereNotNull('atividades.data_conclusao')
+            ->whereNull('atividades.em_revisao')
             ->tap(fn (Builder $query) => $this->aplicarCompetenciaDashboard($query, $mesAno))
             ->groupBy('projetos.id', 'projetos.nome', 'projetos.created_at', 'colaboradores.nome')
             ->orderByDesc('projetos.created_at')
