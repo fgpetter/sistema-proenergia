@@ -57,11 +57,27 @@ function optionsProducao(payload) {
             strokeDashArray: 3,
         },
         tooltip: {
-            y: {
-                formatter: (value) => `${value} postes`,
+            custom({ dataPointIndex }) {
+                const cad = Math.round(payload.cad?.[dataPointIndex] ?? 0);
+                const proj = Math.round(payload.proj?.[dataPointIndex] ?? 0);
+                const nome = escapeHtml(payload.categories?.[dataPointIndex] ?? '');
+
+                return `<div class="apexcharts-tooltip-title">${nome}</div>`
+                    + '<div style="padding: 6px 10px; font-size: 12px; line-height: 1.5;">'
+                    + `<div>CAD: ${cad} postes</div>`
+                    + `<div>PROJ: ${proj} postes</div>`
+                    + '</div>';
             },
         },
     };
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
 }
 
 function optionsEvolucao(payload) {

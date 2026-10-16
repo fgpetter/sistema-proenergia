@@ -367,6 +367,8 @@ class DashboardModelTest extends TestCase
 
         $this->assertSame(['Diego', 'Bruno', 'Ana', 'Carla'], $ranking->pluck('nome')->all());
         $this->assertSame([500, 320, 300, 299], $ranking->pluck('total')->all());
+        $this->assertSame([0, 320, 300, 299], $ranking->pluck('cad')->all());
+        $this->assertSame([500, 0, 0, 0], $ranking->pluck('proj')->all());
         $this->assertSame([true, true, true, false], $ranking->pluck('acimaDaMeta')->all());
     }
 

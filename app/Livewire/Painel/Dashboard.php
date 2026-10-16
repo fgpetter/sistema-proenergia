@@ -113,7 +113,7 @@ class Dashboard extends Component
     /**
      * Payload JSON para o gráfico de barras (ranking).
      *
-     * @return array{categories: list<string>, totals: list<int>, colors: list<string>, aplicarMeta: bool}
+     * @return array{categories: list<string>, totals: list<int>, cad: list<int>, proj: list<int>, colors: list<string>, aplicarMeta: bool}
      */
     #[Computed]
     public function graficoProducaoPayload(): array
@@ -127,6 +127,8 @@ class Dashboard extends Component
         return [
             'categories' => $itens->pluck('nome')->values()->all(),
             'totals' => $itens->pluck('total')->values()->all(),
+            'cad' => $itens->pluck('cad')->values()->all(),
+            'proj' => $itens->pluck('proj')->values()->all(),
             'colors' => $itens->map(function (object $item) use ($aplicarMeta, $corNeutra, $corAcima, $corAbaixo): string {
                 if (! $aplicarMeta) {
                     return $corNeutra;

@@ -280,6 +280,40 @@ class DashboardTest extends TestCase
             ->assertDontSee('Evolução: mês atual');
     }
 
+    public function test_grafico_de_producao_separa_postes_cad_e_proj(): void
+    {
+        $admin = $this->createUser(UserRole::Administrativos);
+        $this->mockProdutividadeAgregada();
+
+        $colaborador = Colaborador::factory()->create(['nome' => 'Ana Ranking']);
+        $projeto = Projeto::factory()->create([
+            'created_at' => '2026-08-10 10:00:00',
+            'updated_at' => '2026-08-10 10:00:00',
+        ]);
+        Atividade::factory()->cad()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'postes_projetados' => 230,
+            'data_conclusao' => '2026-08-04',
+        ]);
+        Atividade::factory()->proj()->create([
+            'projeto_id' => $projeto->id,
+            'colaborador_id' => $colaborador->id,
+            'postes_projetados' => 125,
+            'data_conclusao' => '2026-08-10',
+        ]);
+
+        $payload = Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->instance()
+            ->graficoProducaoPayload;
+
+        $this->assertSame(['Ana Ranking'], $payload['categories']);
+        $this->assertSame([355], $payload['totals']);
+        $this->assertSame([230], $payload['cad']);
+        $this->assertSame([125], $payload['proj']);
+    }
+
     public function test_dashboard_exibe_coordenador_nas_estatisticas_de_projetos(): void
     {
         $admin = $this->createUser(UserRole::Administrativos);

@@ -93,7 +93,7 @@ class Colaborador extends Model
     }
 
     /**
-     * @return Collection<int, object{nome: string, total: int, acimaDaMeta: bool|null}>
+     * @return Collection<int, object{nome: string, total: int, cad: int, proj: int, acimaDaMeta: bool|null}>
      */
     public function producaoDashboard(?string $mesAno = null): Collection
     {
@@ -122,6 +122,8 @@ class Colaborador extends Model
                 return (object) [
                     'nome' => $colaborador->nome,
                     'total' => (int) $colaborador->total,
+                    'cad' => (int) $colaborador->total_cad,
+                    'proj' => (int) $colaborador->total_proj,
                     'acimaDaMeta' => $aplicaCorMeta
                         ? $calculadoraBonus->metaAtingida(0, (int) $colaborador->total_cad, (int) $colaborador->total_proj)
                         : null,
