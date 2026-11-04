@@ -3,8 +3,12 @@
 namespace App\Providers;
 
 use App\Models\User;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +25,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('checkuser', function (Request $request) {
+            $user = $request->input('user');
+            $user = is_string($user) ? Str::lower(trim($user)) : '';
+            $response = fn () => response('', 429);
+
+            return [
+                Limit::perMinute(5)->by('ip:'.$request->ip())->response($response),
+                Limit::perMinute(5)->by('user:'.hash('sha256', $user))->response($response),
+            ];
+        });
+
         // Se for super admin, permite acesso a todas as rotas
         Gate::before(function (User $user, string $ability) {
             if ($user->isSuperAdmin()) {
