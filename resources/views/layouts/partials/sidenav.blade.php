@@ -62,7 +62,23 @@
                         <li class="menu-item">
                             <a class="menu-link {{ request()->routeIs('admin.relatorio-colaboradores') ? 'active' : '' }}" href="{{ route('admin.relatorio-colaboradores') }}">
                                 <span class="menu-icon"><i data-lucide="chart-column"></i></span>
-                                <div class="menu-text">Relatório de Produtividade</div>
+                                <div class="menu-text">Produtividade CLT</div>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('view-relatorio-produtividade-pj')
+                        <li class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.produtividade-pj') ? 'active' : '' }}" href="{{ route('admin.produtividade-pj') }}">
+                                <span class="menu-icon"><i data-lucide="chart-column"></i></span>
+                                <div class="menu-text">Produtividade PJ</div>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('manage-parametros-produtividade-pj')
+                        <li class="menu-item">
+                            <a class="menu-link {{ request()->routeIs('admin.produtividade-pj.parametros') ? 'active' : '' }}" href="{{ route('admin.produtividade-pj.parametros') }}">
+                                <span class="menu-icon"><i data-lucide="settings"></i></span>
+                                <div class="menu-text">Parâmetros</div>
                             </a>
                         </li>
                     @endcan

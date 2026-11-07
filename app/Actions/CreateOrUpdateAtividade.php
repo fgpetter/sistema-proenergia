@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\TipoProjetoAtividade;
+use App\Enums\TipoContrato;
 use App\Enums\UserRole;
 use App\Models\Atividade;
 use App\Models\Colaborador;
@@ -25,9 +26,7 @@ class CreateOrUpdateAtividade
         $colaboradorId = $this->normalizeColaboradorId($colaboradorId);
 
         return DB::transaction(function () use ($projetoId, $nome, $colaboradorId, $dados, $user) {
-            if ($colaboradorId) {
-                $this->validateColaboradorCanBeAssigned($colaboradorId);
-            }
+            $colaborador = $colaboradorId ? $this->validateColaboradorCanBeAssigned($colaboradorId) : null;
 
             unset($dados['duracao_horas'], $dados['duracao_minutos']);
 
@@ -43,6 +42,7 @@ class CreateOrUpdateAtividade
                 'data_conclusao' => ($dados['data_conclusao'] ?? '') !== '' ? $dados['data_conclusao'] : null,
                 'em_revisao' => $this->resolveEmRevisao(null, $dados, $user),
                 'observacoes' => $dados['observacoes'] ?? null,
+                ...$this->flagsProdutividade($colaborador, $dados),
             ]);
 
             $postesDesenhados = $this->inteiroOuZero($dados['postes_desenhados'] ?? null);
@@ -75,9 +75,7 @@ class CreateOrUpdateAtividade
         }
 
         return DB::transaction(function () use ($atividade, $nome, $colaboradorId, $dados, $user) {
-            if ($colaboradorId) {
-                $this->validateColaboradorCanBeAssigned($colaboradorId, $atividade->colaborador_id);
-            }
+            $colaborador = $colaboradorId ? $this->validateColaboradorCanBeAssigned($colaboradorId, $atividade->colaborador_id) : null;
 
             $postesDesenhadosAntes = $atividade->postes_desenhados;
             $postesProjetadosAntes = $atividade->postes_projetados;
@@ -93,6 +91,7 @@ class CreateOrUpdateAtividade
                 'data_conclusao' => ($dados['data_conclusao'] ?? '') !== '' ? $dados['data_conclusao'] : null,
                 'em_revisao' => $this->resolveEmRevisao($atividade->em_revisao, $dados, $user),
                 'observacoes' => $dados['observacoes'] ?? null,
+                ...$this->flagsProdutividade($colaborador, $dados, $atividade),
                 'duracao_minutos' => $this->resolveDuracaoMinutos($atividade, $dados, $user),
             ];
 
@@ -108,6 +107,20 @@ class CreateOrUpdateAtividade
 
             return $atividade->fresh();
         });
+    }
+
+    /**
+     * @param array<string, mixed> $dados
+     * @return array{relatorio_realizado: bool, analise_proj_realizada: bool}
+     */
+    private function flagsProdutividade(?Colaborador $colaborador, array $dados, ?Atividade $atividadeAtual = null): array
+    {
+        $isPj = $colaborador?->contrato === TipoContrato::PJ;
+
+        return [
+            'relatorio_realizado' => $isPj && filter_var($dados['relatorio_realizado'] ?? $atividadeAtual?->relatorio_realizado ?? false, FILTER_VALIDATE_BOOLEAN),
+            'analise_proj_realizada' => $isPj && filter_var($dados['analise_proj_realizada'] ?? $atividadeAtual?->analise_proj_realizada ?? false, FILTER_VALIDATE_BOOLEAN),
+        ];
     }
 
     private function registrarLogAtividade(int $projetoId, int $userId, int $atividadeId, string $acao, string $item, int $valor): void
@@ -195,7 +208,7 @@ class CreateOrUpdateAtividade
         return (int) $value;
     }
 
-    private function validateColaboradorCanBeAssigned(int $colaboradorId, ?int $atribuicaoAtualId = null): void
+    private function validateColaboradorCanBeAssigned(int $colaboradorId, ?int $atribuicaoAtualId = null): Colaborador
     {
         $colaborador = Colaborador::withTrashed()
             ->with(['user' => fn ($query) => $query->withTrashed()])
@@ -208,7 +221,7 @@ class CreateOrUpdateAtividade
                 );
             }
 
-            return;
+            return $colaborador;
         }
 
         $allowedRoles = [
@@ -222,5 +235,7 @@ class CreateOrUpdateAtividade
                 'O colaborador deve ter perfil Levantador, Orçamentista ou Projetista.'
             );
         }
+
+        return $colaborador;
     }
 }

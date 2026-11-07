@@ -62,12 +62,14 @@ class Colaborador extends Model
         ?string $mesAno = null,
         ?int $coordenadorId = null,
         bool $limitarAoHoje = false,
+        ?TipoContrato $contrato = null,
     ): Collection {
         return (new Colaborador)->newModelQuery()
             ->join('atividades', 'atividades.colaborador_id', '=', 'colaboradores.id')
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
             ->whereNull('atividades.deleted_at')
             ->whereNull('projetos.deleted_at')
+            ->when($contrato !== null, fn (Builder $query) => $query->where('colaboradores.contrato', $contrato->value))
             ->tap(fn (Builder $query) => (new Atividade)->aplicarFiltrosRelatorio(
                 $query,
                 $colaboradorId,

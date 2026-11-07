@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\TipoContrato;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -64,7 +65,19 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
-            return $user->isPrestador() && $user->colaborador !== null;
+            return $user->isPrestador() && $user->colaborador?->contrato === TipoContrato::CLT;
+        });
+
+        Gate::define('view-relatorio-produtividade-pj', function (User $user) {
+            if ($user->isAdmin() || $user->isCoordenador()) {
+                return true;
+            }
+
+            return $user->isPrestador() && $user->colaborador?->contrato === TipoContrato::PJ;
+        });
+
+        Gate::define('manage-parametros-produtividade-pj', function (User $user) {
+            return $user->isAdmin();
         });
 
         Gate::define('download-planilha-contabilidade', function (User $user) {

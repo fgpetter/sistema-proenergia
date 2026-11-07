@@ -59,6 +59,8 @@ class ProjetoEditDrawer extends Component
             'atividades.*.duracao_minutos' => ['nullable', 'integer', 'min:0', 'max:59'],
             'atividades.*.data_conclusao' => ['nullable', 'date_format:Y-m-d'],
             'atividades.*.observacoes' => ['nullable', 'string'],
+            'atividades.*.relatorio_realizado' => ['sometimes', 'boolean'],
+            'atividades.*.analise_proj_realizada' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -176,6 +178,8 @@ class ProjetoEditDrawer extends Component
                 : null,
             'em_revisao' => (bool) ($atividadeData['em_revisao'] ?? false),
             'observacoes' => $atividadeData['observacoes'] ?? '',
+            'relatorio_realizado' => (bool) ($atividadeData['relatorio_realizado'] ?? false),
+            'analise_proj_realizada' => (bool) ($atividadeData['analise_proj_realizada'] ?? false),
         ];
     }
 
@@ -213,6 +217,8 @@ class ProjetoEditDrawer extends Component
             'data_conclusao' => $atividade->data_conclusao?->format('Y-m-d') ?? '',
             'em_revisao' => $atividade->em_revisao !== null,
             'observacoes' => $atividade->observacoes ?? '',
+            'relatorio_realizado' => (bool) $atividade->relatorio_realizado,
+            'analise_proj_realizada' => (bool) $atividade->analise_proj_realizada,
             '_delete' => false,
         ];
     }
@@ -421,6 +427,8 @@ class ProjetoEditDrawer extends Component
             'data_conclusao' => '',
             'em_revisao' => false,
             'observacoes' => '',
+            'relatorio_realizado' => false,
+            'analise_proj_realizada' => false,
             '_delete' => false,
         ];
     }
@@ -463,6 +471,8 @@ class ProjetoEditDrawer extends Component
                 "atividades.{$index}.duracao_minutos" => ['nullable', 'integer', 'min:0', 'max:59'],
                 "atividades.{$index}.data_conclusao" => ['nullable', 'date_format:Y-m-d'],
                 "atividades.{$index}.observacoes" => ['nullable', 'string'],
+                "atividades.{$index}.relatorio_realizado" => ['sometimes', 'boolean'],
+                "atividades.{$index}.analise_proj_realizada" => ['sometimes', 'boolean'],
             ]);
 
             $atividadeData = $this->atividades[$index];

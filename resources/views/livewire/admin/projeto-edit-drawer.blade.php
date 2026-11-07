@@ -288,6 +288,16 @@
                                                             </div>
                                                     </div>
 
+                                                    <div class="grid gap-2 sm:grid-cols-2">
+                                                        <label class="flex items-center gap-2 text-sm text-default-700">
+                                                            <input type="checkbox" wire:model="atividades.{{ $index }}.relatorio_realizado" class="form-checkbox">
+                                                            Relatório realizado
+                                                        </label>
+                                                        <label class="flex items-center gap-2 text-sm text-default-700">
+                                                            <input type="checkbox" wire:model="atividades.{{ $index }}.analise_proj_realizada" class="form-checkbox">
+                                                            Análise de projeto realizada
+                                                        </label>
+                                                    </div>
                                                     <div>
                                                         <label class="block text-sm font-medium text-default-700 mb-1">Observações</label>
                                                         <textarea

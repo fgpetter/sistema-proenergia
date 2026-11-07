@@ -40,6 +40,11 @@ class ColaboradorFactory extends Factory
         ]);
     }
 
+    public function prestador(): static
+    {
+        return $this->projetista()->state(['contrato' => TipoContrato::PJ]);
+    }
+
     public function coordenador(): static
     {
         return $this->state(fn (array $attributes): array => [

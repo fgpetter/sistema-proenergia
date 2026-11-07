@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Enums\TipoProjetoAtividade;
+use App\Enums\TipoContrato;
 use App\Enums\UserRole;
 use App\Exports\ExportacaoProdutividadeExport;
 use App\Exports\PlanilhaContabilidadeExport;
@@ -23,6 +24,11 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RelatorioColaboradores extends Component
 {
+    public function boot(): void
+    {
+        Gate::authorize('view-relatorio-colaboradores');
+    }
+
     #[Url(as: 'projeto')]
     public ?int $projetoId = null;
 
@@ -60,6 +66,7 @@ class RelatorioColaboradores extends Component
         $competencias = Atividade::query()
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
             ->whereNull('projetos.deleted_at')
+            ->whereHas('colaborador', fn ($query) => $query->where('contrato', TipoContrato::CLT->value))
             ->whereNotNull('atividades.data_conclusao')
             ->orderByDesc('atividades.data_conclusao')
             ->get(['atividades.data_conclusao'])
@@ -90,6 +97,7 @@ class RelatorioColaboradores extends Component
 
         return Atividade::query()
             ->where('colaborador_id', $user->colaborador->id)
+            ->whereHas('colaborador', fn ($query) => $query->where('contrato', TipoContrato::CLT->value))
             ->whereNull('data_conclusao')
             ->count();
     }
@@ -107,6 +115,7 @@ class RelatorioColaboradores extends Component
                 mesAno: $periodo['mesAno'],
                 coordenadorId: $this->coordenadorId,
                 limitarAoHoje: $periodo['limitarAoHoje'],
+                contrato: TipoContrato::CLT,
             )
             ->map(fn (Colaborador $colaborador): Colaborador => $calculator->enriquecerColaborador($colaborador));
     }
@@ -124,12 +133,12 @@ class RelatorioColaboradores extends Component
 
         return $user !== null
             && $user->isPrestador()
-            && $user->colaborador !== null;
+            && $user->colaborador?->contrato === TipoContrato::CLT;
     }
 
     public function exportarProdutividade(): BinaryFileResponse
     {
-        abort_unless($this->podeExportarProdutividade, 403);
+        abort_unless($this->podeExportarProdutividade && Gate::allows('view-relatorio-colaboradores'), 403);
 
         $this->validate([
             'mesAno' => ['required', 'date_format:Y-m'],
@@ -148,6 +157,7 @@ class RelatorioColaboradores extends Component
             mesAno: $periodo['mesAno'],
             coordenadorId: $this->coordenadorId,
             limitarAoHoje: $periodo['limitarAoHoje'],
+            contrato: TipoContrato::CLT,
         );
 
         $atividadesCad = $atividades
@@ -196,7 +206,7 @@ class RelatorioColaboradores extends Component
 
     public function exportarPlanilhaContabilidade(): BinaryFileResponse
     {
-        abort_unless($this->podeExportarPlanilhaContabilidade, 403);
+        abort_unless($this->podeExportarPlanilhaContabilidade && Gate::allows('view-relatorio-colaboradores'), 403);
 
         $periodo = $this->periodoApuracao();
         $calculator = app(BonusColaboradorCalculator::class);
@@ -206,6 +216,7 @@ class RelatorioColaboradores extends Component
                 colaboradorId: $this->colaboradorIdEscopo(),
                 mesAno: $periodo['mesAno'],
                 limitarAoHoje: $periodo['limitarAoHoje'],
+                contrato: TipoContrato::CLT,
             )
             ->map(fn (Colaborador $colaborador): Colaborador => $calculator->enriquecerColaborador($colaborador));
 
@@ -248,7 +259,7 @@ class RelatorioColaboradores extends Component
             return null;
         }
 
-        return $user->colaborador?->id;
+        return $user->colaborador?->id ?? 0;
     }
 
     protected function formatarCompetencia(string $competencia): string

@@ -32,6 +32,12 @@ Route::group(['prefix' => '/painel', 'middleware' => 'auth'], function () {
         Route::view('/relatorio-colaboradores', 'admin.relatorio-colaboradores')
             ->name('admin.relatorio-colaboradores')
             ->can('view-relatorio-colaboradores');
+        Route::view('/produtividade-pj', 'admin.relatorio-produtividade-pj')
+            ->name('admin.produtividade-pj')
+            ->can('view-relatorio-produtividade-pj');
+        Route::view('/produtividade-pj/parametros', 'admin.parametros-produtividade-pj')
+            ->name('admin.produtividade-pj.parametros')
+            ->can('manage-parametros-produtividade-pj');
     });
 
 });

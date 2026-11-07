@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TipoProjetoAtividade;
+use App\Enums\TipoContrato;
 use Carbon\Carbon;
 use Database\Factories\AtividadeFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,6 +33,8 @@ class Atividade extends Model
         'data_conclusao',
         'em_revisao',
         'observacoes',
+        'relatorio_realizado',
+        'analise_proj_realizada',
     ];
 
     protected function casts(): array
@@ -45,6 +48,8 @@ class Atividade extends Model
             'duracao_minutos' => 'integer',
             'data_conclusao' => 'date',
             'em_revisao' => 'datetime',
+            'relatorio_realizado' => 'boolean',
+            'analise_proj_realizada' => 'boolean',
         ];
     }
 
@@ -111,11 +116,13 @@ class Atividade extends Model
         ?string $mesAno = null,
         ?int $coordenadorId = null,
         bool $limitarAoHoje = false,
+        ?TipoContrato $contrato = null,
     ): Collection {
         return Atividade::query()
             ->select('atividades.*')
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
             ->whereNull('projetos.deleted_at')
+            ->when($contrato !== null, fn (Builder $query) => $query->whereHas('colaborador', fn (Builder $colaborador) => $colaborador->where('contrato', $contrato->value)))
             ->with('projeto')
             ->tap(fn (Builder $query) => $this->aplicarFiltrosRelatorio(
                 $query,

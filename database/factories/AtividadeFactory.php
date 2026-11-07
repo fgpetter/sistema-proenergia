@@ -48,6 +48,19 @@ class AtividadeFactory extends Factory
         ]);
     }
 
+    public function concluida(?string $data = null): static
+    {
+        return $this->state(fn (): array => ['data_conclusao' => $data ?? now()->toDateString()]);
+    }
+
+    public function comProducaoProjetada(int $metros, int $postes): static
+    {
+        return $this->state([
+            'extensao_projeto' => $metros,
+            'postes_projetados' => $postes,
+        ]);
+    }
+
     /**
      * Projeto CAD com postes acima ou iguais à Meta Projeto CAD (300).
      */
