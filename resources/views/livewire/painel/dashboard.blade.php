@@ -1,14 +1,24 @@
 <div>
     <div class="flex items-center flex-wrap gap-2 mb-4 print:hidden">
         <h4 class="text-default-900 text-lg font-semibold">Dashboard</h4>
-        <div class="ms-auto">
-            <label class="mb-1 block text-sm font-medium text-default-700">Mês/Ano</label>
-            <select wire:model.live="mesAno" class="form-input form-input-sm w-full min-w-48">
-                <option value="todas">Todas as competências</option>
-                @foreach ($this->competenciasDisponiveis as $valor => $rotulo)
-                    <option value="{{ $valor }}">{{ $rotulo }}</option>
-                @endforeach
-            </select>
+        <div class="ms-auto flex flex-wrap gap-2">
+            <div>
+                <label for="dashboard-mes-ano" class="mb-1 block text-sm font-medium text-default-700">Mês/Ano</label>
+                <select id="dashboard-mes-ano" wire:model.live="mesAno" class="form-input form-input-sm w-full min-w-48">
+                    <option value="todas">Todas as competências</option>
+                    @foreach ($this->competenciasDisponiveis as $valor => $rotulo)
+                        <option value="{{ $valor }}">{{ $rotulo }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="dashboard-tipo-contrato" class="mb-1 block text-sm font-medium text-default-700">Tipo de prestador</label>
+                <select id="dashboard-tipo-contrato" wire:model.live="tipoContrato" class="form-input form-input-sm w-full min-w-48">
+                    <option value="todos">Todos</option>
+                    <option value="clt">CLT</option>
+                    <option value="pj">PJ</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -122,7 +132,7 @@
     </div>
 
     <div class="grid grid-cols-1 gap-5 mb-5">
-        <livewire:painel.performance-colaboradores :mes-ano="$this->mesAnoFiltro" :key="$this->mesAno" />
+        <livewire:painel.performance-colaboradores :mes-ano="$this->mesAnoFiltro" :contrato="$this->contratoFiltro" :key="$this->mesAno.'-'.$this->tipoContrato" />
     </div>
 
     <div class="grid grid-cols-1 gap-5">

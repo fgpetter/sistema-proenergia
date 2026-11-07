@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TipoContrato;
 use App\Enums\TipoProjetoAtividade;
 use Carbon\Carbon;
 use Database\Factories\ProjetoFactory;
@@ -58,7 +59,7 @@ class Projeto extends Model
      *     vaoMedioProjetado: float,
      * }
      */
-    public function totaisGlobaisDashboard(?string $mesAno = null): object
+    public function totaisGlobaisDashboard(?string $mesAno = null, ?TipoContrato $contrato = null): object
     {
         $atividades = Atividade::query()
             ->join('projetos', 'projetos.id', '=', 'atividades.projeto_id')
@@ -66,6 +67,7 @@ class Projeto extends Model
             ->where('atividades.tipo_projeto', TipoProjetoAtividade::Cad->value)
             ->whereNotNull('atividades.data_conclusao')
             ->whereNull('atividades.em_revisao')
+            ->when($contrato !== null, fn (Builder $query) => $query->whereHas('colaborador', fn (Builder $colaborador) => $colaborador->where('contrato', $contrato->value)))
             ->tap(fn (Builder $query) => $this->aplicarCompetenciaDashboard($query, $mesAno))
             ->selectRaw('COALESCE(SUM(atividades.extensao_projeto), 0) as total_extensao_projeto')
             ->selectRaw('COALESCE(SUM(atividades.postes_projetados), 0) as total_postes_projetados')
@@ -73,11 +75,12 @@ class Projeto extends Model
             ->first();
 
         $totalProjetos = (int) Projeto::query()
-            ->whereHas('atividades', function (Builder $query) use ($mesAno): void {
+            ->whereHas('atividades', function (Builder $query) use ($mesAno, $contrato): void {
                 $query
                     ->where('tipo_projeto', TipoProjetoAtividade::Cad->value)
                     ->whereNotNull('data_conclusao')
                     ->whereNull('em_revisao')
+                    ->when($contrato !== null, fn (Builder $query) => $query->whereHas('colaborador', fn (Builder $colaborador) => $colaborador->where('contrato', $contrato->value)))
                     ->when($mesAno, function (Builder $query) use ($mesAno): void {
                         $inicio = Carbon::createFromFormat('Y-m', $mesAno)->startOfMonth();
 
@@ -107,7 +110,7 @@ class Projeto extends Model
     /**
      * @return Builder<Projeto>
      */
-    public function estatisticasDashboard(?string $mesAno = null): Builder
+    public function estatisticasDashboard(?string $mesAno = null, ?TipoContrato $contrato = null): Builder
     {
         return Projeto::query()
             ->leftJoin('atividades', function ($join): void {
@@ -119,6 +122,7 @@ class Projeto extends Model
             ->leftJoin('colaboradores', 'colaboradores.id', '=', 'projetos.colaborador_responsavel_id')
             ->whereNotNull('atividades.data_conclusao')
             ->whereNull('atividades.em_revisao')
+            ->when($contrato !== null, fn (Builder $query) => $query->whereIn('atividades.colaborador_id', Colaborador::withTrashed()->where('contrato', $contrato->value)->select('id')))
             ->tap(fn (Builder $query) => $this->aplicarCompetenciaDashboard($query, $mesAno))
             ->groupBy('projetos.id', 'projetos.nome', 'projetos.created_at', 'colaboradores.nome')
             ->orderByDesc('projetos.created_at')

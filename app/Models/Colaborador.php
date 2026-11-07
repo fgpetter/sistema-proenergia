@@ -97,7 +97,7 @@ class Colaborador extends Model
     /**
      * @return Collection<int, object{nome: string, total: int, cad: int, proj: int, acimaDaMeta: bool|null}>
      */
-    public function producaoDashboard(?string $mesAno = null): Collection
+    public function producaoDashboard(?string $mesAno = null, ?TipoContrato $contrato = null): Collection
     {
         $aplicaCorMeta = $mesAno !== null;
         $calculadoraBonus = app(BonusColaboradorCalculator::class);
@@ -110,6 +110,7 @@ class Colaborador extends Model
             ->whereIn('atividades.tipo_projeto', [TipoProjetoAtividade::Cad->value, TipoProjetoAtividade::Proj->value])
             ->whereNotNull('atividades.data_conclusao')
             ->whereNull('atividades.em_revisao')
+            ->when($contrato !== null, fn (Builder $query) => $query->where('colaboradores.contrato', $contrato->value))
             ->tap(fn (Builder $query) => $this->aplicarCompetenciaDashboard($query, $mesAno))
             ->groupBy('colaboradores.id', 'colaboradores.nome')
             ->havingRaw('COALESCE(SUM(atividades.postes_projetados), 0) > 0')

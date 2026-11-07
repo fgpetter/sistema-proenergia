@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Painel;
 
+use App\Enums\TipoContrato;
 use App\Models\Atividade;
 use App\Models\Colaborador;
 use App\Models\Projeto;
@@ -21,6 +22,9 @@ class Dashboard extends Component
     #[Url(as: 'mes')]
     public string $mesAno = '';
 
+    #[Url(as: 'contrato', except: 'todos')]
+    public string $tipoContrato = 'todos';
+
     public function boot(Projeto $projeto, Colaborador $colaborador, Atividade $atividade): void
     {
         $this->projeto = $projeto;
@@ -33,12 +37,30 @@ class Dashboard extends Component
         if ($this->mesAno !== 'todas' && ! preg_match('/^\d{4}-\d{2}$/', $this->mesAno)) {
             $this->mesAno = now()->format('Y-m');
         }
+
+        $this->normalizarTipoContrato();
     }
 
     public function updatedMesAno(): void
     {
+        $this->atualizarGraficos();
+    }
+
+    public function updatedTipoContrato(): void
+    {
+        $this->normalizarTipoContrato();
+        $this->atualizarGraficos();
+    }
+
+    private function atualizarGraficos(): void
+    {
         $this->resetPage();
-        unset($this->producaoPorColaborador, $this->graficoProducaoPayload);
+        unset(
+            $this->producaoPorColaborador,
+            $this->graficoProducaoPayload,
+            $this->evolucaoSemanalPostes,
+            $this->graficoEvolucaoPayload,
+        );
 
         $this->dispatch(
             'graficos-dashboard-atualizados',
@@ -51,6 +73,23 @@ class Dashboard extends Component
     public function mesAnoFiltro(): ?string
     {
         return $this->mesAno === 'todas' ? null : $this->mesAno;
+    }
+
+    #[Computed]
+    public function contratoFiltro(): ?TipoContrato
+    {
+        if ($this->tipoContrato === 'todos') {
+            return null;
+        }
+
+        return TipoContrato::tryFrom($this->tipoContrato);
+    }
+
+    private function normalizarTipoContrato(): void
+    {
+        if ($this->tipoContrato !== 'todos' && TipoContrato::tryFrom($this->tipoContrato) === null) {
+            $this->tipoContrato = 'todos';
+        }
     }
 
     /**
@@ -83,7 +122,7 @@ class Dashboard extends Component
     #[Computed]
     public function totais(): object
     {
-        return $this->projeto->totaisGlobaisDashboard($this->mesAnoFiltro);
+        return $this->projeto->totaisGlobaisDashboard($this->mesAnoFiltro, $this->contratoFiltro);
     }
 
     /**
@@ -92,7 +131,7 @@ class Dashboard extends Component
     #[Computed]
     public function producaoPorColaborador(): Collection
     {
-        return $this->colaborador->producaoDashboard($this->mesAnoFiltro);
+        return $this->colaborador->producaoDashboard($this->mesAnoFiltro, $this->contratoFiltro);
     }
 
     /**
@@ -101,7 +140,7 @@ class Dashboard extends Component
     #[Computed]
     public function evolucaoSemanalPostes(): Collection
     {
-        return $this->atividade->evolucaoSemanalPostes();
+        return $this->atividade->evolucaoSemanalPostes($this->contratoFiltro);
     }
 
     #[Computed]
@@ -160,7 +199,7 @@ class Dashboard extends Component
     #[Computed]
     public function estatisticasProjetos(): LengthAwarePaginator
     {
-        return $this->projeto->estatisticasDashboard($this->mesAnoFiltro)->paginate(15);
+        return $this->projeto->estatisticasDashboard($this->mesAnoFiltro, $this->contratoFiltro)->paginate(15);
     }
 
     public function render(): View

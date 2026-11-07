@@ -76,7 +76,7 @@ class Atividade extends Model
     /**
      * @return Collection<int, object{semana: int, rotulo: string, total: int}>
      */
-    public function evolucaoSemanalPostes(): Collection
+    public function evolucaoSemanalPostes(?TipoContrato $contrato = null): Collection
     {
         $inicio = now()->copy()->startOfMonth();
         $fimExclusivo = $inicio->copy()->addMonth()->startOfMonth()->toDateString();
@@ -89,6 +89,7 @@ class Atividade extends Model
             ->whereNull('atividades.em_revisao')
             ->where('atividades.data_conclusao', '>=', $inicio->toDateString())
             ->where('atividades.data_conclusao', '<', $fimExclusivo)
+            ->when($contrato !== null, fn (Builder $query) => $query->whereHas('colaborador', fn (Builder $colaborador) => $colaborador->where('contrato', $contrato->value)))
             ->toBase()
             ->get(['atividades.data_conclusao', 'atividades.postes_projetados']);
 
