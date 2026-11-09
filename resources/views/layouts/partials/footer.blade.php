@@ -8,7 +8,7 @@
             </script>
         </div>
         <div class="md:flex hidden gap-2 item-center md:justify-end">
-            Desenvolvido por <a class="text-primary" href="https://premiumweb.com.br/" target="_blank">PremiumWeb</a>
+            Desenvolvido por <a class="text-primary" href="https://vetora.dev.br" target="_blank">Vetora Tecnologia</a>
         </div>
     </div>
 </footer>
